@@ -1,15 +1,6 @@
 # 🔐 Keycloak Adapter API for Node.js (Express)
 Keycloak-api-manager is a comprehensive **Node.js library** that wraps the official 
-Keycloak Admin REST API, providing a clean and consistent functional interface for 
-programmatic management of Keycloak resources.  With this package, you can easily interact with Keycloak just like through its Admin 
-Console — creating and managing realms, clients, users, roles, groups, 
-permissions, and authentication policies — all via simple JavaScript functions.
-The library simplifies integration of Keycloak into custom applications, automation 
-scripts, and backend services by handling authentication, 
-API calls, and error management internally. Designed for developers who want full control over Keycloak’s administrative capabilities 
-without manually invoking REST endpoints, keycloak-api-manager enables fast, reliable, 
-and type-safe operations across multiple realms and environments.
-it is a wrapper based on '@keycloak/keycloak-admin-client'
+Keycloak Admin REST API
 ---
 ## 📦 Features
 

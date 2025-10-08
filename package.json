@@ -1,6 +1,6 @@
 {
   "name": "keycloak-api-manager",
-  "version": "2.0.1",
+  "version": "1.0.0",
   "description": "Keycloak-api-manager is a lightweight Node.js wrapper for the Keycloak Admin REST API. It provides an easy-to-use functional methods and functions to manage realms, users, roles, clients, groups, and permissions directly from your application code — just like you would from the Keycloak admin console.",
   "main": "index.js",
   "scripts": {
@@ -42,5 +42,14 @@
     "express"
   ],
   "author": "aromanino (Crs4)",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smartenv-crs4/keycloak-api-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/smartenv-crs4/keycloak-api-manager/issues"
+  },
+  "homepage": "https://github.com/smartenv-crs4/keycloak-api-manager#readme"
 }
