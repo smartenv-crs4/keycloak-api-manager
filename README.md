@@ -5509,7 +5509,7 @@ console.log("Mapper updated successfully!");
 
 
 
-##### `function identityProviders.importFromUrl(filter,mapperRepresentation)`
+##### `function identityProviders.importFromUrl(filter)`
 The method lets you import an Identity Provider configuration directly from a metadata URL (e.g., OIDC discovery document or SAML metadata XML).
 This saves you from manually entering configuration details, since Keycloak can auto-fill them from the provided URL.
 @parameters:
@@ -5580,6 +5580,15 @@ Groups help organize users and assign permissions in a scalable way
 #### `entity groups functions`
 ##### `function create(groupRappresentation)`
 Create a new group in the current realme
+@parameters:
+- groupRepresentation:An object representing the new state of the group. You can update properties such as:
+    - name: [optional] New name of the group
+    - attributes: [optional] Custom attributes up field
+    - path: [optional] full path of the group
+    - subGroups: [optional] List of child groups (can also be updated separately)
+    - description: [optional] the new group Description
+    - {other [optional] group descriprion fields}
+
 ```js
  // create a group called my-group
  keycloakAdapter.kcAdminClient.groups.create({name: "my-group"});
@@ -5929,12 +5938,21 @@ Create a new role
  // create a role name called my-role
  keycloakAdapter.kcAdminClient.roles.create({name:'my-role'});
  ```
-##### `function createComposite(params: { roleId: string }, payload: RoleRepresentation[]`
-Create a new composite role
-Composite roles in Keycloak are roles that combine other roles, allowing you to group multiple permissions 
-into a single, higher-level role. A composite role can include roles from the same realm as well
-as roles from different clients. When you assign a composite role to a user, 
-they automatically inherit all the roles it contains.
+##### `function createComposite(filters,[roles])`
+Create a new composite role. Composite roles in Keycloak are roles that combine other roles,
+allowing you to group multiple permissions into a single, higher-level role.
+A composite role can include roles from the same realm as well
+as roles from different clients.
+When you assign a composite role to a user, they automatically inherit all the roles it contains.
+@parameters:
+- filters: parameter provided as a JSON object that accepts the following parameters:
+    - roleId: [required] The id of the role to which composite roles will be added.
+
+- roles: (Array<RoleRepresentation>) [required] A list of roles to be added as composites. Each RoleRepresentation typically includes:
+    - id: [required] The role’s unique ID.
+    - name: [required] The role’s name.
+    - containerId: [optional] The realm or client that owns the role.
+    - clientRole: [optional] Whether the role belongs to a client.
 
 
 ```js
@@ -5945,69 +5963,106 @@ const readerRole = await client.roles.findOneByName({ name: 'reader' });
 await client.roles.createComposite({ roleId: adminRole.id }, [readerRole]);
  ```
 
-##### `function find()`
+##### `function find(filters)`
 get all realm roles and return a JSON
+- filters: parameter provided as a JSON object that accepts the following parameters:
+    - name (string, optional): Search string to filter roles by name
+    - realm (string, optional: if set globally in the client): The realm from which to retrieve roles.
+    - first (number, optional): Index of the first result to return (used for pagination).
+    - max (number, optional): Maximum number of results to return.
 ```js
  keycloakAdapter.kcAdminClient.roles.find();
  ```
-##### `function findOneByName(filter)`
-get a role by name
+##### `function findOneByName(filters)`
+Get a role by name
+@parameters:
+- filters: parameter provided as a JSON object that accepts the following parameters:
+    - name (string, required) — The exact name of the role to retrieve.
+    - realm (string, optional if set globally) — The realm where the role is defined.
 ```js
  // get information about 'my-role' role
  keycloakAdapter.kcAdminClient.roles.findOneByName({ name: 'my-role' });
  ```
 
-##### `function findOneById(filter)`
-get a role by its Id
+##### `function findOneById(filters)`
+Get a role by its Id
+@parameters:
+- filters: parameter provided as a JSON object that accepts the following parameters:
+    - Id (string, required) — The Id of the role to retrieve.
+    - realm (string, optional if set globally) — The realm where the role is defined.
 ```js
  // get information about 'my-role-id' role
  keycloakAdapter.kcAdminClient.roles.findOneById({ id: 'my-role-id' });
  ```
 
-##### `function updateByName(filter,role_dictionary)`
-update a role by its name
+##### `function updateByName(filters,role_dictionary)`
+Update a role by its name
+@parameters:
+- filters: parameter provided as a JSON object that accepts the following parameters:
+    - name (string, required) — The exact name of the role to retrieve.
+    - realm (string, optional if set globally) — The realm where the role is defined.
+- role_dictionary: A JSON object representing a role dictionary as defined in Keycloak
 ```js
  // update 'my-role' role with a new description
  keycloakAdapter.kcAdminClient.roles.updateByName({ name: 'my-role' }, {description:"new Description"});
  ```
 
-##### `function updateById(filter,role_dictionary)`
-update a role by its id
+##### `function updateById(filters,role_dictionary)`
+Update a role by its Id
+@parameters:
+- filters: parameter provided as a JSON object that accepts the following parameters:
+    - name (string, required) — The exact name of the role to retrieve.
+    - realm (string, optional if set globally) — The realm where the role is defined.
+- role_dictionary: A JSON object representing a role dictionary as defined in Keycloak
 ```js
  // update role by id 'my-role-id' with a new description
  keycloakAdapter.kcAdminClient.roles.updateById({ id: 'my-role-id' }, {description:"new Description"});
  ```
 
-##### `function delByName(filter)`
-delete a role by its name
+##### `function delByName(filters)`
+Delete a role by its name
+@parameters:
+- filters: parameter provided as a JSON object that accepts the following parameters:
+    - name (string, required) — The exact name of the role to retrieve.
+    - realm (string, optional if set globally) — The realm where the role is defined.
 ```js
  // delete role  'my-role' 
  keycloakAdapter.kcAdminClient.roles.delByName({ name: 'my-role' });
  ```
 
-##### `function findUsersWithRole(filter)`
-Find all users associated with a specific role.
+##### `function findUsersWithRole(filters)`
+Find all users associated with a specific role
+- filters: parameter provided as a JSON object that accepts the following parameters:
+    - name: (string, optional) — The exact name of the role to retrieve.
+    - id: (string, optional) — The Id of the role to retrieve.
+    - realm: (string, optional if set globally) — The realm where the role is defined.
 ```js
  // Find all users associated with role named 'my-role' 
  keycloakAdapter.kcAdminClient.roles.findUsersWithRole({ name: 'my-role' });
  ```
 
-##### `function getCompositeRoles({id:roleid})`
-Find all composite roles associated with a specific id.
+##### `function getCompositeRoles(filters)`
+Find all composite roles associated with a specific role.
+- filters: parameter provided as a JSON object that accepts the following parameters:
+    - name: (string, optional) — The exact name of the role to retrieve.
+    - id: (string, optional) — The Id of the role to retrieve.
 ```js
  // Find all composite role named 'my-role' and id 'my-role-id' 
  keycloakAdapter.kcAdminClient.roles.getCompositeRoles({ id: 'my-role-id' });
  ```
 
 ##### `function getCompositeRolesForRealm({roleId:roleid})`
-The getCompositeRolesForRealm function  is used to 
-retrieve all realm-level roles that are associated with a given composite role. 
-When a role is defined as composite, it can include other roles either from the same 
+The getCompositeRolesForRealm function  is used to retrieve all realm-level roles that are
+associated with a given composite role.
+When a role is defined as composite, it can include other roles either from the same
 realm or from different clients. This specific method returns only the realm-level roles
-that have been added to the composite role. It requires the roleId of the target role as a 
+that have been added to the composite role. It requires the roleId of the target role as a
 parameter and returns an array of RoleRepresentation objects. If the role is not composite
-or has no associated realm roles, the result will be an empty array. This method is useful 
+or has no associated realm roles, the result will be an empty array. This method is useful
 for understanding and managing hierarchical role structures within a realm in Keycloak.
+@parameters:
+- filters: parameter provided as a JSON object that accepts the following parameters:
+    - roleId: (string, required) — The Id of the role to retrieve.
 ```js
 const compositeRoles = await keycloakAdapter.kcAdminClient.roles.getCompositeRolesForRealm({ roleId: 'role-id' });
 console.log('admin composite roles:', compositeRoles.map(r => r.name));
@@ -6015,14 +6070,18 @@ console.log('admin composite roles:', compositeRoles.map(r => r.name));
  ```
 
 ##### `function getCompositeRolesForClient({roleId:'roleid', clientId:'clientId'})`
-The getCompositeRolesForClient function is used to retrieve 
-all client-level roles that are associated with a given composite role. 
+The getCompositeRolesForClient function is used to retrieve all client-level roles that are
+associated with a given composite role.
 Composite roles in Keycloak can include roles from different clients,
 and this method specifically returns the roles belonging to a specified client that
-are part of the composite role. It requires the roleId of the composite role 
+are part of the composite role. It requires the roleId of the composite role
 and the clientId of the client whose roles you want to retrieve. The function returns an array of
-RoleRepresentation objects representing the client roles included in the composite. 
+RoleRepresentation objects representing the client roles included in the composite.
 This helps manage and inspect client-specific role hierarchies within the composite role structure in Keycloak.
+@parameters:
+- filters: parameter provided as a JSON object that accepts the following parameters:
+    - roleId: (string, required) — The Id of the role to retrieve
+    - clientId: (string, required) — The Id of the client to search for composite roles
 ```js
 const compositeRoles = await keycloakAdapter.kcAdminClient.roles.getCompositeRolesForClient({
     roleId: 'compositeRole-Id',
@@ -6041,7 +6100,7 @@ Components in Keycloak are modular and pluggable, and this API lets you create, 
 
 #### `entity components functions`
 
-##### `function create(comoponentReppresentation)`
+##### `function create(componentReppresentation)`
 The method creates a new component in a Keycloak realm.
 Components are modular providers in Keycloak, such as user federation providers (LDAP, Kerberos), authenticators, identity providers, or other pluggable extensions.
 
@@ -6051,7 +6110,12 @@ Components are modular providers in Keycloak, such as user federation providers 
   - providerId: [required] The provider ID (e.g., "ldap", "kerberos", "totp"). 
   - providerType: [required] The type/class of the provider (e.g., "org.keycloak.storage.UserStorageProvider"). 
   - parentId: [optional] The ID of the parent component (if hierarchical). 
-  - config: [optional] A map of configuration options, where each property is an array of strings (Keycloak convention).
+  - config: [optional] A map of configuration options, where each property is an array of strings (Keycloak convention). Example:
+        - enabled: ["true"],
+        - connectionUrl: ["ldap://ldap.example.com"],
+        - bindDn: ["cn=admin,dc=example,dc=com"],
+        - bindCredential: ["secret"],
+        - usersDn: ["ou=users,dc=example,dc=com"]
 ```js
  // create a component called my-ldap
  const newComponent= await keycloakAdapter.kcAdminClient.components.create({
@@ -6072,19 +6136,25 @@ console.log("Created component:", newComponent);
  ```
 
 
-##### `function update(comoponentReppresentation)`
+##### `function update(componentReppresentation)`
 The method updates an existing component in a Keycloak realm.
-Components represent pluggable extensions such as user federation providers (LDAP, Kerberos), protocol mappers, authenticator factories, or other custom integrations.
+Components represent pluggable extensions such as user federation providers (LDAP, Kerberos),
+protocol mappers, authenticator factories, or other custom integrations.
 
 @parameters:
 - filter: parameter provided as a JSON object that accepts the following filter:
-  - id: [required] The unique ID of the component to update.
-- comoponentReppresentation: An object representing the component to update.
-  - name: [required] A human-readable name for the component. 
-  - providerId: [required] The provider ID (e.g., "ldap", "kerberos", "totp"). 
-  - providerType: [required] The type/class of the provider (e.g., "org.keycloak.storage.UserStorageProvider"). 
-  - parentId: [optional] The ID of the parent component (if hierarchical). 
-  - config: [optional] A map of configuration options, where each property is an array of strings (Keycloak convention).
+    - id: [required] The unique ID of the component to update.
+- componentRepresentation: An object representing the component to update.
+    - name: [required] A human-readable name for the component.
+    - providerId: [required] The provider ID (e.g., "ldap", "kerberos", "totp").
+    - providerType: [required] The type/class of the provider (e.g., "org.keycloak.storage.UserStorageProvider").
+    - parentId: [optional] The ID of the parent component (if hierarchical).
+    - config: [optional] A map of configuration options, where each property is an array of strings (Keycloak convention). Example:
+        - enabled: ["true"],
+        - connectionUrl: ["ldap://ldap.example.com"],
+        - bindDn: ["cn=admin,dc=example,dc=com"],
+        - bindCredential: ["secret"],
+        - usersDn: ["ou=users,dc=example,dc=com"]
 ```js
  // update a component
  await keycloakAdapter.kcAdminClient.components.update(
