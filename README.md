@@ -68,10 +68,8 @@ yarn add keycloak-api-manager
 ---
 
 ## 🛠️ Get Keycloak Configuration
-
 Copy or Download from keycloak admin page your client configuration `keycloak.json` by visiting 
 the Keycloak Admin Console → clients (left sidebar) → choose your client → Installation → Format Option → Keycloak OIDC JSON → Download
-
 ```json
 {
   "realm": "your-realm",
@@ -84,19 +82,57 @@ the Keycloak Admin Console → clients (left sidebar) → choose your client →
   "confidential-port": 0
 }
 ```
-
 ---
 
 ## 📄 Usage Example
 
 ```js
 const express = require('express');
-const keycloackAdapter = require('keycloak-api-manager');
+// Import the Keycloak API Manager
+const KeycloakManager = require('keycloak-api-manager');
 
 const app = express();
 
 
-// Configure and Initialize Keycloak adapter
+// Configure and Initialize Keycloak manager api
+// Initialize the manager with Keycloak credentials
+const keycloak = new KeycloakManager({
+    baseUrl: 'http://localhost:8080',   // Keycloak base URL
+    realm: 'master',                    // Realm where the admin user belongs
+    clientId: 'admin-cli',              // Keycloak admin client
+    username: 'admin',                  // Admin username
+    password: 'admin',                  // Admin password
+});
+
+// Authenticate and obtain access token
+await keycloak.authenticate();
+
+// Create a new user in the target realm
+const newUser = await keycloak.createUser({
+    realm: 'myrealm',
+    username: 'john.doe',
+    email: 'john.doe@example.com',
+    firstName: 'John',
+    lastName: 'Doe',
+    enabled: true,
+});
+
+// Assign a realm role to the user
+await keycloak.assignRealmRole({
+    realm: 'myrealm',
+    userId: newUser.id,
+    roleName: 'user',
+});
+
+console.log(`✅ User ${newUser.username} created and assigned to role 'user'`);
+
+
+
+
+
+
+
+
 await keycloackAdapter.configure(app,{
         "realm": "Realm-Project",
         "auth-server-url": "https://YourKeycloakUrl:30040/",
@@ -1866,21 +1902,6 @@ console.log(ressult);
  ```
 
 
-##### `function getCredentials(filter)`
-getCredentials() method retrieves the list of credentials (e.g., passwords, OTPs, WebAuthn, etc.) 
-currently associated with a given user in a specific realm.
-This is useful for auditing, checking what types of credentials a user has set up, 
-or managing credentials such as password reset, WebAuthn deletion, etc.
-@parameters:
- - getCredentials: is a JSON object that accepts filter parameters
-   - id: [Required] the user ID to update
-   - realm [Optional] the realm name (defaults to current realm)
-```js
- // get credentials info for user whose id is 'user-id'
-const ressult = await keycloakAdapter.kcAdminClient.users.getCredentials({id: 'user-id'});
-console.log(ressult);
- ```
-
 ##### `function deleteCredential(accountInfo)`
 deleteCredential method allows you to delete a specific credential (e.g., password, OTP, WebAuthn, etc.) from a user. 
 This is useful when you want to invalidate or remove a credential, forcing the user to reconfigure or reset it.
@@ -1901,7 +1922,7 @@ It is a method  that retrieves the user profile dictionary information.
 This includes basic user details such as username, email, first name,  last name, 
 and other attributes associated with the user profile in the Keycloak realm.
 ```js
- // create a role name called my-role
+ // Get user profile
  const userProfile = await keycloakAdapter.kcAdminClient.users.getProfile();
  console.log('User profile dicionary:', userProfile);
  ```
@@ -3651,8 +3672,7 @@ meaning it can define resources, scopes, permissions, and policies for fine-grai
 
 // get resource Server
 const resourceServer = await keycloakAdapter.kcAdminClient.clients.getResourceServer({
-    id: 'internal-client-id',
-    resourceId: '12345-abcde',
+    id: 'internal-client-id'
 });
 
 console.log('Resource Server:', resourceServer);
@@ -3912,8 +3932,7 @@ Resources represent protected entities (such as APIs, files, or services) that c
 
 // List resources
 const resources= await keycloakAdapter.kcAdminClient.clients.listResources({ 
-    id: 'internal-client-id',
-    resourceId: 'resource-id'
+    id: 'internal-client-id'
 });
 
 console.log("Resources:", resources);
