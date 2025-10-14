@@ -223,7 +223,7 @@ each realm manages its own set of users, roles, groups, and clients independentl
 ##### `function create(realm-dictionary)`
 create is a method used to create a new realm.
 This method accepts a realm representation object containing details such as is, name
-@parameters:
+**` -- @parameters -- `**
 - realm-dictionary: is a JSON object that accepts filter parameters
   - id:[required] The internal ID of the realm. If omitted, Keycloak uses the realm name as the ID.
   - realm:[required] The name of the realm to create.
@@ -241,7 +241,7 @@ const KeycloakManager = require('keycloak-api-manager');
 ##### `function update(filter,realm-dictionary)`
 Updates the configuration of an existing realm. 
 You can use this method to modify settings such as login behavior, themes, token lifespans, and more.
-@parameters:
+**` -- @parameters -- `**
 - filter:is a JSON object that accepts filter parameters
   - realm:[required] The identifier of the realm you want to update.
 - realm-dictionary: An object containing the updated realm configuration. Only the fields you want to change need to be included.
@@ -262,7 +262,7 @@ const KeycloakManager = require('keycloak-api-manager');
 ##### `function del(filter)`
 Deletes a specific realm from the Keycloak server. 
 This operation is irreversible and removes all users, clients, roles, groups, and settings associated with the realm.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm to delete.
 
@@ -288,7 +288,7 @@ console.log("Retrieved realms:",realms);
 ##### `function findOne(filter)`
 Retrieves the full configuration and metadata of a specific realm by its name (realm ID). 
 This includes settings like login policies, themes, password policies, etc.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts filter parameters
   - realm:[required] The name (ID) of the realm you want to retrieve.
 
@@ -306,7 +306,7 @@ console.log("Retrieved realm:",realmConfig);
 Performs a partial import of realm configuration into a Keycloak realm. 
 This allows you to import users, roles, groups, clients, and other components without replacing the entire realm.
 It’s useful for incremental updates or merging configuration pieces.
-@parameters:
+**` -- @parameters -- `**
 - configuration: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm where the data should be imported.
   - representation:[required] A JSON object representing part of the realm configuration to be imported(can include users, roles, groups, clients, etc.).
@@ -343,7 +343,7 @@ const result = await KeycloakManager.realms.partialImport({
 ##### `function export(configuration)`
 Exports the configuration of a specific realm. 
 This method returns the full realm representation in JSON format, including roles, users, clients, groups, and other components depending on the provided options.
-@parameters:
+**` -- @parameters -- `**
 - configuration: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm to export.
   - exportClients: [optional] boolean, Whether to include clients in the export. Default: true. 
@@ -365,7 +365,7 @@ console.log(JSON.stringify(exportedRealm, null, 2));
 ##### `function getClientRegistrationPolicyProviders(configuration)`
 Fetches the list of available client registration policy providers for the specified realm.
 These providers define how new clients can be registered and what rules or validations apply (e.g., allowed scopes, required attributes).
-@parameters:
+**` -- @parameters -- `**
 - configuration: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm where you want to list client registration policy providers.
 
@@ -382,7 +382,7 @@ await KeycloakManager.realms.getClientRegistrationPolicyProviders({
 ##### `function createClientsInitialAccess(realmFilter,options)`
 Creates a new Initial Access Token for dynamic client registration. 
 This token allows clients to register themselves with the realm using the Dynamic Client Registration API. Useful when you want to allow programmatic client creation in a controlled way.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm where the initial access token should be created.
 - options: is a JSON object that accepts filter parameters
@@ -411,7 +411,7 @@ console.log("Initial Access Token:", initialAccess.token);
 ##### `function getClientsInitialAccess(realmFilter)`
 Retrieves all existing Initial Access Tokens for dynamic client registration in a given realm. 
 These tokens are used to allow programmatic or automated registration of clients via the Dynamic Client Registration API.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm from which to list all initial access tokens.
  
@@ -434,7 +434,7 @@ console.log("Initial Access Tokens:", tokens);
 ##### `function delClientsInitialAccess(realmFilter)`
 Deletes a specific Initial Access Token used for dynamic client registration in a given realm.
 This revokes the token, preventing any future use.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm where the token was created.
   - id:[required] The ID of the initial access token you want to delete.
@@ -451,7 +451,7 @@ await KeycloakManager.realms.delClientsInitialAccess({
 ##### `function addDefaultGroup(realmFilter)`
 Adds an existing group to the list of default groups for a given realm.
 Users created in this realm will automatically be added to all default groups.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm where the default group will be set.
   - id:[required] The ID of the group to be added as a default group
@@ -467,7 +467,7 @@ await KeycloakManager.realms.addDefaultGroup({
 ##### `function removeDefaultGroup(realmFilter)`
 Removes a group from the list of default groups in a realm. 
 Default groups are automatically assigned to new users when they are created.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm from which to remove the default group.
   - id:[required] The ID of the group you want to remove from the default list.
@@ -484,7 +484,7 @@ await KeycloakManager.realms.removeDefaultGroup({
 ##### `function getDefaultGroups(realmFilter)`
 Retrieves a list of all default groups for a specified realm.
 These are the groups that new users will automatically be added to upon creation.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm from which to retrieve default groups.
   
@@ -501,7 +501,7 @@ console.log(defaultGroups);
 ##### `function getGroupByPath(realmFilter)`
 Retrieves a group object by specifying its hierarchical path in a realm. 
 This is useful when you know the group’s full path (e.g., /parent/child) but not its ID.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm where the group is located.
   - path:[required] TThe full hierarchical path to the group, starting with a slash (/). For example: /developers/frontend.
@@ -523,7 +523,7 @@ console.log(defaultGroups);
 Retrieves the event configuration settings for a specific realm.
 This includes settings related to the event listeners, enabled event types, admin events, and more.
 Useful for auditing and tracking activities inside Keycloak.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
     - realm:[required] The name of the realm from which to retrieve the event configuration.
 ```js
@@ -550,7 +550,7 @@ console.log(config);
 Updates the event configuration for a given realm.
 This includes enabling/disabling events, setting specific event types to track,
 enabling admin event logging, and choosing which event listeners to use.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
     - realm:[required] The name of the realm where the configuration will be updated.
 - configurationEvents:is a config events JSON object dictionary like this:
@@ -579,7 +579,7 @@ const config= await KeycloakManager.realms.updateConfigEvents(
 Retrieves a list of events that occurred in a specified realm. 
 You can filter the results by event type, user, date range, and other criteria. 
 Useful for auditing login, logout, and other user-related activities.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
     - realm: [required] The name of the realm to fetch events from. 
     - client: [optional] Client ID to filter events for a specific client. 
@@ -606,7 +606,7 @@ const config= await KeycloakManager.realms.findEvents({
 Retrieves administrative events that occurred in a specific realm. 
 Admin events are triggered by actions such as creating users, updating roles, or modifying realm settings. 
 This is useful for auditing changes made via the admin API or admin console.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
     - realm: [required] The name of the realm to retrieve admin events from. 
     - authClient: [optional] Client ID used to perform the action. 
@@ -639,7 +639,7 @@ const config= await KeycloakManager.realms.findAdminEvents({
 Deletes all user events (not admin events) from the event store of a specific realm. 
 Useful for resetting or cleaning up event logs related to user actions such as logins, logouts, failed login attempts, etc.
 This does not clear administrative events. To remove those, use realms.clearAdminEvents().
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
     - realm: [required] The name of the realm from which to clear user events.
 ```js
@@ -656,7 +656,7 @@ const config= await KeycloakManager.realms.clearEvents({
 Deletes all admin events from the event store of a specific realm. 
 Admin events include actions such as creating users, updating roles, changing client settings, etc., 
 performed by administrators via the Admin Console or Admin REST API.
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
     - realm: [required] The name of the realm from which to clear administrative events.
 ```js
@@ -674,7 +674,7 @@ const config= await KeycloakManager.realms.clearAdminEvents({
 Retrieves the status and configuration of user management permissions (also known as fine-grained permissions) in a specific realm. 
 This allows you to check whether user management operations (like creating, updating, or deleting users) are protected by specific roles or policies.
 
-@parameters:
+**` -- @parameters -- `**
 - realmFilter: is a JSON object that accepts filter parameters
     - realm: [required] The name of the realm for which you want to retrieve the user management permission settings.
 
@@ -708,7 +708,7 @@ console.log(permissions.enabled); // true or false
 Enables or disables fine-grained user management permissions in a specified realm. 
 This controls whether operations on users (such as creating, editing, or deleting users)
 are protected using Keycloak's authorization services.
-@parameters:
+**` -- @parameters -- `**
 - update-parameters: is a JSON object that accepts this parameters
     - realm: [required] The name of the realm for which you want to update the user management permission settings.
     - enabled: [required] boolean value to enable or disable permission
@@ -744,7 +744,7 @@ console.log(permissions.enabled); // true
 ##### `function getKeys(filter)`
 Retrieves the realm keys metadata, including public keys, certificates, and active key information 
 used for token signing, encryption, and other cryptographic operations in the specified realm.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts this parameters
     - realm: [required] The name of the realm for which you want to retrieve key metadata.
 
@@ -783,7 +783,7 @@ console.log(Keys);
 
 ##### `function getClientSessionStats(filter)`
 Retrieves statistics about active client sessions in the specified realm. This includes the number of active sessions per client.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts this parameters
     - realm: [required]  The name of the realm for which you want to retrieve client session statistics.
 
@@ -811,7 +811,7 @@ console.log(stats);
 ##### `function pushRevocation(filter)`
 Immediately pushes a revocation policy to all clients in the specified realm. 
 This forces clients to revalidate tokens, effectively revoking cached access tokens and enforcing updated policies.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts this parameters
     - realm: [required]  The name of the realm where the revocation should be pushed.
 
@@ -830,7 +830,7 @@ console.log(pushR);
 ##### `function logoutAll(filter)`
 Logs out all active sessions for all users in the specified realm. 
 This invalidates all user sessions, forcing every user to re-authenticate.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts this parameters
     - realm: [required] The name of the realm from which to log out all users.
 
@@ -850,7 +850,7 @@ console.log('logout results:',logout);
 Tests the connection to an LDAP server using the provided configuration parameters. 
 This is useful to verify that Keycloak can reach and authenticate with the LDAP server before 
 fully integrating it into the realm configuration.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts this filter parameters
     - realm: [required] Name of the realm where the LDAP provider is being tested.
 - options: is a JSON object that accepts this parameters
@@ -891,7 +891,7 @@ const KeycloakManager = require('keycloak-api-manager');
 This function queries the LDAP server configured for a specific realm to retrieve and display its supported capabilities.
 It helps validate the connection and understand which LDAP features are available,
 such as supported controls, extensions, authentication mechanisms, and more.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts this filter parameters
     - realm: [required] Name of the realm where the LDAP provider is being tested.
 - options: is a JSON object that accepts this parameters
@@ -932,7 +932,7 @@ const KeycloakManager = require('keycloak-api-manager');
 Tests the SMTP connection using the provided configuration. 
 This allows you to verify that Keycloak can connect and send emails through the configured 
 SMTP server before applying the settings to the realm.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts this filter parameters
     - realm: [required] The name of the realm where the SMTP server will be tested.
 - config: An object containing the SMTP server configuration:
@@ -971,7 +971,7 @@ const KeycloakManager = require('keycloak-api-manager');
 ##### `function getRealmLocalizationTexts(filter)`
 Retrieves all localization texts (custom messages and labels) defined for a specific realm and locale. 
 Localization texts are used to override default Keycloak UI messages for login forms, error pages, and other user-facing content
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts this filter parameters
     - realm: [required] The name of the realm from which to fetch localization texts.
     - selectedLocale: [required] The locale code (e.g., 'en', 'it', 'fr', etc.) for which you want to retrieve the translations.
@@ -991,7 +991,7 @@ console.log(texts);
 ##### `function addLocalization(filter,value)`
 Adds or updates a localization text (custom UI message or label) for a specific realm and locale in Keycloak. 
 This allows you to override default messages in the login screens and other UI components with custom translations.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts this filter parameters
     - realm: [required] The name of the realm where the localization should be applied.
     - selectedLocale: [required] The locale code (e.g., 'en', 'fr', 'it') for which the translation is being added.
@@ -1013,7 +1013,7 @@ await KeycloakManager.realms.addLocalization({
 ##### `function getRealmSpecificLocales(filter)`
 Retrieves the list of locales (language codes) for which custom localization texts have been defined in a specific realm. 
 This function is useful to determine which locales have at least one overridden message.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts this filter parameters
     - realm: [required] The name of the realm for which to fetch the list of custom locales.
     - selectedLocale: [optional] The locale code (e.g., 'en', 'fr', 'it').
@@ -1043,7 +1043,7 @@ console.log(specificLocales.thekey); // new Value String for key:theKey
 ##### `function deleteRealmLocalizationTexts(filter)`
 Deletes a specific custom localization text entry for a given locale and key within a realm. 
 This is useful when you want to remove a previously added or overridden message from the realm's custom localization.
-@parameters:
+**` -- @parameters -- `**
 - filter: is a JSON object that accepts this filter parameters
     - realm: [required] The name of the realm where the localization entry exists.
     - selectedLocale: [required] The locale code (e.g., 'en', 'fr', 'it').
@@ -1075,7 +1075,7 @@ create is a method used to create a new user in the specified realm.
 This method accepts a user representation object containing details such as username, email, enabled status, 
 credentials, and other user attributes that can be get by getProfile function. 
 It is typically used when you want to programmatically add new users to your Keycloak realm via the Admin API.
-@parameters:
+**` -- @parameters -- `**
 - userRepresentation: An object containing the user fields to be updated.
 ```js
 const KeycloakManager = require('keycloak-api-manager');
@@ -1095,7 +1095,7 @@ const KeycloakManager = require('keycloak-api-manager');
 ##### `function del(filter)`
 Deletes a user from the specified realm. Once removed, the user and all associated data (such as credentials, 
 sessions, and group/role memberships) are permanently deleted.
-@parameters:
+**` -- @parameters -- `**
 - id: [Required] the user ID to delete
 - realm [Optional] the realm name (defaults to current realm)
 ```js
@@ -1109,7 +1109,7 @@ const KeycloakManager = require('keycloak-api-manager');
 find method is used to retrieve a list of users in a specific realm. 
 It supports optional filtering parameters such as username, email, first name, last name, and more. 
 Searching by attributes is only available from Keycloak > 15
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - q: A string containing a query filter by custom attributes, such as 'username:admin'. 
   - {builtin attribute}: To find users by builtin attributes such as email, surname... example {email:"admin@admin.com"}
@@ -1149,7 +1149,7 @@ count method returns the total number of users in a given realm.
 It optionally accepts filtering parameters similar to those in users.find() such 
 as username, email, firstName, lastName and so on to count only users that match specific criteria.
 Searching by attributes is only available from Keycloak > 15
-@parameters:
+**` -- @parameters -- `**
  - filter is a JSON object that accepts filter parameters, such as { email: 'test@keycloak.org' }
 ```js
 const KeycloakManager = require('keycloak-api-manager');
@@ -1167,7 +1167,7 @@ console.log('User found:', user_count);
 update method is used to update the details of a specific user in a Keycloak realm.
 It requires at least the user’s ID(searchParams) and the updated data(userRepresentation). 
 You can modify fields like firstName, lastName, email, enabled, and more.
-@parameters:
+**` -- @parameters -- `**
  - searchParams: is a JSON object that accepts filter parameters
    - id: [Required] the user ID to update
    - realm [Optional] the realm name (defaults to current realm)
@@ -1186,7 +1186,7 @@ const user_count = await KeycloakManager.users.update({ id: 'user-Id' }, {
 resetPassword method is used to set a new password for a specific user. 
 This action replaces the user's existing credentials. You can also set whether the user is required to 
 change the password on next login.
-@parameters:
+**` -- @parameters -- `**
  - newCredentialsParameters: is a JSON object that accepts filter parameters
    - id: [Required] the user ID to update
    - realm [Optional] the realm name (defaults to current realm)
@@ -1212,7 +1212,7 @@ getCredentials() method retrieves the list of credentials (e.g., passwords, OTPs
 currently associated with a given user in a specific realm.
 This is useful for auditing, checking what types of credentials a user has set up, 
 or managing credentials such as password reset, WebAuthn deletion, etc.
-@parameters:
+**` -- @parameters -- `**
  - getCredentials: is a JSON object that accepts filter parameters
    - id: [Required] the user ID to update
    - realm [Optional] the realm name (defaults to current realm)
@@ -1227,7 +1227,7 @@ console.log(ressult);
 ##### `function deleteCredential(accountInfo)`
 deleteCredential method allows you to delete a specific credential (e.g., password, OTP, WebAuthn, etc.) from a user. 
 This is useful when you want to invalidate or remove a credential, forcing the user to reconfigure or reset it.
-@parameters:
+**` -- @parameters -- `**
  - accountInfo: is a JSON object that accepts this parameters
    - id: [Required] the user ID to update
    - credentialId [Required] the credentils identifier
@@ -1253,7 +1253,7 @@ const KeycloakManager = require('keycloak-api-manager');
 
 ##### `function addToGroup(parameters)`
 Adds a user to a specific group within the realm.
-@parameters:
+**` -- @parameters -- `**
 - parameters: is a JSON object that accepts this parameters 
   - id [required]: The user ID of the user you want to add to the group. 
   - groupId [required]: The group ID of the group the user should be added to.
@@ -1268,7 +1268,7 @@ const KeycloakManager = require('keycloak-api-manager');
  ```
 ##### `function delFromGroup(parameters)`
 Removes a user from a specific group in Keycloak.
-@parameters:
+**` -- @parameters -- `**
 - parameters: is a JSON object that accepts this parameters 
   - id [required]: The user ID of the user you want to remove to the group. 
   - groupId [required]: The group ID of the group the user should be removed to.
@@ -1284,7 +1284,7 @@ const KeycloakManager = require('keycloak-api-manager');
 
 ##### `function countGroups(filter)`
 Retrieves the number of groups that a given user is a member of.
-@parameters:
+**` -- @parameters -- `**
 - filter is a JSON object that accepts filter parameters, such as { id: '' }
   - id: [required] The user ID of the user whose group membership count you want to retrieve.
   - search: [optional] a String containing group name such "cool-group",
@@ -1297,7 +1297,7 @@ console.log('Groups found:', user_count);
  ```
 ##### `function listGroups(filter)`
 Returns the list of groups that a given user is a member of.
-@parameters:
+**` -- @parameters -- `**
 - filter is a JSON object that accepts filter parameters, such as { id: '' }
   - id: [required] The user ID of the user whose group membership you want to retrieve.
   - search: [optional] a String containing group name such "cool-group",
@@ -1314,7 +1314,7 @@ console.log('Groups found:', user_count);
 Assigns one or more realm-level roles to a user.    
 Returns a promise that resolves when the roles are successfully assigned. No return value on success.
 
-@parameters:
+**` -- @parameters -- `**
 - roleMapping is a JSON object that accepts this parameters:
   - id: [required] The ID of the user to whom the roles will be assigned..
   - roles: [required] An array of role representations to assign. Each role object should contain at least:
@@ -1341,7 +1341,7 @@ Removes one or more realm-level roles from a specific user.
 Only roles that were directly assigned to the user can be removed with this method.
 This method does not affect composite roles. It only removes directly assigned realm roles.
 
-@parameters:
+**` -- @parameters -- `**
 - roleMapping is a JSON object that accepts this parameters:
     - id: [required] The ID of the user to whom the roles will be removed..
     - roles: [required] An array of role representations to remove. Each role object should contain at least:
@@ -1369,7 +1369,7 @@ console.log(`realm role role-name to user user-id removed`);
 Retrieves all available realm-level roles that can still be assigned to a specific user.
 These are the roles that exist in the realm but have not yet been mapped to the user.
 
-@parameters:
+**` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user for whom to list assignable realm roles.
 ```js
@@ -1384,7 +1384,7 @@ console.log('Assignable realm-level roles for user user-id',available_roles);
 ##### `function listRoleMappings(filter)`
 Retrieves all realm-level and client-level roles that are currently assigned to a specific user.
 
- - @parameters:
+ **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The user ID for which you want to fetch the assigned role mappings.
 
@@ -1418,7 +1418,7 @@ for (const [clientId, mapping] of Object.entries(roleMappings.clientMappings || 
 Retrieves the realm-level roles that are currently assigned to a specific user.
 Unlike listRoleMappings, this method focuses only on realm roles and excludes client roles.
 
- - @parameters:
+ **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The user ID for which you want to fetch the assigned role mappings.
 
@@ -1442,7 +1442,7 @@ roleMappings.forEach((role) => {
 Retrieves the list of composite realm-level roles that are effectively assigned to a user.
 Composite roles include both directly assigned realm roles and any roles inherited through composite role structures.
 
- - @parameters:
+ **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The user ID for which you want to fetch the assigned role mappings.
 
@@ -1467,7 +1467,7 @@ Assigns one or more client-level roles to a user.
 This method adds role mappings from a specific client to the given user,
 allowing the user to have permissions defined by those client roles.
 
- - @parameters:
+ **` -- @parameters -- `**
 - role_mapping is a JSON object that accepts this parameters:
   - id: [required] The ID of the user to whom roles will be assigned. 
   - clientUniqueId:[required] The internal ID of the client that owns the roles.
@@ -1496,7 +1496,7 @@ Retrieves a list of client roles that are available to be assigned to a specific
 meaning roles defined in a client that the user does not yet have assigned. 
 This is useful for determining which roles can still be mapped to the user.
 
- - @parameters:
+ **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user
   - clientUniqueId:[required] The internal ID of the client (not the clientId string)
@@ -1518,7 +1518,7 @@ Retrieves all composite roles assigned to a specific user for a given client.
 Composite roles are roles that include other roles. 
 This method returns not only directly assigned roles, but also roles inherited through composite definitions for that client.
 
- - @parameters:
+ **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user
   - clientUniqueId:[required] The internal ID of the client (not the clientId string)
@@ -1540,7 +1540,7 @@ Retrieves all client-level roles directly assigned to a user for a specific clie
 Unlike composite role mappings, this method only returns the roles that were explicitly 
 assigned to the user from the client, without including roles inherited via composite definitions.
 
- - @parameters:
+ **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user
   - clientUniqueId:[required] The internal ID of the client (not the clientId string)
@@ -1560,7 +1560,7 @@ const availableRoles = await KeycloakManager.users.listClientRoleMappings({
 Removes one or more client-level roles previously assigned to a specific user. 
 This operation unlinks the direct association between the user and the specified roles within the given client.
 
- - @parameters:
+ **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user to whom roles will be removed.
   - clientUniqueId:[required] The internal ID of the client that owns the roles.
@@ -1589,7 +1589,7 @@ await KeycloakManager.users.delClientRoleMappings({
 Retrieves a list of active user sessions for the specified user. 
 Each session represents a login session associated with that user across different clients or devices.
 
- - @parameters:
+ **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user whose sessions will be listed.
   - clientId: [optional] The internal ID of the client that owns the roles.
@@ -1610,7 +1610,7 @@ Retrieves a list of offline sessions for the specified user.
 Offline sessions represent long-lived refresh tokens that allow clients to obtain new access tokens 
 without requiring the user to be actively logged in.
 
- - @parameters:
+ **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user whose sessions will be listeds
   - clientId: [optional] The client ID whose sessions are being checked
@@ -1631,7 +1631,7 @@ const sessions=await KeycloakManager.users.listOfflineSessions({
 Forces logout of the specified user from all active sessions, both online and offline. 
 This invalidates the user’s active sessions and tokens, effectively logging them out from all clients
 
- - @parameters:
+ **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user whose sessions will be closed
 ```js
@@ -1649,7 +1649,7 @@ const sessions=await KeycloakManager.users.logout({
 Retrieves the list of OAuth2 client consents that the specified user has granted.
 Each consent represents a client application that the user has authorized to access their data with specific scopes.
 
- - @parameters:
+ **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user whose client consents can be retrieved.
 ```js
@@ -1669,7 +1669,7 @@ Revokes a previously granted OAuth2 client consent for a specific user.
 This operation removes the authorization a user has given to a client, 
 effectively disconnecting the client from the user's account and invalidating associated tokens.
 
-@parameters:
+**` -- @parameters -- `**
 
 - filter is a JSON object that accepts this parameters:
     - id: [required] The ID of the user whose consent should be revoked
@@ -1692,7 +1692,7 @@ This allows an administrator to act on behalf of the user, gaining access as if 
 This is typically used for debugging or support purposes.
 Returns an object containing a redirect URL or token used to impersonate the user.
 
-@parameters:
+**` -- @parameters -- `**
 
 - filter is a JSON object that accepts this parameters:
     - id: [required] The ID of the user to impersonate.
@@ -1711,7 +1711,7 @@ await KeycloakManager.users.impersonation({id: 'user-id'},{
 Retrieves a list of federated identities (external identity providers) associated with a specific user. 
 This is useful if the user has linked their account with external providers like Google, Facebook, etc.
 
-@parameters:
+**` -- @parameters -- `**
 
 - filter is a JSON object that accepts this parameters:
     - id: [required] The unique ID of the user for whom you want to fetch the federated identities.
@@ -1728,7 +1728,7 @@ console.log("Federated Identities:", federatedIdentities);
 Adds (links) an external identity provider to a specific Keycloak user.
 This is typically used to associate a federated identity (such as a Google or Facebook account) with an existing Keycloak user.
 
-@parameters:
+**` -- @parameters -- `**
 
 - options is a JSON object that accepts this parameters:
     - id: [required] The ID of the Keycloak user to whom the federated identity should be added.
@@ -1758,7 +1758,7 @@ await KeycloakManager.users.addToFederatedIdentity({
 Removes (unlinks) a federated identity provider from a specific Keycloak user. 
 This operation dissociates the external identity (e.g., a Google or Facebook account) previously linked to the user.
 
-@parameters:
+**` -- @parameters -- `**
 
 - options is a JSON object that accepts this parameters:
     - id: [required] The ID of the Keycloak user from whom the federated identity should be removed.
@@ -1791,7 +1791,7 @@ Clients represent entities that want to interact with Keycloak for authenticatio
 
 ##### `function create(client_dictionary)`
 Creates a new client with the provided configuration
-@parameters:
+**` -- @parameters -- `**
 - client_dictionary:  An object(JSON) of type ClientRepresentation, containing the configuration for the new client.
     - clientId: [required] string	The unique identifier for the client (required). 
     - name:	[required] string	A human-readable name for the client. 
@@ -1816,7 +1816,7 @@ console.log("New Client Created:", client);
 Retrieves a list of all clients in the current realm, optionally filtered by query parameters. 
 This method is useful for listing all registered applications or services in Keycloak or searching 
 for a specific one using filters like clientId.
-@parameters:
+**` -- @parameters -- `**
 - filter: A JSON structure used to filter results based on specific fields:
   - clientId: [optional] string filter to search clients by their clientId. 
   - viewableOnly: [optional] boolean value.	If true, returns only clients that the current user is allowed to view. 
@@ -1832,7 +1832,7 @@ console.log("Clients:", clients);
 ##### `function findOne(filter)`
 Retrieves detailed information about a specific client within a realm by its unique client ID. 
 This method fetches the client’s configuration, including its settings, roles, protocols, and other metadata.
-@parameters:
+**` -- @parameters -- `**
 - filter: A JSON structure used to filter results based on specific fields:
   - id: [optional] 	The unique identifier of the client to retrieve
 ```js
@@ -1846,7 +1846,7 @@ console.log("Clients:", clients);
 ##### `function del(filter)`
 Deletes a client from the realm using its internal ID. 
 This operation is irreversible and will remove the client and all its associated roles, permissions, and configurations.
-@parameters:
+**` -- @parameters -- `**
 - filter: A JSON structure used to filter results based on specific fields:
   - id: [required] The internal ID of the client to delete (not clientId)
 ```js
@@ -1860,7 +1860,7 @@ console.log(`Client successfully deleted.`);
 ##### `function update(filter,clientRepresentation)`
 Updates the configuration of an existing client in the realm. 
 You can modify various attributes such as the client name, redirect URIs, protocol, access type, and more.
-@parameters:
+**` -- @parameters -- `**
 - filter: A JSON structure used to filter results based on specific fields:
   - id: [required] The unique ID of the client you want to update
 - clientRepresentation: [required] The new configuration for the client
@@ -1885,7 +1885,7 @@ console.log(`Client successfully updated.`);
 Creates a new client role under a specific client. 
 Client roles are roles associated with a specific client (application), and are useful 
 for fine-grained access control within that client.
-@parameters:
+**` -- @parameters -- `**
 - role_parameters: JSON structure that defines the role like:
     - id: [required] The internal ID of the client where the role will be created. 
     - name: [required] Name of the new role. 
@@ -1907,7 +1907,7 @@ console.log("Client role:", role);
 ##### `function findRole(filter)`
 Retrieves a specific client role by name from a given client. 
 This is useful when you want to inspect or verify the properties of a role defined within a particular client.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not the clientId string) where the role is defined.
     - roleName: [required] The name of the client role you want to find.
@@ -1926,7 +1926,7 @@ console.log("Client role:", role);
 ##### `function updateRole(filter,roleRepresentation)`
 Updates the attributes of a specific client role in Keycloak. 
 This includes changing the role's name, description, or any associated metadata.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not the clientId string) where the role is defined.
     - roleName: [required] The name of the client role you want to update
@@ -1950,7 +1950,7 @@ Deletes a client role by its name for a specific client.
 This permanently removes the role from the specified client in Keycloak.
 A promise that resolves to void if the deletion is successful. 
 If the role does not exist or the operation fails, an error will be thrown.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not the clientId string) where the role is defined.
     - roleName: [required] The name of the client role you want to delete.
@@ -1968,7 +1968,7 @@ const role= await KeycloakManager.clients.delRole({
 ##### `function listRoles(filter)`
 Retrieves all roles defined for a specific client within the realm. 
 These roles can be used to assign permissions to users or groups for the specific client application.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not clientId)
 
@@ -1985,7 +1985,7 @@ console.log("Client roles:", roles);
 ##### `function getClientSecret(filter)`
 Retrieves the client secret associated with a confidential client in Keycloak. 
 This is typically used for clients using client_credentials or authorization_code flows where the secret is required to authenticate the client.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not clientId)
 
@@ -2003,7 +2003,7 @@ console.log("Client secret:", secret);
 ##### `function generateNewClientSecret(filter)`
 Generates a new client secret for a confidential client in Keycloak. This will overwrite the existing secret and return the newly generated one. 
 It is useful when rotating credentials or recovering access.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not clientId)
 
@@ -2021,7 +2021,7 @@ console.log("New client secret:", secret.value);
 ##### `function generateRegistrationAccessToken(filter)`
 Generates a new registration access token for a client. This token allows the client to make authorized requests to the client registration REST API. 
 It’s particularly useful in dynamic client registration workflows or when automating client updates via external systems.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not clientId)
 
@@ -2040,7 +2040,7 @@ console.log("New registration access token:", result.registrationAccessToken);
 Invalidates (revokes) the current client secret, making it no longer valid. 
 After invalidation, the client will no longer be able to authenticate using the old secret and a new secret should be generated.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not clientId)
 
@@ -2060,7 +2060,7 @@ Retrieves a list of available installation providers for a specific client.
 Installation providers define how client configuration can be exported or installed, 
 for example as a JSON file, Keycloak XML adapter config, or other formats supported by Keycloak.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not clientId)
 
@@ -2080,7 +2080,7 @@ The method retrieves the list of available policy providers for a client’s res
 Policy providers define the logic used to evaluate authorization decisions (e.g., role-based, group-based, time-based, JavaScript rules).
 This method allows you to see which policy types are supported and available to be created for a given client.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client (resource server) for which to list available policy providers.
 
@@ -2100,7 +2100,7 @@ Retrieves the service account user associated with a specific client.
 In Keycloak, clients configured as service accounts have a corresponding user representing them, 
 which can be used for token-based access and permissions management.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not clientId)
 
@@ -2120,7 +2120,7 @@ console.log("Service Account User:", serviceAccountUser);
 The method is used to associate a client scope as a default scope for a specific client. 
 Default scopes are automatically included in tokens issued to the client.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not clientId) 
     - clientScopeId: [required] The ID of the client scope you want to add as a default scope.
@@ -2139,7 +2139,7 @@ const KeycloakManager = require('keycloak-api-manager');
 This function detaches a default client scope (either default or optional) from a client. 
 Default scopes are automatically assigned to tokens issued for the client.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not clientId) 
     - clientScopeId: [required]  The ID of the client scope to be removed.
@@ -2157,7 +2157,7 @@ const KeycloakManager = require('keycloak-api-manager');
 The method is used to remove an optional client scope from a specific client. 
 Optional client scopes are those that are not automatically assigned to clients but can be requested during authentication.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client (not clientId) 
     - clientScopeId: [required]  The ID of the client scope you want to unlink from the client.
@@ -2176,7 +2176,7 @@ const KeycloakManager = require('keycloak-api-manager');
 This method lists those default scopes for a given client.
 Default client scopes are automatically assigned to a client during token requests (e.g., openid, profile).
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The client ID of the client whose default client scopes you want to list.
 
@@ -2196,7 +2196,7 @@ console.log("Default Clients Scopes:",defaultScopes);
 The method is used to retrieve all optional client scopes currently assigned to a specific client. 
 Optional scopes are those that a client can request explicitly but are not automatically applied.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The client ID of the client whose optional client scopes you want to list.
 
@@ -2214,7 +2214,7 @@ console.log("Optional Clients Scopes:",optionalScopes);
 The method is used to assign an optional client scope to a specific client. 
 Optional scopes are not automatically applied during login unless explicitly requested by the client in the scope parameter.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal client ID of the client
     - clientScopeId: [required] The ID of the client scope you want to assign as optional.
@@ -2233,7 +2233,7 @@ await KeycloakManager.clients.addOptionalClientScope({
 This method is used to list all scope mappings (roles assigned via scopes) for a given client in Keycloak.
 This includes realm-level roles and client-level roles that are mapped to the client.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client whose scope mappings you want to list.
 
@@ -2255,7 +2255,7 @@ console.log("Scope mappings:", scopeMappings);
 The method is used to list the client roles that are available to be mapped (but not yet assigned) to a specific client in Keycloak.
 This helps you discover which client roles you can still add as scope mappings.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the target client (the one receiving the scope mappings). 
     - client: [required] The client ID of the source client (the one that owns the roles to be mapped).
@@ -2277,7 +2277,7 @@ console.log("Available roles to be mapped:", availableRoles);
 The method is used to assign client roles (from a source client) to another client as scope mappings.
 This means the target client will inherit these roles when requesting tokens.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the target client (the one receiving the scope mappings). 
     - client: [required] The client ID of the source client (the one that owns the roles to be mapped).
@@ -2315,7 +2315,7 @@ console.log("Roles successfully mapped to client!");
 ##### `function clients.listClientScopeMappings(filter)`
 The method is used to list all client role mappings assigned to a client.
 It shows which roles from another client (source) are already mapped to the target client.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the target client (where roles are mapped)
     - client: [required] The ID of the source client (the one that owns the roles being mapped)
@@ -2337,7 +2337,7 @@ console.log("Mapped roles:", assignedRoles);
 ##### `function clients.listCompositeClientScopeMappings(filter)`
 The method is used to list both direct and composite (inherited) client role mappings that are assigned to a target client.
 It differs from listClientScopeMappings because it expands composite roles and shows all roles that are effectively available to the client.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the target client (the one receiving the mappings)
     - client: [required] The ID of the source client (the one that owns the roles)
@@ -2359,7 +2359,7 @@ console.log("Effective (composite) role mappings:", effectiveRoles);
 ##### `function clients.delClientScopeMappings(filter)`
 The method is used to remove one or more client role mappings from a target client.
 It is the reverse of clients.addClientScopeMappings
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] ID of the target client (the client losing the roles)
     - client: [required] ID of the source client (the client where the roles are defined)
@@ -2391,7 +2391,7 @@ console.log("Roles removed from client mappings");
 ##### `function clients.listAvailableRealmScopeMappings(filter)`
 The method is used to retrieve all realm-level roles that are available to be assigned to a specific client. 
 These are roles defined at the realm level that the client does not yet have mapped, allowing you to see what can be added.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client for which you want to list available realm-level role mappings.
 
@@ -2410,7 +2410,7 @@ console.log("Available realm roles for client:", availableRealmRoles);
 ##### `function clients.listAvailableRealmScopeMappings(filter)`
 The method is used to retrieve all realm-level roles that are available to be assigned to a specific client. 
 These are roles defined at the realm level that the client does not yet have mapped, allowing you to see what can be added.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client for which you want to list available realm-level role mappings.
 
@@ -2430,7 +2430,7 @@ console.log("Available realm roles for client:", availableRealmRoles);
 ##### `function clients.listRealmScopeMappings(filter)`
 The method retrieves the realm-level roles currently assigned to a client as part of its scope mappings.
 This shows which realm roles the client is allowed to request on behalf of users.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The client ID whose realm-level scope mappings you want to list
 
@@ -2449,7 +2449,7 @@ console.log("Realm roles mapped to client:", roles.map(r => r.name));
 ##### `function clients.listCompositeRealmScopeMappings(filter)`
 The method retrieves all composite realm-level roles associated with a client through its scope mappings.
 This includes not only the roles directly mapped to the client, but also roles inherited through composite roles.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The client ID whose composite realm scope mappings you want to list
 
@@ -2469,7 +2469,7 @@ console.log("Realm composite roles mapped to client:", roles.map(r => r.name));
 ##### `function clients.addRealmScopeMappings(filter,roles)`
 The method is used to assign realm-level role mappings to a specific client.
 This effectively grants the client access to the specified realm roles.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The client ID that will receive the new realm-level role mappings.
 - roles: [required] An array of realm roles to be mapped to the client. Each role object typically contains at least id and name 
@@ -2488,7 +2488,7 @@ await KeycloakManager.clients.addRealmScopeMappings(
 ##### `function clients.delRealmScopeMappings(filter,roles)`
 The method removes realm-level roles from a client’s scope mappings.
 This is the opposite of clients.addRealmScopeMappings.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The client ID whose realm role mapping must be removed.
 - roles: [required] An array of role objects you want to remove. Each role object must at least contain the id or name field.
@@ -2506,7 +2506,7 @@ await KeycloakManager.clients.delRealmScopeMappings(
 
 ##### `function clients.listSessions(filter)`
 The method retrieves active user sessions for a specific client.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The client ID whose session must be retrieved 
     - first:[optional] pagination field. First result index for pagination. 
@@ -2533,7 +2533,7 @@ sessions.forEach(s =>
 ##### `function clients.listOfflineSessions(filter)`
 The method retrieves offline sessions associated with a given client.
 Offline sessions are created when a client uses offline tokens (refresh tokens with offline_access scope)
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The client ID whose session must be retrieved 
     - first:[optional] pagination field. First result index for pagination. 
@@ -2559,7 +2559,7 @@ sessions.forEach(s =>
 ##### `function clients.getSessionCount(filter)`
 The method retrieves the number of active user sessions for a given client.
 This includes online sessions, not offline sessions (those are retrieved with listOfflineSessions).
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The client ID whose session must be retrieved
   
@@ -2579,7 +2579,7 @@ console.log(`Client internal-client-id has ${sessionCount.count} active sessions
 The method retrieves the number of offline sessions associated with a given client. 
 Offline sessions represent sessions where the user has a valid offline token, typically used for long-lived access 
 without requiring active login.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client for which you want to count offline sessions.
   
@@ -2599,7 +2599,7 @@ console.log(`Client internal-client-id has ${sessionCount.count} offline session
 The method is used to register a cluster node for a specific Keycloak client. 
 This is relevant in scenarios where you are running Keycloak in a clustered environment and want to synchronize 
 client sessions and node information across multiple instances.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client for which you want to add a cluster node. 
     - node: [required] The name or identifier of the cluster node to register.
@@ -2620,7 +2620,7 @@ await KeycloakManager.clients.addClusterNode({
 The method in Keycloak Admin Client is used to remove a previously registered cluster node for a specific client. 
 This is useful in clustered environments when a node is no longer active or should be deregistered from the
 client session synchronization.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client for which you want to remove a cluster node.
     - node: [required] The name or identifier of the cluster node to remove.
@@ -2639,7 +2639,7 @@ await KeycloakManager.clients.deleteClusterNode({
 ##### `function clients.generateAndDownloadKey(filter,config)`
 The method is used to generate a new cryptographic key for a client and download it. 
 This is typically used for clients that require client credentials, JWT signing, or encryption.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client for which you want to generate the key
     - attr: [required] The name of the client attribute where the generated key will be saved
@@ -2683,7 +2683,7 @@ console.log('Keystore saved ad client-keystore.jks');
 The method is used to generate a new cryptographic key for a client without automatically downloading it. 
 This is useful for creating new signing or encryption keys associated with a client directly within Keycloak.
 Unlike clients.generateAndDownloadKey, this method only generates the key and stores it in Keycloak. It does not return the key material to the caller
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client for which you want to generate the key
     - attr: [required] The name of the client attribute where the generated key will be saved
@@ -2708,7 +2708,7 @@ console.log('New RSA key successfully generated for client');
 ##### `function clients.getKeyInfo(filter)`
 The method is used to retrieve metadata about the keys associated with a specific client.
 It does not return the actual key material but provides information such as the key type, provider, algorithm, and status.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client whose key information should be retrieved
     - attr: [optional] The name of the client attribute to get
@@ -2733,7 +2733,7 @@ console.log("Client key info:", keyInfo);
 ##### `function clients.downloadKey(filter,config)`
 The method Downloads a client’s cryptographic key (certificate) from Keycloak. 
 This is typically used when you need to retrieve the public certificate of a client for token validation, signing, or encryption purposes.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client whose key information should be downloaded
     - attr: [optional] Specifies which key/certificate to download. Common values include:
@@ -2783,7 +2783,7 @@ console.log(cert);
 The method in the Keycloak Admin Client is used to create a new authorization scope for a specific client.
 Authorization scopes are part of Keycloak’s Authorization Services and represent fine-grained permissions 
 that can later be linked to resources and policies.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] TThe ID of the client for which the scope will be created 
     - scopeRepresentation:[required] The details of the new authorization scope as:
@@ -2810,7 +2810,7 @@ await KeycloakManager.clients.createAuthorizationScope(
 ##### `function clients.listAllScopes(filter)`
 The method is used to retrieve all available scopes for a specific client.
 This includes both default scopes and optional scopes that can be assigned to the client.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client whose scopes you want to list
     
@@ -2830,7 +2830,7 @@ console.log(scopes);
 ##### `function clients.updateAuthorizationScope(filter,AuthorizationScopeRepresentation)`
 The method is used to update an existing authorization scope for a specific client. 
 Authorization scopes define permissions that can be used in policies and permissions for the client’s resources.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client to which the scope belongs 
     - scopeId [required] The ID of the authorization scope to update
@@ -2864,7 +2864,7 @@ console.log('Authorization scope updated successfully');
 ##### `function clients.getAuthorizationScope(filter)`
 The method is used to retrieve the details of a specific authorization scope associated with a client. 
 Authorization scopes define permissions that can be applied to resources and policies in Keycloak.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client to which the scope belongs 
     - scopeId [required] The ID of the authorization scope to retrieve
@@ -2885,7 +2885,7 @@ console.log('Authorization scope details:', scope);
 ##### `function clients.listAllResourcesByScope(filter)`
 The method is used to retrieve all resources associated with a specific authorization scope for a given client. 
 This allows you to see which resources are governed by a particular scope in the client’s authorization settings.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client to which the scope belongs 
     - scopeId [required] The ID of the authorization scope whose associated resources you want to list.
@@ -2907,7 +2907,7 @@ console.log('Resources associated with this scope:', resources);
 ##### `function clients.listAllPermissionsByScope(filter)`
 The method is used to retrieve all permissions associated with a specific authorization scope for a given client. 
 This is helpful for understanding which permissions (policies and rules) are applied when a particular scope is used.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client to query 
     - scopeId [required] The ID of the authorization scope whose associated permissions you want to list
@@ -2932,7 +2932,7 @@ console.log('Permissions associated with this scope:', permissions);
 The method is used to retrieve all scopes associated with a specific permission for a given client. 
 This allows you to see which scopes a permission controls, helping you manage fine-grained access rules 
 in Keycloak’s Authorization Services (UMA 2.0) framework.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client whose permission scopes you want to list
     - permissionId [optional] The ID of the permission whose scopes should be retrieved
@@ -2958,7 +2958,7 @@ console.log('Permission Scopes:', permissionScopes);
 The method is used to import a resource into a client. 
 This is part of Keycloak’s Authorization Services (UMA 2.0) and allows you to programmatically define 
 resources that a client can protect with policies and permissions.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client to which the resource should be imported 
 - resource [required]  The resource representation object. This typically includes attributes like name, uris, type, scopes, and other Keycloak resource configuration options.
@@ -2991,7 +2991,7 @@ console.log('Resource imported successfully');
 The method is used to export a resource from a client. 
 This allows you to retrieve the full configuration of a resource, including its URIs, scopes, 
 and associated permissions, which can then be backed up, replicated, or modified externally.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client from which to export the resource 
     - resourceId: [optional] The ID of the resource you want to export
@@ -3013,7 +3013,7 @@ console.log('Exported Resource:', exportedResource);
 The method is used to create a new resource under a specific client. 
 A resource represents a protected entity in Keycloak’s authorization services, such as a REST endpoint,
 a document, or any application-specific asset. This allows you to manage fine-grained access control via policies and permissions.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client where the resource will be created
 - resourceRepresentation: [required] An object representing the resource configuration. Typical fields defined in https://www.keycloak.org/docs-api/latest/rest-api/index.html#ResourceRepresentation include:
@@ -3047,7 +3047,7 @@ console.log('Created Resource:', createdResource);
 The method is used to retrieve a specific resource of a client by its ID. 
 Resources in Keycloak represent protected entities, such as APIs, documents, or any application-specific assets, 
 that can have associated scopes, policies, and permissions for fine-grained access control.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client that owns the resource 
     - resourceId: [required] The ID of the resource you want to retrieve.
@@ -3068,7 +3068,7 @@ console.log('Retrieved Resource:', resource);
 The method is used to retrieve the resource server settings of a client. 
 A resource server in Keycloak represents a client that is enabled with Authorization Services, 
 meaning it can define resources, scopes, permissions, and policies for fine-grained access control.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client whose resource server configuration you want to retrieve
 
@@ -3088,7 +3088,7 @@ console.log('Resource Server:', resourceServer);
 The method is used to update the configuration of a client’s resource server. 
 A resource server defines authorization settings such as resources, scopes, permissions, 
 and policies that control fine-grained access to protected assets.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client whose resource server configuration should be updated
 - resourceServerRepresentation: [required] An object representing the resource server configuration such as:
@@ -3118,7 +3118,7 @@ console.log("Resource server updated successfully");
 ##### `function clients.listPermissionsByResource(filter)`
 The method is used to retrieve all permissions associated with a specific resource within a client’s resource server. 
 This is part of the Keycloak Authorization Services API and helps administrators inspect which permissions are linked to a given protected resource.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
   - id: [required] The ID of the client (the resource server). 
   - resourceId: [required] The ID of the resource for which to list permissions.
@@ -3141,7 +3141,7 @@ console.log("Permissions for resource:", permissions);
 The method is used to create a new permission for a client.
 Permissions define which users or roles can access specific resources or scopes within the client,
 based on policies you configure. This is part of Keycloak’s Authorization Services (UMA 2.0) framework.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client for which the permission will be created
     - type: [required] Type of the permission (resource or scope)
@@ -3178,7 +3178,7 @@ console.log('Permission created');
 The method is used to search for permissions within a client’s resource server.
 Permissions in Keycloak represent rules that define how policies are applied to resources or scopes,
 and this method allows you to list and filter them based on specific criteria.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client (the resource server) where permissions are defined 
     - name: [optional] Filter permissions by name
@@ -3206,7 +3206,7 @@ console.log("Permissions found:", permissions);
 The method updates the fine-grained admin permissions configuration for a specific client.
 Fine-grained permissions allow you to control which users/roles can manage different aspects of a client 
 (e.g., who can manage roles, protocol mappers, or scope assignments).
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client (the resource server) where permissions are defined 
 - status: JSON structure that defines the fine grain permission
@@ -3226,7 +3226,7 @@ console.log("Fine-grained permissions updated successfully");
 ##### `function clients.listFineGrainPermissions(filter)`
 The method retrieves the current fine-grained admin permission settings for a given client.
 This is useful for checking which permissions are configured (e.g., managing roles, protocol mappers, or client scopes).
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client (the resource server) where permissions are defined
 ```js
@@ -3245,7 +3245,7 @@ console.log("Fine-grained permissions for client:", permissions);
 ##### `function clients.getAssociatedScopes(filter)`
 The method is used to retrieve all scopes associated with a specific permission within a client’s resource server.
 In Keycloak’s Authorization Services, permissions can be linked to one or more scopes to define the contexts in which they apply. This method allows you to query those associations.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client whose permission scopes you want to list
     - permissionId: [required] The ID of the permission whose associated scopes you want to retrieve.
@@ -3265,7 +3265,7 @@ console.log("Associated scopes:", scopes);
 ##### `function clients.getAssociatedPolicies(filter)`
 The method is used to retrieve all policies associated with a specific permission within a client’s resource server.
 n Keycloak Authorization Services, permissions can be tied to one or more policies that define the conditions under which access is granted. This method lets you fetch those policy associations
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client whose permission policies you want to list
     - permissionId: [required] The ID of the permission whose associated policies you want to retrieve.
@@ -3287,7 +3287,7 @@ console.log("Associated policies:", policies);
 ##### `function clients.getAssociatedResources(filter)`
 The method is used to retrieve all resources linked to a specific permission in a client’s resource server.
 In Keycloak Authorization Services, permissions can be scoped to one or more resources (such as APIs, endpoints, or domain-specific entities). This method allows you to query those resource associations.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client whose permission resource you want to list
     - permissionId: [required] The ID of the permission for which you want to fetch associated resources.
@@ -3309,7 +3309,7 @@ console.log("Associated resources:", resources);
 ##### `function clients.listScopesByResource(filter)`
 The method is used to list all authorization scopes associated with a specific resource in a client’s resource server. 
 This allows administrators to understand which scopes are directly linked to a protected resource and therefore which permissions can be applied to it.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
   - id: [required] The ID of the client (the resource server). 
   - resourceId: [required] The ID of the resource for which to list scopes.
@@ -3332,7 +3332,7 @@ console.log("Scopes for resource:", scopes);
 ##### `function clients.listResources(filter)`
 The method is used to retrieve all resources defined in a client’s resource server. 
 Resources represent protected entities (such as APIs, files, or services) that can be associated with scopes and permissions in Keycloak’s authorization services.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
   - id: [required] The ID of the client (the resource server) 
   - deep: [optional] If true, returns detailed information about each resource 
@@ -3359,7 +3359,7 @@ console.log("Resources:", resources);
 ##### `function clients.updateResource(filter,resourceRepresentation)`
 The method is used to update an existing resource in a client’s resource server. 
 Resources represent protected entities (APIs, files, services, etc.) that can be secured with scopes and permissions under Keycloak’s Authorization Services
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
   - id: [required] The ID of the client (the resource server)
   - resourceId: [required] The ID of the resource you want to update.
@@ -3400,7 +3400,7 @@ console.log("Resource updated successfully");
 The method is used to create a new policy for a client’s resource server under Keycloak’s Authorization Services.
 Policies define the rules that determine whether access should be granted or denied to a given resource, scope, or permission. 
 They can be based on users, roles, groups, conditions, or custom logic.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
   - id: [required] The ID of the client (the resource server) where the policy will be created.
   - type: [required] The policy type. Examples include:
@@ -3449,7 +3449,7 @@ console.log("Policy created successfully");
 ##### `function clients.listDependentPolicies(filter)`
 The method is used to list all policies that depend on a given policy within a client’s resource server.
 This is useful when you want to understand how a policy is referenced by other policies, permissions, or configurations, helping you manage complex authorization structures.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
   - id: [required] The ID of the client (the resource server) where the policy exists. 
   - policyId: [required] The ID of the policy for which you want to list dependent policies.
@@ -3475,7 +3475,7 @@ console.log("Dependent policies:", dependentPolicies);
 ##### `function clients.evaluateGenerateAccessToken(filter)`
 The method is used to generate or simulate an access token for a specific client, typically for testing or evaluating the token
 contents without performing a full user login. This can help you verify client roles, scopes, and protocol mappers included in the token
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] ID of the client for which you want to generate or evaluate the access token
   
@@ -3502,7 +3502,7 @@ console.log("Generated access token:", token);
 The method is used to generate or simulate an ID token for a specific client, usually for testing or evaluating the token without
 performing a full user login. This allows you to verify which claims, scopes, and protocol mappers are included in the ID 
 token for the client.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] ID of the client for which you want to generate or evaluate the ID token
   
@@ -3528,7 +3528,7 @@ console.log("Generated ID token:", token);
 The method is used to generate or simulate a UserInfo response for a specific client, typically for testing or evaluating what 
 user information would be returned by the UserInfo endpoint for that client. This helps verify which claims are included in the 
 UserInfo response without performing a full login flow.
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client for which you want to generate the UserInfo response
   
@@ -3559,7 +3559,7 @@ console.log("Generated UserInfo response:", userInfo);
 The method is used to retrieve or evaluate the protocol mappers associated with a specific client. 
 Protocol mappers define how user information (claims) is mapped into tokens (like ID tokens or access tokens) for a client.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] ID of the client for which you want to list or evaluate protocol mappers.
 
@@ -3581,7 +3581,7 @@ console.log("Protocol mappers for client:", protocolMappers);
 The method allows you to add a single protocol mapper to a specific client. 
 Protocol mappers define how data from user/client models is added to tokens (e.g., access token, ID token, or SAML assertion)..
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal client ID of the client
 - protocolMapperRepresentation: The protocol mapper definition, typically matching this structure:
@@ -3624,7 +3624,7 @@ await KeycloakManager.clients.addProtocolMapper(
 ##### `function updateProtocolMapper(filter,protocolMapperRepresentation)`
 The method is used to update an existing protocol mapper for a specific client in Keycloak.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal client ID of the client
     - mapperId: [required] The ID of the protocol mapper to be updated.
@@ -3666,7 +3666,7 @@ Protocol mappers define how data from the user or client model is transformed an
 issued by Keycloak (e.g., access tokens, ID tokens, SAML assertions). 
 This batch operation is efficient when you want to configure multiple mappings without multiple API calls.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal client ID of the client
 - protocolMapperRepresentation: An array of protocol mapper objects. Each object must conform to the ProtocolMapperRepresentation structure, which typically includes:
@@ -3731,7 +3731,7 @@ await KeycloakManager.clients.addMultipleProtocolMappers(
 This method helps locate a protocol mapper within a specific client based on its protocol type (e.g. openid-connect) and the mapper name. 
 It is particularly useful when you want to verify if a mapper exists or fetch its full configuration.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal client ID of the client
     - name: [required] The name of the protocol mapper to look up. (usually "openid-connect" or "saml").
@@ -3749,7 +3749,7 @@ await KeycloakManager.clients.findProtocolMapperByName({
 ##### `function findProtocolMappersByProtocol(filter)`
 The method returns all protocol mappers associated with a client, filtered by a specific protocol (e.g., "openid-connect" or "saml").
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal client ID of the client
     - protocol: [required] The protocol for which you want to fetch mappers. Common values:
@@ -3772,7 +3772,7 @@ console.log(mappers);
 ##### `function findProtocolMapperById(filter)`
 The method retrieves the details of a specific protocol mapper by its ID for a given client.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal client ID of the client
     - mapperId: [required] The ID of the protocol mapper you want to fetch.
@@ -3793,7 +3793,7 @@ The method is used to retrieve all protocol mappers associated with a specific c
 Protocol mappers define how user and role information is included in tokens such as access tokens, ID tokens, or SAML assertions. 
 This method is useful for inspecting or managing the token contents of a client.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal ID of the client whose protocol mappers you want to list.
 
@@ -3812,7 +3812,7 @@ The method is used to delete a specific protocol mapper from a client.
 Protocol mappers are used to include specific user or role information in tokens (e.g. access tokens, ID tokens). 
 This method is useful when you want to remove an existing mapper from a client configuration.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The internal client ID of the client
     - mapperId: [required] The ID of the protocol mapper to delete
@@ -3854,7 +3854,7 @@ const KeycloakManager = require('keycloak-api-manager');
 The method updates the configuration of an existing client scope in a realm.
 You can modify properties such as the scope’s name, description, attributes, or protocol mappers.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The unique ID of the client scope to update.
     - realm: [optional] The realm where the client scope exists. 
@@ -3881,7 +3881,7 @@ const KeycloakManager = require('keycloak-api-manager');
 The method deletes a client scope from a realm in Keycloak.
 Once deleted, the client scope will no longer be available for assignment to clients (either as default, optional, or manually).
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The unique ID of the client scope to delete.
     - realm: [optional] The realm where the client scope is defined.
@@ -3898,7 +3898,7 @@ const KeycloakManager = require('keycloak-api-manager');
 This method removes a client scope from the realm using its unique name. 
 It's an alternative to deleting by ID when the scope's name is known.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - name: [required] The name of the client scope to delete. This must match exactly with the registered name in the realm.
 ```js
@@ -3914,7 +3914,7 @@ const KeycloakManager = require('keycloak-api-manager');
 The method retrieves the list of client scopes defined in a realm.
 Client scopes represent a set of protocol mappers and roles that can be assigned to clients, either as default, optional, or manually added.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - realm: [optional] The realm where client scopes are defined. 
     - search: [optional] A search string to filter client scopes by name. 
@@ -3933,7 +3933,7 @@ console.log("Search Result:",scope);
 The method retrieves the details of a specific client scope in a realm by its unique identifier (ID).
 It’s useful when you need the full configuration of a particular client scope, including protocol mappers and assigned roles.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The unique ID of the client scope.
     - realm: [optional] The realm where the client scope is defined. 
@@ -3952,7 +3952,7 @@ The method is used to retrieve a specific client scope by its name.
 This is useful when you know the name of a client scope and want to fetch its full details, 
 including its ID, protocol, and other settings.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - name: [required] The name of the client scope you're searching for.
 ```js
@@ -3969,7 +3969,7 @@ console.log("Search Result:",scope);
 The method retrieves the list of default client scopes configured in a realm.
 Default client scopes are automatically assigned to newly created clients in that realm (for example, profile, email, roles).
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - realm: [optional] The realm where the client scopes are defined.
     - first: [optional] Index of the first result (for pagination).
@@ -3988,7 +3988,7 @@ console.log("Search Result:",scopes);
 The method adds a client scope to the list of default client scopes of a realm in Keycloak.
 Default client scopes are automatically assigned to all newly created clients within the realm.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The ID of the client scope to add as a default.
     - realm: [optional] The realm where the client scopes are defined.
@@ -4007,7 +4007,7 @@ The method removes a client scope from the list of default client scopes of a re
 Default client scopes are automatically assigned to newly created clients in that realm. 
 Removing one prevents it from being included by default.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The ID of the client scope to remove from the default list.
     - realm:: [optional] The realm where the client scope is defined. 
@@ -4028,7 +4028,7 @@ console.log("Client scope removed from defaults");
 The method retrieves the list of default optional client scopes in a realm.
 Optional client scopes are available for clients to select but are not automatically applied when a new client is created.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - realm:: [optional] The realm where the client scope is defined. 
     
@@ -4048,7 +4048,7 @@ console.log("Default optional client scopes:", optionalScopes);
 The method adds a client scope to the list of default optional client scopes in a realm.
 Optional client scopes are available to clients for selection but are not automatically applied when a new client is created.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the client scope to add as a default optional scope. 
   - realm:: [optional] The realm where the client scope is defined. 
@@ -4071,7 +4071,7 @@ Optional client scopes are scopes that can be assigned to clients on demand.
 By default, they are available to clients but not automatically applied unless explicitly selected. 
 Removing one prevents it from being listed as optional for new clients.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The ID of the client scope to remove from the optional list.
     - realm:: [optional] The realm where the client scope is defined. 
@@ -4092,7 +4092,7 @@ console.log("Client scope removed from default optional scopes");
 The method retrieves a protocol mapper from a specific client scope by its name.
 Protocol mappers define how user attributes, roles, or other data are mapped into tokens (ID token, access token, or user info) in Keycloak.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the client scope to search within.
   - realm: [optional] The realm where the client scope is defined. 
@@ -4118,7 +4118,7 @@ if (mapper) {
 The method retrieves a specific protocol mapper from a client scope in a realm, using its mapper ID.
 Protocol mappers define how user attributes, roles, or other information are mapped into tokens (ID token, access token, or user info) in Keycloak.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the client scope containing the protocol mapper.
   - mapperId: [required] The ID of the protocol mapper to retrieve.
@@ -4144,7 +4144,7 @@ if (mapper) {
 ##### `function findProtocolMappersByProtocol(filter)`
 The method retrieves all protocol mappers of a given protocol (e.g., openid-connect or saml) for a specific client scope in a realm.
 This is useful when you want to filter protocol mappers by the authentication protocol they are associated with.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the client scope to search within.
   - protocol: [required] The protocol to filter by (e.g., "openid-connect", "saml").
@@ -4171,7 +4171,7 @@ if (mapper) {
 The method deletes a protocol mapper from a specific client scope in a realm.
 Protocol mappers define how user attributes, roles, or other information are mapped into tokens (ID token, access token, or user info) in Keycloak. 
 Deleting a mapper removes its configuration from the client scope.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the client scope containing the protocol mapper.
   - mapperId: [required] The ID of the protocol mapper to delete.
@@ -4194,7 +4194,7 @@ console.log("Protocol mapper deleted successfully");
 ##### `function listProtocolMappers(filter)`
 The method retrieves all protocol mappers associated with a specific client scope in a realm.
 Protocol mappers define how user attributes, roles, or other data are mapped into tokens (ID token, access token, or user info) in Keycloak.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the client scope to list protocol mappers from.
   - realm: [optional] The realm where the client scope is defined.
@@ -4216,7 +4216,7 @@ console.log("Protocol mappers for client scope:", mappers);
 The method adds multiple protocol mappers to a specific client scope in a realm.
 Protocol mappers define how user attributes, roles, or other data are mapped into tokens (ID token, access token, or user info) in Keycloak. 
 With this method, you can configure several mappers in a single request.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the client scope where the protocol mappers should be added.
   - realm: [optional] The realm where the client scope is defined. 
@@ -4264,7 +4264,7 @@ console.log("Multiple protocol mappers added successfully");
 The method adds a single protocol mapper to a specific client scope in a realm.
 Protocol mappers define how user attributes, roles, or other information are mapped into tokens (ID token, access token, or user info) in Keycloak.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the client scope where the protocol mapper should be added.
   - realm: [optional] The realm where the client scope is defined. 
@@ -4306,7 +4306,7 @@ The method updates an existing protocol mapper in a specific client scope of a r
 Protocol mappers define how user attributes, roles, or other information are mapped into tokens (ID token, access token, or user info). 
 With this method, you can modify an existing mapper’s configuration.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the client scope where the protocol mapper should be updated.
   - mapperId: [required] The ID of the protocol mapper to update.
@@ -4348,7 +4348,7 @@ console.log("Protocol mapper updated successfully");
 The method retrieves all scope mappings for a given client scope in a realm. 
 Scope mappings define which roles (from realm roles or client roles) are granted to a client scope. 
 These roles determine the permissions and access tokens issued for clients using this scope.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The ID of the client scope to list scope mapping.
     - realm: [optional] The realm where the client scope is defined.
@@ -4371,7 +4371,7 @@ console.log("Scope mappings:", scopeMappings);
 The method retrieves the list of available client roles that can be mapped to a given client scope but are not yet assigned.
 This helps identify which roles from a specific client are still available to be added to the client scope.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The ID of the client scope to list available scope mapping.
     - client: [required] The client ID (client UUID or client identifier) from which to list available roles
@@ -4397,7 +4397,7 @@ console.log("Available client scope mappings:", availableRoles);
 The method adds one or more client roles from a specific client to a given client scope in a realm.
 This means the client scope will include the selected roles, and any client using this scope will inherit these permissions in its tokens.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:    
   - id: [required] ID of the client scope. 
   - client: [required] The client ID (client UUID or client identifier) whose roles are being mapped.
@@ -4444,7 +4444,7 @@ console.log("Client roles mapped to client scope successfully");
 The method removes one or more client role mappings from a given client scope in a realm.
 This allows you to revoke previously assigned client roles so they are no longer included in the client scope.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:    
   - id: [required] ID of the client scope. 
   - client: [required] The client ID (client UUID or client identifier) from which the roles are being removed.
@@ -4491,7 +4491,7 @@ console.log("Roles removed from client scope mappings.");
 The method retrieves all client roles from a specific client that are currently mapped to a given client scope in a realm.
 This allows you to check which roles from a particular client are already included in the client scope.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter: 
   - id: [required] The ID of the client scope. 
   - client: [required]: The client ID (client UUID or client identifier) whose mapped roles you want to list.
@@ -4516,7 +4516,7 @@ console.log("Mapped client roles:", mappedRoles);
 The method retrieves all effective client roles mapped to a given client scope, including both directly assigned roles and those inherited via composite roles.
 This is useful when you want to see the final set of roles available in a client scope, not just the ones explicitly mapped.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter: 
   - id: [required] The ID of the client scope. 
   - client: [required]: The client ID (client UUID or client identifier) whose mapped roles you want to list.
@@ -4541,7 +4541,7 @@ console.log("Mapped client roles:", mappedRoles);
 The method retrieves the list of realm roles that are available to be mapped to a given client scope but are not yet assigned.
 This helps you determine which realm-level roles can still be added to the client scope.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter: 
   - id: [required] The ID of the client scope.
   - realm: [optional] The realm where the client scope is defined.
@@ -4564,7 +4564,7 @@ console.log("Available realm scope mappings:", availableRealmRoles);
 The method adds one or more realm roles to a given client scope in a realm.
 This means that any client using this client scope will inherit the specified realm-level roles in its tokens.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter: 
   - id: [required] The ID of the client scope.
   - realm: [optional] The realm where the client scope is defined.
@@ -4599,7 +4599,7 @@ console.log("Realm roles added to client scope successfully");
 The method removes one or more realm role mappings from a given client scope in a realm.
 This revokes previously assigned realm roles, so clients using this scope will no longer inherit these permissions.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter: 
   - id: [required] The ID of the client scope.
   - realm: [optional] The realm where the client scope is defined.
@@ -4634,7 +4634,7 @@ console.log("Realm roles added to client scope successfully");
 The method retrieves all realm roles that are currently mapped to a given client scope in a realm.
 This allows you to see which realm-level permissions are already assigned to the client scope.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter: 
   - id: [required] The ID of the client scope.
   - realm: [optional] The realm where the client scope is defined.
@@ -4656,7 +4656,7 @@ console.log("Mapped realm roles:", mappedRealmRoles);
 The method retrieves all effective realm roles mapped to a given client scope, including both directly assigned roles and those inherited via composite roles.
 This is useful to see the complete set of realm-level permissions a client scope provides.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter: 
   - id: [required] The ID of the client scope.
   - realm: [optional] The realm where the client scope is defined.
@@ -4687,7 +4687,7 @@ The method is used to create a new Identity Provider (IdP) in a Keycloak realm.
 An IdP allows users to authenticate via external providers such as Google, Facebook, GitHub, 
 or another SAML/OIDC provider. 
 This method requires specifying an alias, the provider type, and configuration settings such as client ID, client secret, and any other provider-specific options.
-@parameters:
+**` -- @parameters -- `**
 - identityProvidersRappresentation: parameter provided as a JSON object containing the configuration of the Identity Provider
     - alias: [required] Unique name for the IdP within the realm. 
     - providerId: [required] Type of provider (google, facebook, oidc, saml, etc.). 
@@ -4722,7 +4722,7 @@ console.log("Created Identity Provider:", newIdP);
 ##### `function identityProviders.createMapper(mapperParams)`
 The method creates a new mapper for an existing Identity Provider in the current realm. 
 The mapper defines how attributes, roles, or claims from the Identity Provider are mapped to the Keycloak user model.
-@parameters:
+**` -- @parameters -- `**
 - mapperParams: parameter provided as a JSON object containing the fields to create a new mapper
     - alias: [required] The alias of the Identity Provider to which the mapper will be attached. 
     - identityProviderMapper: [required] The mapper configuration object, which includes details like the mapper type, name, and configuration values
@@ -4749,7 +4749,7 @@ const KeycloakManager = require('keycloak-api-manager');
 ##### `function identityProviders.findMappers(filter)`
 The method retrieves all mappers associated with a specific Identity Provider in the current realm. 
 These mappers define how attributes, roles, or claims from the external Identity Provider are mapped to the Keycloak user model.
-@parameters:
+**` -- @parameters -- `**
 - filter: pparameter provided as a JSON object that accepts the following filter:
     - alias: [required] TThe alias of the Identity Provider whose mappers you want to fetch.
 ```js
@@ -4769,7 +4769,7 @@ console.log(mappers);
 ##### `function identityProviders.delMapper(filter)`
 The method deletes a specific mapper associated with an Identity Provider in the current realm. 
 This is useful when you need to remove a mapping rule that translates attributes, roles, or claims from the external Identity Provider into Keycloak.
-@parameters:
+**` -- @parameters -- `**
 - filter: pparameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias of the Identity Provider that owns the mapper. 
     - id : [required] The unique ID of the mapper to be deleted.
@@ -4789,7 +4789,7 @@ console.log("Mapper deleted successfully");
 ##### `function identityProviders.findOneMapper(filter)`
 The method retrieves the details of a specific mapper associated with an Identity Provider in the current realm. 
 This allows you to inspect a mapper’s configuration, such as how attributes or claims from the external Identity Provider are mapped into Keycloak.
-@parameters:
+**` -- @parameters -- `**
 - filter: pparameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias of the Identity Provider. 
     - id: [required] The unique ID of the mapper to retrieve.
@@ -4809,7 +4809,7 @@ console.log("Mapper details:", mapper);
 The method removes an Identity Provider from the current realm. 
 This action deletes the provider configuration, including all its associated mappers and settings. 
 After deletion, users will no longer be able to authenticate using that Identity Provider.
-@parameters:
+**` -- @parameters -- `**
 - filter: pparameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias of the Identity Provider you want to delete.
 ```js
@@ -4826,7 +4826,7 @@ console.log(`Identity Provider deleted successfully`);
 ##### `function identityProviders.findOne(filter)`
 The method retrieves the configuration details of a specific Identity Provider in the current realm. 
 It is useful when you need to inspect the provider’s settings, such as its alias, display name, authentication flow, or other configuration parameters.
-@parameters:
+**` -- @parameters -- `**
 - filter: pparameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias of the Identity Provider you want to find.
 ```js
@@ -4863,7 +4863,7 @@ providers.forEach((provider) => {
 ##### `function identityProviders.update(filter,identityProviderRepresentation)`
 The method updates the configuration of a specific Identity Provider in the current realm. 
 It allows you to modify settings such as client ID, secret, authorization URLs, or any custom configuration fields exposed by the provider.
-@parameters:
+**` -- @parameters -- `**
 - filter: pparameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias of the Identity Provider to update. 
 - identityProviderRepresentation: An object containing the updated configuration fields:
@@ -4889,7 +4889,7 @@ const KeycloakManager = require('keycloak-api-manager');
 The method retrieves information about a specific Identity Provider factory available in Keycloak. 
 A factory represents a provider type (e.g., "oidc", "saml", "github") and contains metadata about how that provider can be configured. 
 This is useful when you want to check what configuration options are supported before creating or updating an Identity Provider.
-@parameters:
+**` -- @parameters -- `**
 - filter: pparameter provided as a JSON object that accepts the following filter:
   - providerId: [required] The ID of the Identity Provider factory to look up (e.g., "oidc", "saml", "google").
 ```js
@@ -4909,7 +4909,7 @@ console.log("Factory details:", factory);
 The method retrieves all mappers associated with a specific Identity Provider in Keycloak. 
 Mappers define how information from the external Identity Provider (e.g., Google, SAML, GitHub) is mapped into Keycloak attributes, roles, or claims. 
 This is useful to list all transformations and mappings applied to users authenticating via that provider.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - alias: [required] The alias of the Identity Provider (set when the provider was created).
 ```js
@@ -4926,7 +4926,7 @@ console.log("Mappers for Google IdP:", mappers);
 ##### `function identityProviders.findOneMapper(filter)`
 The method retrieves a single mapper associated with a specific Identity Provider in Keycloak.
 It’s useful when you need to inspect the configuration of a mapper before updating or deleting it.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - alias: [required] The alias of the Identity Provider. 
   - id: [required] The unique ID of the mapper to fetch.
@@ -4950,7 +4950,7 @@ if (mapper) {
 The method updates an existing mapper for a given Identity Provider in Keycloak.
 Mappers define how attributes, roles, or claims from an external Identity Provider (e.g., Google, GitHub, SAML) are mapped into Keycloak user attributes or tokens.
 This method allows you to change the configuration of an existing mapper (e.g., modify the claim name, attribute name, or role assignment).
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias of the Identity Provider (set during IdP creation). 
     - id: [required] The ID of the mapper to update. 
@@ -4988,7 +4988,7 @@ console.log("Mapper updated successfully!");
 ##### `function identityProviders.importFromUrl(filter)`
 The method lets you import an Identity Provider configuration directly from a metadata URL (e.g., OIDC discovery document or SAML metadata XML).
 This saves you from manually entering configuration details, since Keycloak can auto-fill them from the provided URL.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - fromUrl : [required] The URL of the IdP metadata (OIDC discovery endpoint or SAML metadata). 
   - providerId : [required]The type of IdP (e.g., "oidc", "saml"). 
@@ -5011,7 +5011,7 @@ console.log("Imported IdP:", importedIdp);
 ##### `function identityProviders.updatePermission(filter,permissionRepresentation)`
 The method allows you to enable or disable fine-grained admin permissions for a specific Identity Provider in Keycloak.
 When enabled, Keycloak creates client roles (scopes) that let you define which users or groups can view or manage the Identity Provider.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter: 
   - alias: [required] The alias of the Identity Provider. 
 - permissionRepresentation: parameter provided as a JSON object that represent the updated permission object.
@@ -5033,7 +5033,7 @@ console.log("Updated permission:", updatedPermissions);
 ##### `function identityProviders.listPermissions(filter)`
 The method retrieves the current fine-grained permission settings for a specific Identity Provider in Keycloak.
 It returns whether permissions are enabled and, if so, which scope roles are associated with managing and viewing the Identity Provider.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter: 
   - alias: [required] The alias of the Identity Provider. 
   - realm: [optional] The realm where the IdP is defined.
@@ -5059,7 +5059,7 @@ Groups help organize users and assign permissions in a scalable way
 #### `entity groups functions`
 ##### `function create(groupRappresentation)`
 Create a new group in the current realme
-@parameters:
+**` -- @parameters -- `**
 - groupRepresentation:An object representing the new state of the group. You can update properties such as:
     - name: [optional] New name of the group
     - attributes: [optional] Custom attributes up field
@@ -5079,7 +5079,7 @@ const KeycloakManager = require('keycloak-api-manager');
 find method is used to retrieve a list of groups in a specific realm.
 It supports optional filtering parameters.
 Searching by attributes is only available from Keycloak > 15
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - {builtin attribute}: To find groips by builtin attributes such as name, id
     - max: A pagination parameter used to define the maximum number of groups to return (limit).
@@ -5112,7 +5112,7 @@ else console.log('Group not found');
 ##### `function del(filter)`
 Deletes a group from the realm.
 Return a promise that resolves when the group is successfully deleted. No content is returned on success.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: The ID of the group to delete.
 ```js
@@ -5125,7 +5125,7 @@ const group = await KeycloakManager.groups.del({ id: 'group-id' });
 ##### `function count(filter)`
 Retrieves the total number of groups present in the specified realm. 
 This is useful for pagination, reporting, or general statistics regarding group usage in a Keycloak realm.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - realm: [optional] The name of the realm. If omitted, the default realm is used. 
   - search: [optional] A text string to filter the group count by name.
@@ -5146,7 +5146,7 @@ console.log('Total cool-group groups:', result.count);
 ##### `function update(filter,groupRepresentation)`
 Updates an existing group’s information in a Keycloak realm. 
 You can modify the group’s name, attributes, or hierarchy by providing the group ID and the updated data.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The unique ID of the group you want to update. 
   - realm: [optional] The realm name 
@@ -5170,7 +5170,7 @@ await KeycloakManager.groups.update(
 ##### `function listSubGroups(filter)`
 Retrieves a paginated list of direct subgroups for a specified parent group. 
 This method is useful when navigating hierarchical group structures within a Keycloak realm.
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - parentId: [required] ID of the parent group whose subgroups you want to list.
   - first: [optional] Index of the first result for pagination (default is 0).
@@ -5193,7 +5193,7 @@ await KeycloakManager.groups.listSubGroups({
 ##### `function addRealmRoleMappings(role_mapping)`
 Adds one or more realm-level roles to a specific group. 
 This operation grants all users within that group the associated realm roles, effectively assigning permissions at a group level.
-@parameters:
+**` -- @parameters -- `**
 - role_mapping: parameter provided as a JSON object that accepts the following parameters:
   - id: [required] 	The ID of the group to which roles will be added.
   - roles: [required] An array of role(RoleRepresentation) objects to assign.
@@ -5216,7 +5216,7 @@ await KeycloakManager.groups.addRealmRoleMappings({
 ##### `function listAvailableRealmRoleMappings(filters)`
 Retrieves all available realm-level roles that can be assigned to a specific group but are not yet assigned. 
 This helps in identifying which roles are still eligible for addition to the group.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
   - id: [required] The ID of the group you want to inspect.
 
@@ -5235,7 +5235,7 @@ console.log('Available realm roles for group:', availableRoles);
 ##### `function listRoleMappings(filters)`
 Retrieves all role mappings for a specific group, including both realm roles and client roles. 
 This method is useful for understanding the complete set of roles that are assigned to a group.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
   - id: [required] The ID of the group whose roles to fetch
 
@@ -5257,7 +5257,7 @@ console.log('Client roles:', roleMappings.clientMappings);
 ##### `function listRealmRoleMappings(filters)`
 Returns the list of realm-level roles that are directly assigned to a specific group. 
 These roles are defined at the realm level and are not tied to any specific client.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
   - id: [required] TThe ID of the group to retrieve roles for
 
@@ -5276,7 +5276,7 @@ console.log('Realm roles assigned to group:', realmRoles.map(role => role.name))
 ##### `function listCompositeRealmRoleMappings(filters)`
 Retrieves all composite realm-level roles assigned to a group.
 This includes both directly assigned roles and those inherited through composite roles.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
   - id: [required] TThe ID of the group to retrieve roles for
 
@@ -5296,7 +5296,7 @@ console.log('All (composite) realm roles for group:', compositeRealmRoles.map(ro
 Removes one or more realm-level roles from a group's role mappings. 
 This operation only affects roles that are directly assigned.
 Composite roles inherited indirectly will not be removed.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
   - id: [required] TThe ID of the group to retrieve roles for
   - roles: [required] Array of roles to be removed
@@ -5318,7 +5318,7 @@ await KeycloakManager.groups.delRealmRoleMappings({
 ##### `function addClientRoleMappings(filters)`
 Assigns one or more client-level roles to a specific group. 
 This allows all users belonging to that group to inherit the specified roles for a given client.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
   - id: [required] The ID of the group
   - clientUniqueId: [required] The internal ID of the client
@@ -5342,7 +5342,7 @@ await KeycloakManager.groups.addClientRoleMappings({
 ##### `function listAvailableClientRoleMappings(filters)`
 Retrieves the list of client roles that are available to be assigned to a specific group but are not currently mapped. 
 This is useful when you want to show assignable roles for a group in a specific client context.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
   - id: [required] The ID of the group
   - clientUniqueId: [required] The internal ID of the client
@@ -5361,7 +5361,7 @@ console.log('Available roles:', availableRoles);
 ##### `function listClientRoleMappings(filters)`
 Retrieves the list of client roles that are currently assigned (mapped) to a specific group for a given client. 
 This allows you to see which roles from a client the group already has.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
   - id: [required] The ID of the group
   - clientUniqueId: [required] The internal ID of the client
@@ -5380,7 +5380,7 @@ console.log('Assigned client roles:', availableRoles);
 ##### `function listCompositeClientRoleMappings(filters)`
 Retrieves the list of composite client roles assigned to a specific group. 
 Composite roles are roles that aggregate other roles, so this method returns client roles that include one or more roles grouped under a composite role assigned to the group.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
   - id: [required] The ID of the group
   - clientUniqueId: [required] The internal ID of the client
@@ -5399,7 +5399,7 @@ console.log('Composite client roles assigned to group:', compositeClientRoles);
 ##### `function delClientRoleMappings(filters)`
 Removes specific client role mappings from a group. 
 This function deletes one or more client roles that were assigned to the group, effectively revoking those client roles from the group.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
   - id: [required] The ID of the group
   - clientUniqueId: [required] The internal ID of the client
@@ -5442,7 +5442,7 @@ allowing you to group multiple permissions into a single, higher-level role.
 A composite role can include roles from the same realm as well
 as roles from different clients.
 When you assign a composite role to a user, they automatically inherit all the roles it contains.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
     - roleId: [required] The id of the role to which composite roles will be added.
 
@@ -5475,7 +5475,7 @@ const KeycloakManager = require('keycloak-api-manager');
  ```
 ##### `function findOneByName(filters)`
 Get a role by name
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
     - name (string, required) — The exact name of the role to retrieve.
     - realm (string, optional if set globally) — The realm where the role is defined.
@@ -5487,7 +5487,7 @@ const KeycloakManager = require('keycloak-api-manager');
 
 ##### `function findOneById(filters)`
 Get a role by its Id
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
     - Id (string, required) — The Id of the role to retrieve.
     - realm (string, optional if set globally) — The realm where the role is defined.
@@ -5499,7 +5499,7 @@ const KeycloakManager = require('keycloak-api-manager');
 
 ##### `function updateByName(filters,role_dictionary)`
 Update a role by its name
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
     - name (string, required) — The exact name of the role to retrieve.
     - realm (string, optional if set globally) — The realm where the role is defined.
@@ -5512,7 +5512,7 @@ const KeycloakManager = require('keycloak-api-manager');
 
 ##### `function updateById(filters,role_dictionary)`
 Update a role by its Id
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
     - name (string, required) — The exact name of the role to retrieve.
     - realm (string, optional if set globally) — The realm where the role is defined.
@@ -5525,7 +5525,7 @@ const KeycloakManager = require('keycloak-api-manager');
 
 ##### `function delByName(filters)`
 Delete a role by its name
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
     - name (string, required) — The exact name of the role to retrieve.
     - realm (string, optional if set globally) — The realm where the role is defined.
@@ -5567,7 +5567,7 @@ that have been added to the composite role. It requires the roleId of the target
 parameter and returns an array of RoleRepresentation objects. If the role is not composite
 or has no associated realm roles, the result will be an empty array. This method is useful
 for understanding and managing hierarchical role structures within a realm in Keycloak.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
     - roleId: (string, required) — The Id of the role to retrieve.
 ```js
@@ -5586,7 +5586,7 @@ are part of the composite role. It requires the roleId of the composite role
 and the clientId of the client whose roles you want to retrieve. The function returns an array of
 RoleRepresentation objects representing the client roles included in the composite.
 This helps manage and inspect client-specific role hierarchies within the composite role structure in Keycloak.
-@parameters:
+**` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
     - roleId: (string, required) — The Id of the role to retrieve
     - clientId: (string, required) — The id of the client to search for composite roles
@@ -5613,7 +5613,7 @@ Components in Keycloak are modular and pluggable, and this API lets you create, 
 The method creates a new component in a Keycloak realm.
 Components are modular providers in Keycloak, such as user federation providers (LDAP, Kerberos), authenticators, identity providers, or other pluggable extensions.
 
-@parameters:
+**` -- @parameters -- `**
 - comoponentReppresentation: An object representing the component to create.
   - name: [required] A human-readable name for the component. 
   - providerId: [required] The provider ID (e.g., "ldap", "kerberos", "totp"). 
@@ -5651,7 +5651,7 @@ The method updates an existing component in a Keycloak realm.
 Components represent pluggable extensions such as user federation providers (LDAP, Kerberos),
 protocol mappers, authenticator factories, or other custom integrations.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The unique ID of the component to update.
 - componentRepresentation: An object representing the component to update.
@@ -5692,7 +5692,7 @@ console.log("Component updated successfully");
 The method retrieves a single component from a realm by its ID.
 Components in Keycloak represent pluggable providers such as LDAP user federation, authenticators, protocol mappers, or other extensions.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The unique ID of the component to retrieve.
 ```js
@@ -5714,7 +5714,7 @@ if (component) {
 The method retrieves a list of components in a Keycloak realm.
 You can optionally filter components by their parent ID and/or provider type (e.g., LDAP user federation providers, authenticators, protocol mappers).
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - {builtin attribute}: To find components by builtin attributes such as name, id
     - max: A pagination parameter used to define the maximum number of components to return (limit).
@@ -5739,7 +5739,7 @@ if (component) {
 The method deletes a specific component from a Keycloak realm.
 Components include user federation providers (e.g., LDAP, Kerberos), authenticator providers, protocol mappers, or other pluggable extensions.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The unique ID of the component to delete.
 ```js
@@ -5759,7 +5759,7 @@ This is useful when working with hierarchical components, for example:
  - LDAP storage provider and protocol mappers as sub-components 
  - Authenticator factories with nested components
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the parent component. 
   - type: [optional] Filters sub-components by their provider type (e.g., "org.keycloak.protocol.mapper.ProtocolMapper").
@@ -5802,7 +5802,7 @@ Required actions are tasks that users must complete after login, such as:
 
 By deleting a required action, it will no longer be available for assignment to users.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - alias: [required] The unique alias of the required action to delete (e.g., "UPDATE_PASSWORD").
 ```js
@@ -5822,7 +5822,7 @@ The method registers a new required action in a Keycloak realm.
 Required actions are tasks that users may be forced to perform during authentication (e.g., verify email, update password, configure OTP, or a custom scripted action).
 This method is typically used after checking available actions via getUnregisteredRequiredActions.
 
-@parameters:
+**` -- @parameters -- `**
 - actionRepresentation: The representation of the required action to register. 
   - providerId: [required] Unique ID of the required action (e.g., "terms_and_conditions"). 
   - name: [required] Display name of the required action. 
@@ -5885,7 +5885,7 @@ The method retrieves a single required action in a Keycloak realm by its alias.
 Required actions are tasks that users may be forced to complete during authentication, such as update password, verify email, or configure OTP.
 This method is useful when you want details about a specific required action without listing all actions.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The unique alias of the required action to retrieve (e.g., "UPDATE_PASSWORD").
 ```js
@@ -5903,7 +5903,7 @@ console.log("Required action for alias details:", requiredAction);
 The method lowers the priority of a registered required action in a Keycloak realm.
 Priority determines the order in which required actions are executed for a user during authentication. Lowering the priority moves the action further down the execution order.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action to modify.
 ```js
@@ -5922,7 +5922,7 @@ The method raises the priority of a registered required action in a Keycloak rea
 Priority determines the order in which required actions are executed for a user during authentication. 
 Raising the priority moves the action higher in the execution order, meaning it will be executed sooner.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action to modify.
 ```js
@@ -5940,7 +5940,7 @@ console.log("Required action priority raised successfully");
 The method retrieves the configuration description for a specific required action in a Keycloak realm.
 This includes details about the configurable options available for that required action, such as which fields can be set, their types, and any default values.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action.
 ```js
@@ -5959,7 +5959,7 @@ console.log("Required action config description:", configDescription);
 The method retrieves the current configuration for a specific required action in a Keycloak realm.
 This allows you to see the settings that have been applied to a required action, such as OTP policies, password requirements, or any custom configurations.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action.
 ```js
@@ -5977,7 +5977,7 @@ console.log("Required action current config:", config);
 The method deletes the configuration of a specific required action in a Keycloak realm.
 This removes any customized settings for the action, effectively resetting it to its default behavior.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action.
 ```js
@@ -6002,7 +6002,7 @@ Required actions are tasks that users may be required to perform during authenti
 
 This method allows you to modify attributes such as enabled, defaultAction, priority, or configuration of a required action.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action to update.
 - actionRepresentation: The updated representation of the required action. 
@@ -6038,7 +6038,7 @@ console.log("Required action updated successfully");
 The method updates the configuration of a specific required action in a Keycloak realm.
 This allows you to modify settings such as OTP policies, password requirements, or other parameters of built-in or custom required actions.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action to update.
 - actionRepresentation: The configuration object to update. 
@@ -6162,7 +6162,7 @@ The method retrieves a specific authentication flow in a Keycloak realm by its i
 Authentication flows define the sequence of authenticators and required actions that users must complete during login or other authentication events.
 This method is useful for inspecting or modifying a particular flow.
 
-@parameters:
+**` -- @parameters -- `**
 - flowRepresentation: The representation of the new flow. A typical AuthenticationFlowRepresentation includes:
   - alias : [required] Human-readable alias for the flow.
   - providerId: [required] Type of flow ("basic-flow", "client-flow", etc.).
@@ -6192,7 +6192,7 @@ console.log("Authentication flow created successfully");
 The method updates an existing authentication flow in a Keycloak realm.
 This allows you to modify attributes such as the flow’s description, alias, top-level status, or other properties.
 
-@parameters:
+**` -- @parameters -- `**
 filter: Parameter provided as a JSON object that accepts the following filter:
     - flowId: [required] The id of the source flow to update.
 - flowRepresentation: The representation of the flow to update. A typical AuthenticationFlowRepresentation includes:
@@ -6228,7 +6228,7 @@ The method deletes an existing authentication flow in a Keycloak realm.
 Deleting a flow removes it completely, including all its executions and subflows. 
 This is typically used to remove custom flows that are no longer needed.
 
-@parameters:
+**` -- @parameters -- `**
 filter: Parameter provided as a JSON object that accepts the following filter:
     - flowId: [required] The id of the source flow to update.
 
@@ -6247,7 +6247,7 @@ console.log("Authentication flow deleted successfully");
 The method duplicates an existing authentication flow in a Keycloak realm.
 This is useful for creating a custom flow based on an existing built-in or custom flow, preserving all executions and subflows.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: Parameter provided as a JSON object that accepts the following filter:
   - flow: [required] The alias of the source flow to copy. 
   - newName: [required] The alias of the new copied flow.
@@ -6270,7 +6270,7 @@ The method retrieves a specific authentication flow in a Keycloak realm by its i
 Authentication flows define the sequence of authenticators and required actions that users must complete during login or other authentication events.
 This method is useful for inspecting or modifying a particular flow.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - flowId: [required] The id of the authentication flow to retrieve
 
@@ -6295,7 +6295,7 @@ Executions define the individual steps or actions within a flow, such as:
 
 This method is useful to inspect or modify the steps of a flow.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - flow: [required] The alias of the authentication flow whose executions you want to retrieve.
 
@@ -6317,7 +6317,7 @@ The method adds a new execution (step) to an existing authentication flow in a K
 Executions define the individual actions or authenticators in a flow, such as username/password verification, OTP validation, or custom authenticators.
 This method allows you to extend a flow with additional steps or subflows.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - flow: [required] The alias of the authentication flow to which the execution will be added. 
     - provider: [required] The authenticator or subflow to add (e.g., "auth-otp-form").
@@ -6341,7 +6341,7 @@ console.log("Execution added to authentication flow successfully");
 The method adds an existing authentication flow as a subflow to another authentication flow in a Keycloak realm.
 This allows you to nest flows, creating complex authentication sequences where one flow can call another as a step.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - flow: [required] The alias of the parent authentication flow. 
     - alias: [required] The alias (name) of the new subflow.
@@ -6369,7 +6369,7 @@ console.log("Subflow added:", flow);
 The method updates an existing execution (step) within an authentication flow in a Keycloak realm.
 Executions are individual authenticators or subflows within a flow, and this method allows you to modify their requirement, priority, or other settings.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - flow: [required] The alias of the authentication flow containing the execution.
 - executionRepresentation: The updated execution object. Typical fields in AuthenticationExecutionInfoRepresentation:
@@ -6401,7 +6401,7 @@ console.log("Execution updated successfully");
 The method deletes an existing execution (step) from an authentication flow in a Keycloak realm.
 Executions are individual authenticators or subflows within a flow, and this method removes them completely from the flow.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The ID of the execution to delete.
     
@@ -6422,7 +6422,7 @@ console.log("Execution deleted successfully");
 The method increases the priority of an execution within an authentication flow in a Keycloak realm.
 Increasing the priority moves the execution earlier in the flow sequence, affecting the order in which authenticators or subflows are executed.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] he ID of the execution whose priority will be raised.
     
@@ -6442,7 +6442,7 @@ console.log("Execution priority raised successfully");
 The method decreases the priority of an execution within an authentication flow in a Keycloak realm.
 Lowering the priority moves the execution later in the flow sequence, affecting the order in which authenticators or subflows are executed.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] he ID of the execution whose priority will be lowered.
     
@@ -6462,7 +6462,7 @@ console.log("Execution priority lowered successfully");
 The method creates a configuration for a specific execution (step) within an authentication flow in a Keycloak realm.
 Configurations allow you to customize the behavior of an authenticator or required action, such as OTP policies, password requirements, or custom parameters.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The ID of the execution or required action to configure. 
     - alias: [required] The alias (name) of the configuration.
@@ -6485,7 +6485,7 @@ console.log("Configuration created:", config);
 The method retrieves the configuration of a specific required action or execution within an authentication flow in a Keycloak realm.
 Configurations define additional settings for authenticators or required actions, such as OTP policies, password rules, or custom parameters.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the execution or required action whose configuration you want to retrieve.
     
@@ -6506,7 +6506,7 @@ console.log("Configuration retrieved:", config);
 The method updates the configuration of a specific required action or execution within an authentication flow in a Keycloak realm.
 This allows you to modify existing settings, such as OTP policies, password rules, or any custom parameters, without creating a new configuration.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the existing configuration.
   - config: [required] Key-value pairs representing the new configuration parameters.
@@ -6531,7 +6531,7 @@ console.log("Configuration updated successfully");
 The method deletes a configuration associated with a specific required action or execution within an authentication flow in a Keycloak realm.
 This is useful for removing obsolete or unwanted settings from a required action or execution.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The ID of the existing configuration.
     
@@ -6559,7 +6559,7 @@ This provides metadata and guidance about the configuration options available fo
 
 This is useful for dynamically generating forms for configuring required actions or authenticators.
 
-@parameters:
+**` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - providerId: [required] The ID of the authenticator or required action whose configuration description you want to retrieve.
     
