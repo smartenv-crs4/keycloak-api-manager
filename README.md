@@ -87,29 +87,24 @@ the Keycloak Admin Console → clients (left sidebar) → choose your client →
 ## 📄 Usage Example
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 const express = require('express');
 // Import the Keycloak API Manager
-const KeycloakManager = require('keycloak-api-manager');
-
-const app = express();
-
 
 // Configure and Initialize Keycloak manager api
 // Initialize the manager with Keycloak credentials
-const keycloak = new KeycloakManager({
+await KeycloakManager.configure({
     baseUrl: 'http://localhost:8080',   // Keycloak base URL
     realm: 'master',                    // Realm where the admin user belongs
     clientId: 'admin-cli',              // Keycloak admin client
     username: 'admin',                  // Admin username
     password: 'admin',                  // Admin password
+    grantType: 'password',              // Type of authentication
 });
 
-// Authenticate and obtain access token
-await keycloak.authenticate();
 
 // Create a new user in the target realm
-const newUser = await keycloak.createUser({
-    realm: 'myrealm',
+const newUser = await KeycloakManager.users.create({
     username: 'john.doe',
     email: 'john.doe@example.com',
     firstName: 'John',
@@ -117,214 +112,43 @@ const newUser = await keycloak.createUser({
     enabled: true,
 });
 
-// Assign a realm role to the user
-await keycloak.assignRealmRole({
-    realm: 'myrealm',
-    userId: newUser.id,
-    roleName: 'user',
+// List first page of users
+const users = await KeycloakManager.users.find({ first: 0, max: 10 });
+
+// find users by attributes
+users = await KeycloakManager.users.find({ q: "phone:123" });
+
+// Override client configuration for all further requests:
+setConfig({
+    realmName: 'another-realm',
 });
 
-console.log(`✅ User ${newUser.username} created and assigned to role 'user'`);
+// This operation will now be performed in 'another-realm' if the user has access.
+const groups = await KeycloakManager.groups.find();
 
-
-
-
-
-
-
-
-await keycloackAdapter.configure(app,{
-        "realm": "Realm-Project",
-        "auth-server-url": "https://YourKeycloakUrl:30040/",
-        "ssl-required": "external",
-        "resource": "keycloackclientName",
-        "credentials": {
-            "secret": "aaaaaaaaaa"
-        },
-        "confidential-port": 0
-    },
-    {
-        session:{
-            secret: 'mySecretForSession',
-        }
-    });
-
-
-// Public route
-app.get('/', (req, res) => {
-  res.send('Public route: no authentication required');
-});
-
-/* Protected routes (any authenticated user)   */
-
-// Example of login with keycloackAdapter.login function
-// After login redirect to "/home" 
-app.get('/signIn', (req, res) => {
-    console.log("Your Custom Code");
-    keycloackAdapter.login(req,res,"/home")
-
-});
-
-// Example of login with keycloackAdapter.loginMiddleware middleware
-// After login redirect to "/home" 
-app.get('/loginMiddleware', keycloackAdapter.loginMiddleware("/home") ,(req, res) => {
-    // Response handled by middleware, this section will never be reached.
-});
-
-// Example of logout with keycloackAdapter.logout function
-// After login redirect to "http://localhost:3001/home" 
-app.get('/logout', (req, res) => {
-    console.log("Your Custom Code");
-    keycloackAdapter.logout(req,res,"http://localhost:3001/home");
-});
-
-// Example of logout with keycloackAdapter.logoutMiddleware middleware
-// After login redirect to "http://localhost:3001/home"
-app.get('/logoutMiddle', keycloackAdapter.logoutMiddleware("http://redirctUrl"), (req, res) => {
-    // Response handled by middleware, this section will never be reached.
+// Set a `realm` property to override the realm for only a single operation.
+// For example, creating a user in another realm:
+await KeycloakManager.users.create({
+    realm: 'a-third-realm',
+    username: 'username',
+    email: 'user@third-realm.com',
 });
 
 
-// Example of protection with keycloackAdapter.protectMiddleware middleware
-// Access is allowed only for authenticated users
-app.get('/private', keycloackAdapter.protectMiddleware(), (req, res) => {
-    console.log("Your Custom Code");
-    console.log( req.session);
-    res.redirect('/auth');
-});
-
-// Example of protection with keycloackAdapter.protectMiddleware middleware
-// whith a static client role validation string
-// Access is allowed only for authenticated admin users
-app.get('/privateStaticClientRole', keycloackAdapter.protectMiddleware("admin"), (req, res) => {
-    // "Your Custom Code"
-    res.send("Is its admin.");
-});
-
-// Example of protection with keycloackAdapter.protectMiddleware middleware
-// whith a static realm role validation string
-// Access is allowed only for authenticated realm admin users
-app.get('/privateStaticRealmRole', keycloackAdapter.protectMiddleware("realm:admin"), (req, res) => {
-    // "Your Custom Code"
-    res.send("Is its admin realm:admin.");
-});
-
-// Example of protection with keycloackAdapter.protectMiddleware middleware
-// whith a static other client role validation string
-// Access is allowed only for authenticated otherClient admin users
-app.get('/privateStaticRealmRole', keycloackAdapter.protectMiddleware("otherClient:admin"), (req, res) => {
-    // "Your Custom Code"
-    res.send("Is its admin otherClient:admin.");
-});
-
-// Example of protection with keycloackAdapter.protectMiddleware middleware
-// whith a control function tmpFunction
-// Access is allowed only for authenticated admin users
-let tmpFunction=function (token, req) {
-    return token.hasRole('admin');
-}
-app.get('/isAdmin', keycloackAdapter.protectMiddleware(tmpFunction), (req, res) => {
-    // "Your Custom Code"
-    res.send("Is its admin tmpFunction.");
+// create a new realm, If id omitted, Keycloak uses the realm name as the ID.
+const realm = await KeycloakManager.realms.create({
+    id: "123456",
+    realm: "new-realm",
 });
 
 
-// Example of protection with keycloackAdapter.customProtectMiddleware middleware
-// whith a control function tmpFunctionString
-// Access is allowed only for authenticated users with role defined by tmpFunctionString
-let tmpFunctionString=function (req,res) {
-    let id=req.params.id
-    // Control String by url param Id 
-    return (`${id}`);
-}
-app.get('/:id/isAdmin', keycloackAdapter.customProtectMiddleware(tmpFunctionString), (req, res) => {
-    // "Your Custom Code"
-    res.send("Is its admin tmpFunctionString.");
+// Get realm Info
+realm = await KeycloakManager.realms.findOne({
+    realm: "new-realm"
 });
 
+console.log("realm info:", realm);
 
-// Example of protection with keycloackAdapter.encodeTokenRole middleware
-// Encode the token and add it to req.encodedTokenRole
-// Use req.encodedTokenRole.hasRole("role") to check whether the token has that role or not
-app.get('/encodeToken', keycloackAdapter.encodeTokenRole(), (req, res) => {
-    if(req.encodedTokenRole.hasRole('realm:admin'))
-        res.send("Is its a realm admin");
-    else
-        res.send("Is its'n a realm admin");
-
-});
-
-// This section provides examples of how to protect resources based on permissions
-// rather than roles.
-
-// Example of protection with keycloackAdapter.enforcerMiddleware middleware
-// whith a static control string
-// Access is allowed only for users with 'ui-admin-resource' permission defined 
-// in keycloak
-app.get('/adminResource', keycloackAdapter.enforcerMiddleware('ui-admin-resource'), (req, res) => {
-    // If this section is reached, the user has the required privileges; 
-    // otherwise, the middleware responds with a 403 Access Denied.
-    res.send('You are an authorized ui-admin-resource User');
-});
-
-// Example of protection with keycloackAdapter.enforcerMiddleware middleware
-// whith a control function tmpFunctionEnforceValidation
-// Access is allowed only for users with 'ui-admin-resource' or
-// ui-viewer-resource permission defined in keycloak
-let tmpFunctionEnforceValidation=function (token,req,callback) {
-    // Check permission using token.hasPermission, which performs the verification
-    // and responds with a callback that returns true if the permission is valid, 
-    // and false otherwise.
-    if(token.hasPermission('ui-admin-resource',function(permission){
-        if(permission) callback(true);
-        else if(token.hasPermission('ui-viewer-resource',function(permission){
-            if(permission) callback(true);
-            else callback(false);
-        }));
-    }));
-}
-app.get('/adminOrViewerResorce', keycloackAdapter.enforcerMiddleware(tmpFunctionEnforceValidation), (req, res) => {
-    // If this section is reached, the user has the required privileges 
-    // driven by tmpFunctionEnforceValidation; otherwise, the middleware responds
-    // with a 403 Access Denied.
-    res.send('You are an authorized User');
-});
-
-
-// Example of protection with keycloackAdapter.customEnforcerMiddleware middleware
-// whith a control function tmpFunctionEnforce that define the control string
-// Access is allowed only for users with a url params ':permission' permission defined 
-// in keycloak
-let tmpFunctionEnforce=function (req,res) {
-    // Permission that depends on a URL parameter.
-    return(req.params.permission);
-}
-app.get('/urlParameterPermission/:permission', keycloackAdapter.customEnforcerMiddleware(tmpFunctionEnforce), (req, res) => {
-    res.send(`You are an authorized User with ${req.params.permission} permission`);
-});
-
-// Example of protection with keycloackAdapter.encodeTokenPermission middleware
-// Encode the token permission and add it to req.encodedTokenPremission
-// Use req.encodedTokenPremission.hasPermission("permission") to check whether
-// the token has that permission or not
-app.get('/encodeTokenPermission', keycloackAdapter.encodeTokenPermission(), (req, res) => {
-    // Check permission using token.hasPermission, which performs the verification
-    // and responds with a callback that returns true if the permission is valid, 
-    // and false otherwise.
-    req.encodedTokenPremission.hasPermission('ui-admin-resource', function(permission){
-        if(permission)
-            res.send('You are an authorized User by ui-admin-resource permission');
-        else res.status(403).send("access Denied");
-    });
-});
-
-
-
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
 ```
 
 ---
@@ -334,602 +158,58 @@ app.listen(PORT, () => {
 In your Express application:
 
 ```js
-import keycloakAdapter from 'keycloak-api-manager';
+const KeycloakManager = require('keycloak-api-manager');
 
-// Configure and Initialize Keycloak adapter
-keycloackAdapter.configure(app,{
-        "realm": "Realm-Project",
-        "auth-server-url": "https://YourKeycloakUrl:30040/",
-        "ssl-required": "external",
-        "resource": "keycloackclientName",
-        "credentials": {
-            "secret": "aaaaaaaaaa"
-        },
-        "confidential-port": 0
-    },
-    {
-        session:{
-            secret: 'mySecretForSession',
-        }
-    })
+// Configure and Initialize Keycloak manager api
+// Initialize the manager with Keycloak credentials
+await KeycloakManager.configure({
+    baseUrl: 'http://localhost:8080',   // Keycloak base URL
+    realm: 'master',                    // Realm where the admin user belongs
+    clientId: 'admin-cli',              // Keycloak admin client
+    username: 'admin',                  // Admin username
+    password: 'admin',                  // Admin password
+    grantType: 'password',              // Type of authentication
+});
 ```
 
-keycloackAdapter.configure is a configuration function for the Keycloak 
-adapter in an Express application.  
-It must be called at app startup, before defining any protected routes.
-It is an async function and returns a promise
+Configure is a configuration function for the Keycloak-api-manager.
+It must be called at app startup, before to use the administrative
+functions exposed by this library
 
 Parameters:
-- app: Express application instance (e.g., const app = express();)
--   keyCloakConfig: JSON object containing the Keycloak client configuration.
-     This can be obtained from the Keycloak admin console:
-     Clients → [client name] → Installation → "Keycloak OIDC JSON" → Download
-      Example:
-    {
-    "realm": "realm-name",
-    "auth-server-url": "https://keycloak.example.com/",
-    "ssl-required": "external",
-    "resource": "client-name",
-    "credentials": { "secret": "secret-code" },
-    "confidential-port": 0
-    }
-- keyCloakOptions: advanced configuration options for the adapter.
-  Main supported options:
-    - session: Express session configuration (as in express-session)
-    - scope: authentication scopes (e.g., 'openid profile email offline_access')
-      Note: to use offline_access, the client must have the option enabled and
-      the user must have the offline_access role.
-    - idpHint: to suggest an identity provider to Keycloak during login
-    - cookies: to enable cookie handling
-    - realmUrl: to override the realm URL
-- adminClientCredentials: [Optional] Advanced configuration for setting up the realm-admin user or client,
+- adminClientCredentials: [required] Advanced configuration for setting up the realm-admin user or client,
   which will be used as the administrator to manage Keycloak via API.
   This is required in order to use the administrative functions exposed by this library.
   If this parameter is not provided, it will not be possible to use the administrative functions of Keycloak
-  exposed by this adapter. In fact, exports.kcAdminClient will be null, so any attempt to call
-  keycloakAdapter.kcAdminClient will result in a runtime error due to access on an undefined object
+  exposed by this adapter, so any attempt to call KeycloakManager.{function} will result in a runtime error due to access on an undefined object
   Main supported options:
-    - realmName: [Optional] A String that specifies the realm to authenticate against, if different from the "keyCloakConfig.realm" parameter.
-      If you intend to use Keycloak administrator credentials, this should be set to 'master'.
-    - scope: [Optional] A string that specifies The OAuth2 scope requested during authentication (optional).
-      Typically, not required for administrative clients. example:openid profile
-    - requestOptions: [Optional] JSON parameters to configure HTTP requests (such as custom headers, timeouts, etc.).
-      It is compatible with the Fetch API standard. Fetch request options
-      https://developer.mozilla.org/en-US/docs/Web/API/fetch#options
-    - username: [Optional] string username. Required when using the password grant type.
-    - password: [Optional] string password. Required when using the password grant type.
-    - grantType: The OAuth2 grant type used for authentication.
-      Possible values: 'password', 'client_credentials', 'refresh_token', etc.
-    - clientId: string containing the client ID configured in Keycloak. Required for all grant types.
-    - clientSecret: [Optional] string containing the client secret of the client. Required for client_credentials or confidential clients.
-    - totp: string for Time-based One-Time Password (TOTP) for multifactor authentication (MFA), if enabled for the user.
-    - offlineToken: [Optional] boolean value. If true, requests an offline token (used for long-lived refresh tokens). Default is false.
-    - refreshToken: [Optional] string containing a valid refresh token to request a new access token when using the refresh_token grant type.
----
-
-## 🔧 Available Middlewares
-
-### `underKeycloakProtection(callback) - deprecated - ` 
-@deprecated. Use the `configure` Method with `await keycloakAdapter.configure(...)`,
-then define your resources as you normally would in Express:
-```js
-    await keycloakAdapter.configure(config_Parameters);
-    
-    // all your routes
-
-    app.get('/my-route', handler);
-```
-
-Alternatively, if you prefer to define your resources inside a container after configuration,
-you can use the `then` syntax:
-```js
-    keycloakAdapter.configure(configParameters).then(() => {
-        // Define all your routes here
-        app.get('/my-route', handler);
-    });
-```
-
-This Method is deprecated and will be removed in future versions.
-
-Method to define Express routes that must be protected by Keycloak.
-
-This method must be called **after** Keycloak has been configured with `configure()`.
-The routes declared inside the provided callback will be protected and will have access
-to authentication/authorization features managed by Keycloak.
-
-📌 Public (unprotected) routes should be declared **before** calling this method.
-
-@param {Function} callback - A function that defines all routes to be protected.
-It must contain exclusively routes requiring authentication.
-
-✅ Usage example:
-```js
-// Public route not protected by Keycloak
-app.get('/public', (req, res) => {
-res.send('Public content');
-});
-
-// Section of routes protected by Keycloak
-keycloakAdapter.underKeycloakProtection(() => {
-
-    // This function is deprecated and will be removed in future versions. 
-    // It is retained only for backward compatibility with older versions
-    
-    // Route protected by authentication
-    app.get('/confidential', keycloakAdapter.protectMiddleware(), (req, res) => {
-        res.send('Confidential content visible only to authenticated users');
-    });
-
-    // Route with forced login: handled directly by middleware
-    app.get('/loginMiddleware', keycloakAdapter.loginMiddleware("/home"), (req, res) => {
-        // This response will never be sent because the middleware handles the 
-        // request directly
-    });
-});
-```
-
-### `protectMiddleware([conditions])`
-Middleware to protect Express routes based on authentication and, optionally,
-authorization via Keycloak roles.
-
-Allows restricting access to a resource only to authenticated users or
-to those possessing specific roles in the realm or in a Keycloak client.
-
-@param {string|function} [conditions]
-- If a string, specifies one or more required roles, using the syntax:
-    - 'role'              → client role in the configured client (e.g., 'admin')
-    - 'clientid:role'     → client role of a specific client (e.g., 'myclient:editor')
-    - 'realm:role'        → realm role (e.g., 'realm:superuser')
-  - If a function, receives (token, req) and must return true or false synchronously.
-    This function enables custom authorization logic.
-    - The `token` object passed to the authorization function exposes methods such as:
-      - token.hasRole('admin')               // client role in configured client
-      - token.hasRole('realm:superuser')     // realm role
-      - token.hasRole('my-client:editor')    // client role of a specific client
-      - token.hasResourceRole('editor', 'my-client-id') // equivalent to hasRole('my-client:editor')
-
-    The authorization function must be synchronous and return true (allow access) or false (deny access).
-
-@returns {Function} Express middleware to protect the route.
-
-✅ Usage example:
-```js
-
-// Authentication only, no role check
-app.get('/admin', keycloakAdapter.protectMiddleware(), (req, res) => {
-    res.send('Only authenticated users can see this resource.');
-});
-
-// Check on client role of configured client (e.g., 'admin')
-app.get('/admin', keycloakAdapter.protectMiddleware('admin'), (req, res) => {
-    res.send('Only users with the admin client role can access.');
-});
-
-// Check on role of a specific client (e.g., client 'clientid', role 'admin')
-app.get('/admin', keycloakAdapter.protectMiddleware('clientid:admin'), (req, res) => {
-    res.send('Only users with admin role in client "clientid" can access.');
-});
-
-// Check on realm role (e.g., 'superuser' role at realm level)
-app.get('/admin', keycloakAdapter.protectMiddleware('realm:superuser'), (req, res) => {
-    res.send('Only users with realm superuser role can access.');
-});
-
-// Custom synchronous authorization function
-app.get('/custom', keycloakAdapter.protectMiddleware((token, req) => {
-    // Allow only if user has realm role 'editor'
-    // and the request has a specific custom header
-    return token.hasRealmRole('editor') && req.headers['x-custom-header'] === 'OK';
-}), (req, res) => {
-    res.send('Access granted by custom authorization function.');
-});
-
-```
-
-
-### `customProtectMiddleware(fn)`
-Middleware similar to `protectMiddleware` but with dynamic role checking via a function.
-
-Unlike `protectMiddleware`, which accepts a string expressing the role or a control function
-that works on the token, this middleware accepts a function that receives the Express
-request and response objects `req` and `res` and must return a string representing the role control string.
-
-This is useful for parametric resources where the role control string must be dynamically generated based on the request,
-for example, based on URL parameters or query strings.
-
-Note: this function **does not** access or parse the token, nor performs any checks other than the role,
-so it cannot be used for complex logic depending on request properties other than the role
-(e.g., client IP, custom headers, etc.).
-The function's sole task is to generate the role control string.
-
---- Parameters ---
-
-@param {function} customFunction - function that receives (req, res) and returns a string
-with the role control string to pass to Keycloak.
-
-✅ Usage example:
-```js
-
-app.get('/custom/:id', keycloakAdapter.customProtectMiddleware((req) => {
-    // Dynamically builds the client role based on URL parameter 'id'
-    return `clientRole${req.params.id}`;
-}), (req, res) => {
-    res.send(`Access granted to users with role 'clientRole${req.params.id}'`);
-});
-```
-
-
-### `enforcerMiddleware(conditions, options)`
-`enforcerMiddleware` is a middleware to enable permission checks
-based on resources and policies defined in Keycloak Authorization Services (UMA 2.0-based).
-
-Unlike `protectMiddleware` and similar, which only verify authentication or roles,
-`enforcerMiddleware` allows checking if the user has permission to access
-a specific protected resource through flexible and dynamic policies.
-
-Useful in contexts where resources are registered in Keycloak (such as documents, instances, dynamic entities) and
-protected by flexible policies.
-
---- Parameters ---
-
-@param {string|function} conditions
-- string containing the name of the resource or permission to check
-- custom check function with signature:
-  function(token, req, callback)
-    - token: decoded Keycloak token
-    - req: Express request
-    - callback(boolean): invoke with true if authorized, false otherwise
-
-@param {object} [options] (optional)
-- response_mode: 'permissions' (default) or 'token'
-- claims: object with claim info for dynamic policies (e.g. owner id matching)
-- resource_server_id: resource client id (default: current client)
-
---- How it works ---
-- If conditions is a function, it is used for custom checks with callback.
-- If conditions is a string, `keycloak.enforcer(conditions, options)` is used for the check.
-
---- response_mode modes ---
-1) 'permissions' (default)
-    - Keycloak returns the list of granted permissions (no new token)
-    - Permissions available in `req.permissions`
-
-2) 'token'
-    - Keycloak issues a new access token containing the granted permissions
-    - Permissions available in `req.kauth.grant.access_token.content.authorization.permissions`
-    - Useful for apps with sessions and decision caching
-
---- Keycloak requirements ---
-
-The client must have:
-- Authorization Enabled = ON
-- Policy Enforcement Mode = Enforcing
-- Add permissions to access token = ON
-
-You must also configure in Keycloak:
-- Resources
-- Policies (e.g., role, owner, JS script)
-- Permissions (associate policies to resources)
-
-✅ Usage example:
-```js
-
-// Check with static string
-app.get('/onlyAdminroute', keycloakAdapter.enforcerMiddleware('ui-admin-resource'), (req, res) => {
-    res.send('You are an authorized admin for this resource');
-});
-
-// Check with custom function (async with callback)
-app.get('/onlyAdminrouteByfunction', keycloakAdapter.enforcerMiddleware(function(token, req, callback) {
-    token.hasPermission('ui-admin-resource', function(permission) {
-        if (permission) callback(true);
-        else {
-            token.hasPermission('ui-viewer-resource', function(permission) {
-                callback(permission ? true : false);
-            });
-        }
-    });
-}), (req, res) => {
-    res.send('You are an authorized admin or viewer (custom check)');
-});
-```
-
-### `customEnforcerMiddleware(fn, options)`
-`customEnforcerMiddleware` is a middleware for permission checks based on resources and policies
-defined in Keycloak Authorization Services (UMA 2.0), using dynamic permission strings.
-
-This middleware is similar to `enforcerMiddleware`, but takes a function
-`customFunction(req, res)` as a parameter, which must dynamically return
-the permission/resource string to be checked.
-
---- Parameters ---
-
-@param {function} customFunction
-Function that receives `req` and `res` and returns the control string for Keycloak.
-Example:
-```js
-function customFunction(req, res) {
-    // Your function logic
-    return req.params.permission;
-}
-```
-
-@param {object} [options] (optional)
-Additional options passed to `keycloak.enforcer()`, including:
-    - response_mode: 'permissions' (default) or 'token'
-    - claims: object with claim info for dynamic policies (e.g., owner ID)
-    - resource_server_id: string representing the resource client ID (default: current client)
-
---- response_mode options ---
-1) 'permissions' (default)
-    - The server returns only the list of granted permissions (no new token)
-    - Permissions available in `req.permissions`
-
-2) 'token'
-    - The server issues a new access token with granted permissions
-    - Permissions available in `req.kauth.grant.access_token.content.authorization.permissions`
-    - Useful for decision caching, session handling, automatic token refresh
-
---- Keycloak Requirements ---
-
-The client must be configured with:
-- Authorization Enabled = ON
-- Policy Enforcement Mode = Enforcing
-- Add permissions to access token = ON
-
-You must also have created:
-- Resources
-- Policies (e.g., role, owner, JS rules)
-- Permissions (linking policies to resources)
-
-✅ Usage example:
-```js
-
-const tmpFunctionEnforce = function(req, res) {
-    return req.params.permission; // dynamic permission from URL parameter
-};
-
-app.get('/onlyAdminrouteByfunction/:permission', keycloakAdapter.customEnforcerMiddleware(tmpFunctionEnforce), (req, res) => {
-    res.send('You are an authorized user with dynamic permission: ' + req.params.permission);
-});
-
-```
-
-### `encodeTokenRole()`
-`encodeTokenRole` is a middleware that decodes the Keycloak token and adds it
-to the Express request as `req.encodedTokenRole`.
-
-Unlike `protectMiddleware` or `customProtectMiddleware`, this middleware
-does NOT perform any role or authentication checks, but simply extracts
-and makes the decoded token available within the route handler function.
-
-It is especially useful when you want to perform custom logic based on roles
-or other information contained in the token directly in the route handler,
-for example showing different content based on role.
-
---- Contents of `req.encodedTokenRole` ---
-
-Represents the decoded Keycloak token and exposes several useful methods such as:
-- token.hasRole('admin')             // true/false if it has client role "admin"
-- token.hasRole('realm:superuser')   // true/false if it has realm role "superuser"
-- token.hasRole('my-client:editor')  // true/false if it has client role "editor" for client "my-client"
-- token.hasResourceRole('editor', 'my-client-id') // identical to hasRole('my-client:editor')
-
-✅ Usage example:
-```js
-
-app.get('/encodeToken', keycloakAdapter.encodeTokenRole(), (req, res) => {
-    if (req.encodedTokenRole.hasRole('realm:admin')) {
-        res.send("User with admin (realm) role in encodeToken");
-    } else {
-        res.send("Regular user in encodeToken");
-    }
-});
-
-```
-
-### `encodeTokenPermission()`
-`encodeTokenPermission` ia s Middleware whose sole purpose is to decode the access token present in the request
-and add to the `req` object a property called `encodedTokenPermission` containing the token's permissions.
-
-Unlike `enforcerMiddleware` and `customEnforcerMiddleware`, it **does not perform any access**
-or authorization checks, but exposes a useful method (`hasPermission`) for checking permissions
-within the route handler.
-
-It is particularly useful when:
-- you want to **customize the response** based on the user's permissions (e.g., show a different page),
-- you want to **manually handle access** or perform custom checks on multiple permissions,
-- you do not want to block access upfront but decide dynamically within the route handler.
-
---- Additions to `req` ---
-
-After applying the middleware, `req` contains:
-- @property {Object} req.encodedTokenPermission
-An object exposing the method:
-    - hasPermission(permission: string, callback: function(boolean))
-      Checks whether the token contains the specified permission.
-      The callback receives `true` if the permission is present, `false` otherwise.
-
-✅ Usage example:
-```js
-
-app.get('/encodeTokenPermission',
-    keycloakAdapter.encodeTokenPermission(),
-    (req, res) => {
-        req.encodedTokenPermission.hasPermission('ui-admin-resource', function(perm) {
-            if (perm)
-                res.send('You are an authorized admin user by function permission parameters');
-            else
-                res.status(403).send('Access Denied by encodeTokenPermission');
-        });
-    });
-
-```
-
-### `loginMiddleware(redirectTo)`
-`loginMiddleware` is a Middleware used to **force user authentication** via Keycloak.
-
-It is particularly useful when you want to: 
-- ensure the user is authenticated,
-- redirect the user to a specific page after login or when access is denied,
-- integrate automatic login flows on routes that don’t require direct authorization,
-    but where login should still be enforced (e.g., profile page, personal area, etc.).
-
---- Behavior ---
-1. If the user is **not authenticated**, Keycloak redirects them to the login flow.
-2. If authentication fails or is denied, the user is redirected according to Keycloak's configured settings.
-3. If authentication is successful, the user is redirected to 'redirectTo' (usually `/home`, `/dashboard`, etc.).
-
---- Parameters ---
-
-@param {string} redirectTo - URL to redirect the user to after login.
-
---- Warning ---
-
-The route handler callback is **never executed**, because the middleware will respond earlier
-with a redirect or block the request.
-
-✅ Usage example:
-```js
-
-app.get('/loginMiddleware', keycloakAdapter.loginMiddleware("/home"), (req, res) => {
-        // This section is never reached
-        res.send("If you see this message, something went wrong.");
-});
-
-```
-
-
-### `logoutMiddleware(redirectTo)`
-`logoutMiddleware` Middleware is used to **force user logout**, removing the local session
-and redirecting the user to Keycloak's logout endpoint according to its configuration.
-
-It is useful when:
-- You want to completely log out the user,
-- You want to **terminate the session on Keycloak** (not just locally),
-- You want to redirect the user to a public page, such as a homepage, after logout.
-
---- Behavior ---
-1. Retrieves the `id_token` of the authenticated user.
-2. Constructs the Keycloak logout URL including the token and the redirect URL.
-3. **Destroys the local Express session** (e.g., cookies, user data).
-4. Redirects the user to the Keycloak logout URL, which in turn redirects to the provided URL.
-
---- Parameters ---
-
-@param {string} redirectTo - URL to which the user will be redirected after complete logout.
-
-✅ Usage example:
-```js
-
-app.get('/logoutMiddleware', keycloakAdapter.logoutMiddleware("http://localhost:3001/home"),  (req, res) => {
-        // This section is never reached
-        // The middleware handles logout and redirection automatically
-    });
-
-```
-
---- Note ---
-- The middleware **never executes the route callback**, as it fully handles the response.
-- The `redirectTo` parameter must match a **valid redirect URI** configured in Keycloak for the client.
-
---- Requirements ---
-- The Keycloak client must have properly configured `Valid Redirect URIs`.
-- The Express session must be active (e.g., `express-session` properly initialized).
-
-
-## 🔧 Available Functions
-
-### `login(req, res, redirectTo)`
-`login` Function not a middleware, but a **classic synchronous function** that forces user authentication
-via Keycloak and, if the user is not authenticated, redirects them to the login page.
-After successful login, the user is redirected to the URL specified in the `redirectTo` parameter.
-
---- Differences from `loginMiddleware` ---
-- `loginMiddleware` handles everything automatically **before** the route handler function.
-- `login` instead is a function **that can be manually called inside the route handler**,
-  offering **greater control** over when and how login is enforced.
-
---- Parameters ---
-
-- @param {Object} req - Express `Request` object
-- @param {Object} res - Express `Response` object
-- @param {string} redirectTo - URL to redirect the user to after successful login
-
---- Behavior ---
-1. Attempts to protect the request using `keycloak.protect()`.
-2. If the user **is authenticated**, it performs `res.redirect(redirectTo)`.
-3. If **not authenticated**, Keycloak automatically handles redirection to the login page.
-
-✅ Usage example:
-```js
-
-app.get('/login', (req, res) => {
-    // Your route logic
-    // ...
-    // Force authentication if necessary
-    keycloakAdapter.login(req, res, "/home");
-});
-
-```
-
---- Notes ---
-- The function can be called **within an Express route**, allowing for custom conditional logic.
-- Useful for scenarios where only certain conditions should trigger a login.
-
---- Requirements ---
-- `Valid Redirect URIs` must include the URL passed to `redirectTo`.
-
-### `logout(req, res, redirectTo)`
-`logout` Function is not a middleware, but a **classic synchronous function** that forces the user to logout
-via Keycloak. In addition to terminating the current session (if any), it generates the Keycloak
-logout URL and redirects the user's browser to that address.
-
---- Differences from `logoutMiddleware` ---
-- `logoutMiddleware` is designed to be used directly as middleware in the route definition.
-- `logout` instead is a function **to be called inside the route**, useful for handling logout
-  **conditionally** or within more complex logic.
-
---- Parameters ---
-- @param {Object} req - Express `Request` object
-- @param {Object} res - Express `Response` object
-- @param {string} redirectTo - URL to redirect the user after logout
-
---- Behavior ---
-1. Retrieves the `id_token` from the current user's Keycloak token (if present).
-2. Builds the logout URL using `keycloak.logoutUrl()`.
-3. Destroys the user's Express session.
-4. Redirects the user to the Keycloak logout URL, which in turn redirects to `redirectTo`.
-
-✅ Usage example:
-```js
-
-app.get('/logout', (req, res) => {
-    // Any custom logic before logout
-    // ...
-    keycloakAdapter.logout(req, res, "http://localhost:3001/home");
-});
-
-```
-
---- Requirements ---
-- The user must be authenticated with Keycloak and have a valid token in `req.kauth.grant`.
-- The URL specified in `redirectTo` must be present in the `Valid Redirect URIs` in the Keycloak client.
-
+  - grantType: [required] The OAuth2 grant type used for authentication. example "password". Possible values: 'password', 'client_credentials', 'refresh_token', etc.
+  - clientId: [required] string containing the client ID configured in Keycloak. Required for all grant types.
+  - username: [optional] string username. Required when using the password grant type. 
+  - password: [optional] string password. Required when using the password grant type.
+  - baseUrl: [Optional] Keycloak base Url 
+  - realmName: [Optional] A String that specifies the realm to authenticate against, if different from the "keyCloakConfig.realm" parameter.  If you intend to use Keycloak administrator credentials, this should be set to 'master'.
+  - scope: [Optional] A string that specifies The OAuth2 scope requested during authentication (optional). Typically, not required for administrative clients. example:openid profile
+  - requestOptions: [Optional] JSON parameters to configure HTTP requests (such as custom headers, timeouts, etc.). It is compatible with the Fetch API standard. Fetch request options https://developer.mozilla.org/en-US/docs/Web/API/fetch#options
+  - clientSecret: [Optional] string containing the client secret of the client. Required for client_credentials or confidential clients.
+  - totp: string for Time-based One-Time Password (TOTP) for multifactor authentication (MFA), if enabled for the user.
+  - offlineToken: [Optional] boolean value. If true, requests an offline token (used for long-lived refresh tokens). Default is false.
+  - refreshToken: [Optional] string containing a valid refresh token to request a new access token when using the refresh_token grant type.
 ---
 
 
-## 🔧 Admin Functions
-All administrative functions that rely on Keycloak's Admin API must be invoked using the 
-keycloakAdapter.kcAdminClient.{entity}.{function} pattern. 
+## 🔧 Available Admin Functions
+All administrative functions that rely on Keycloak's Admin API must be invoked using the
+KeycloakManager.{entity}.{function} pattern. 
  - {entyty} represents the type of resource you want to manage (e.g., users, roles, groups, clients).
  - {function} is the specific operation you want to perform on that resource (e.g., find, create, update, del).
 For example:
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // get all users of this client
 // users is the entity you want to administer.
 // find is the method used to retrieve the list of users.
- keycloakAdapter.kcAdminClient.users.find();
+KeycloakManager.users.find();
  ```
 Credits to @keycloak/keycloak-admin-client. 
 This admin function is built on top of it. For more details, please refer to the official repository.
@@ -937,7 +217,7 @@ This admin function is built on top of it. For more details, please refer to the
 ### `entity realm`
 The realms property provides access to all administrative operations related to Keycloak realms. 
 A realm in Keycloak is a fundamental concept that acts as an isolated tenant: 
-ach realm manages its own set of users, roles, groups, and clients independently.
+each realm manages its own set of users, roles, groups, and clients independently.
 #### `entity realm functions`
 
 ##### `function create(realm-dictionary)`
@@ -947,11 +227,12 @@ This method accepts a realm representation object containing details such as is,
 - realm-dictionary: is a JSON object that accepts filter parameters
   - id:[required] The internal ID of the realm. If omitted, Keycloak uses the realm name as the ID.
   - realm:[required] The name of the realm to create.
-  - Additional optional properties can be passed to configure the realm (e.g., enabled, displayName, etc.).
+  - { other fields }Additional optional properties can be passed to configure the realm (e.g., enabled, displayName, etc.).
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a new realm
- const realm = await keycloakAdapter.kcAdminClient.realms.create({
+ const realm = await KeycloakManager.realms.create({
      id: "realm-id",
      realm: "realmName",
  });
@@ -967,8 +248,9 @@ You can use this method to modify settings such as login behavior, themes, token
   - realm properties that can be passed to update the realm (e.g., enabled, displayName, etc.).
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // update a realm
- await keycloakAdapter.kcAdminClient.realms.update(
+ await KeycloakManager.realms.update(
      { realm: 'realm-name' },
      {
          displayName: "test",
@@ -985,20 +267,21 @@ This operation is irreversible and removes all users, clients, roles, groups, an
   - realm:[required] The name of the realm to delete.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete 'realmeName' realm
- const realm = await keycloakAdapter.kcAdminClient.realms.del({
+ const realm = await KeycloakManager.realms.del({
      realm: "realmName",
  });
  ```
 
-##### `function find(filter)`
+##### `function find()`
 Retrieves a list of all realms configured in the Keycloak server. 
 This includes basic metadata for each realm such as ID and display name, but not the full configuration details.
 This method does not take any parameters.
-
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete 'realmeName' realm
- const realms = await keycloakAdapter.kcAdminClient.realms.find();
+const realms = await KeycloakManager.realms.find();
 console.log("Retrieved realms:",realms);
  ```
 
@@ -1010,8 +293,9 @@ This includes settings like login policies, themes, password policies, etc.
   - realm:[required] The name (ID) of the realm you want to retrieve.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete 'realmeName' realm
- const realmConfig = await keycloakAdapter.kcAdminClient.realms.findOne({
+const realmConfig = await KeycloakManager.realms.findOne({
      realm: "realmName",
  });
 console.log("Retrieved realm:",realmConfig);
@@ -1031,9 +315,10 @@ It’s useful for incremental updates or merging configuration pieces.
       - 'FAIL' – the operation fails if a resource already exists.
       - 'SKIP' – existing resources are skipped.
       - 'OVERWRITE' – existing resources are overwritten.
-    - other configuration to be imported like users, roles, groups ...
+    - {other fields} other configuration to be imported like users, roles, groups ...
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // import configuration
 const roleToImport: PartialImportRealmRepresentation = {
     ifResourceExists: "FAIL",
@@ -1049,7 +334,7 @@ const roleToImport: PartialImportRealmRepresentation = {
     },
 };
 // partial realm import 
-const result = await keycloakAdapter.kcAdminClient.realms.partialImport({
+const result = await KeycloakManager.realms.partialImport({
     realm: 'my-realm',
     rep: roleToImport,
 });
@@ -1065,9 +350,10 @@ This method returns the full realm representation in JSON format, including role
   - exportGroupsAndRoles: [optional] boolean,  Whether to include groups and roles in the export. Default: true.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 //  realm export 
-const exportedRealm = await keycloakAdapter.kcAdminClient.realms.export({
+const exportedRealm = await KeycloakManager.realms.export({
     realm: 'my-realm',
     exportClients: true,      // optional
     exportGroupsAndRoles: true, // optional
@@ -1084,9 +370,10 @@ These providers define how new clients can be registered and what rules or valid
   - realm:[required] The name of the realm where you want to list client registration policy providers.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 //  get Client Registration Policy Providers
-await keycloakAdapter.kcAdminClient.realms.getClientRegistrationPolicyProviders({
+await KeycloakManager.realms.getClientRegistrationPolicyProviders({
     realm: currentRealmName,
 });
 ```
@@ -1111,8 +398,9 @@ This token allows clients to register themselves with the realm using the Dynami
 - count: Maximum allowed uses 
 - remainingCount: How many uses are left
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  get Client Registration Policy Providers with oount=1 and unlimited expiration time
-const initialAccess= await keycloakAdapter.kcAdminClient.realms.realms.createClientsInitialAccess(
+const initialAccess= await KeycloakManager.realms.realms.createClientsInitialAccess(
     { realm: currentRealmName },
     { count: 1, expiration: 0 },
 );
@@ -1135,8 +423,9 @@ These tokens are used to allow programmatic or automated registration of clients
 - count: Maximum allowed uses
 - remainingCount: How many uses are left
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  get get Clients Initial Access list
-const tokens= await keycloakAdapter.kcAdminClient.realms.getClientsInitialAccess({ realm:'realm-id'});
+const tokens= await KeycloakManager.realms.getClientsInitialAccess({ realm:'realm-id'});
 console.log("Initial Access Tokens:", tokens);
 ```
 
@@ -1150,8 +439,9 @@ This revokes the token, preventing any future use.
   - realm:[required] The name of the realm where the token was created.
   - id:[required] The ID of the initial access token you want to delete.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  delete Clients Initial Access
-await keycloakAdapter.kcAdminClient.realms.delClientsInitialAccess({
+await KeycloakManager.realms.delClientsInitialAccess({
     realm: 'realm-id',
     id: 'initial-access-token-id',
 });
@@ -1166,8 +456,9 @@ Users created in this realm will automatically be added to all default groups.
   - realm:[required] The name of the realm where the default group will be set.
   - id:[required] The ID of the group to be added as a default group
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  get get Clients Initial Access list
-await keycloakAdapter.kcAdminClient.realms.addDefaultGroup({
+await KeycloakManager.realms.addDefaultGroup({
     realm: 'realm-id',
     id: 'default-group-id',
 });
@@ -1181,8 +472,9 @@ Default groups are automatically assigned to new users when they are created.
   - realm:[required] The name of the realm from which to remove the default group.
   - id:[required] The ID of the group you want to remove from the default list.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  remove from 'realm-id' the group 'default-group-id'
-await keycloakAdapter.kcAdminClient.realms.removeDefaultGroup({
+await KeycloakManager.realms.removeDefaultGroup({
     realm: 'realm-id',
     id: 'default-group-id',
 });
@@ -1197,8 +489,9 @@ These are the groups that new users will automatically be added to upon creation
   - realm:[required] The name of the realm from which to retrieve default groups.
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  get 'realm-id' default groups
-const defaultGroups = await keycloakAdapter.kcAdminClient.realms.getDefaultGroups({
+const defaultGroups = await KeycloakManager.realms.getDefaultGroups({
     realm: 'realm-id',
 });
 console.log(defaultGroups);
@@ -1215,8 +508,9 @@ This is useful when you know the group’s full path (e.g., /parent/child) but n
   
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  get 'realm-id' group by Path
-const defaultGroups = await keycloakAdapter.kcAdminClient.realms.getGroupByPath({
+const defaultGroups = await KeycloakManager.realms.getGroupByPath({
     realm: 'realm-id',
     path: 'realm-name-path'
 });
@@ -1233,8 +527,9 @@ Useful for auditing and tracking activities inside Keycloak.
 - realmFilter: is a JSON object that accepts filter parameters
     - realm:[required] The name of the realm from which to retrieve the event configuration.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  get Config Events
-const config= await keycloakAdapter.kcAdminClient.realms.getConfigEvents({
+const config= await KeycloakManager.realms.getConfigEvents({
     realm: 'realm-id',
 });
 console.log(config);
@@ -1265,8 +560,9 @@ enabling admin event logging, and choosing which event listeners to use.
     - adminEventsEnabled: Enables logging for admin events.
     - adminEventsDetailsEnabled: Includes full details in admin event logs if set to true.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  Update Config Events
-const config= await keycloakAdapter.kcAdminClient.realms.updateConfigEvents(
+const config= await KeycloakManager.realms.updateConfigEvents(
     { realm: 'realm-id'},
     {
         eventsEnabled: true,
@@ -1294,9 +590,10 @@ Useful for auditing login, logout, and other user-related activities.
     - first: [optional] Pagination offset. 
     - max: [optional] Maximum number of events to return.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 //  find 10 realm-id events with a type=LOGIN and dateFrom and dateTo. 
-const config= await keycloakAdapter.kcAdminClient.realms.findEvents({ 
+const config= await KeycloakManager.realms.findEvents({ 
     realm: 'realm-id',
     type: 'LOGIN',
     dateFrom: '2025-08-01T00:00:00Z',
@@ -1324,9 +621,10 @@ This is useful for auditing changes made via the admin API or admin console.
     - resourcePath: [optional] Filter events by resource path. 
     - resourceTypes: [optional] Filter events by resource type (e.g., USER, REALM_ROLE, CLIENT).
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 //  find 10 realm-id admin events with a type=CREATE|DELETE and dateFrom and dateTo. 
-const config= await keycloakAdapter.kcAdminClient.realms.findAdminEvents({ 
+const config= await KeycloakManager.realms.findAdminEvents({ 
     realm: 'realm-id',
     operationTypes: ['CREATE', 'DELETE'],
     dateFrom: '2025-08-01T00:00:00Z',
@@ -1345,9 +643,10 @@ This does not clear administrative events. To remove those, use realms.clearAdmi
 - realmFilter: is a JSON object that accepts filter parameters
     - realm: [required] The name of the realm from which to clear user events.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 //  clear realm-id events 
-const config= await keycloakAdapter.kcAdminClient.realms.clearEvents({ 
+const config= await KeycloakManager.realms.clearEvents({ 
     realm: 'realm-id',
 });
 ```
@@ -1361,9 +660,10 @@ performed by administrators via the Admin Console or Admin REST API.
 - realmFilter: is a JSON object that accepts filter parameters
     - realm: [required] The name of the realm from which to clear administrative events.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 //  clear realm-id admin events 
-const config= await keycloakAdapter.kcAdminClient.realms.clearAdminEvents({ 
+const config= await KeycloakManager.realms.clearAdminEvents({ 
     realm: 'realm-id',
 });
 ```
@@ -1380,6 +680,7 @@ This allows you to check whether user management operations (like creating, upda
 
 Returns an object with information such as:      
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 {
     enabled: boolean;
     resource: string;
@@ -1392,9 +693,10 @@ if enabled is false, user management operations are not restricted by fine-grain
 You can enable or configure these permissions using updateUsersManagementPermissions()
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 //  Get Permissions 
-const permissions= await keycloakAdapter.kcAdminClient.realms.getUsersManagementPermissions({ 
+const permissions= await KeycloakManager.realms.getUsersManagementPermissions({ 
     realm: 'realm-id',
 });
 console.log(permissions.enabled); // true or false
@@ -1416,6 +718,7 @@ are protected using Keycloak's authorization services.
 
 Returns an object with information such as:      
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 {
     enabled: boolean;
     resource: string;
@@ -1426,8 +729,9 @@ Returns an object with information such as:
 ```
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  Update Permissions 
-const permissions= await keycloakAdapter.kcAdminClient.realms.updateUsersManagementPermissions({ 
+const permissions= await KeycloakManager.realms.updateUsersManagementPermissions({ 
     realm: 'realm-id',
 });
 
@@ -1465,8 +769,9 @@ Returns a list of keys and related information:
 ```
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  Get Keys 
-const Keys= await keycloakAdapter.kcAdminClient.realms.getKeys({ 
+const Keys= await KeycloakManager.realms.getKeys({ 
     realm: 'realm-id',
 });
 
@@ -1485,8 +790,9 @@ Retrieves statistics about active client sessions in the specified realm. This i
 Returns an array of objects, each representing a client with active sessions
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //  Get Client Session Stats 
-const stats= await keycloakAdapter.kcAdminClient.realms.getClientSessionStats({ 
+const stats= await KeycloakManager.realms.getClientSessionStats({ 
     realm: 'realm-id',
 });
 
@@ -1510,8 +816,9 @@ This forces clients to revalidate tokens, effectively revoking cached access tok
     - realm: [required]  The name of the realm where the revocation should be pushed.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // push revocaiton to realm realm-id  
-const pushR= await keycloakAdapter.kcAdminClient.realms.pushRevocation({ 
+const pushR= await KeycloakManager.realms.pushRevocation({ 
     realm: 'realm-id',
 });
 
@@ -1528,8 +835,9 @@ This invalidates all user sessions, forcing every user to re-authenticate.
     - realm: [required] The name of the realm from which to log out all users.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // force all users logout in realm realm-id  
-const logout= await keycloakAdapter.kcAdminClient.realms.logoutAll({ 
+const logout= await KeycloakManager.realms.logoutAll({ 
     realm: 'realm-id',
 });
 
@@ -1555,9 +863,10 @@ fully integrating it into the realm configuration.
   - authType: [optional] Type of authentication; usually "simple" or "none".
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 //should fail with invalid ldap settings
     try {
-        await keycloakAdapter.kcAdminClient.realms.testLDAPConnection(
+        await KeycloakManager.realms.testLDAPConnection(
             { realm: "realm-name" },
             {
                 action: "testConnection",
@@ -1595,9 +904,10 @@ such as supported controls, extensions, authentication mechanisms, and more.
   - authType: [optional] Type of authentication; usually "simple" or "none".
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // should fail with invalid ldap server capabilities
     try {
-        await keycloakAdapter.kcAdminClient.realms.ldapServerCapabilities(
+        await KeycloakManager.realms.ldapServerCapabilities(
             { realm: "realm-name" },
             {
                 action: "testConnection",
@@ -1638,9 +948,10 @@ SMTP server before applying the settings to the realm.
   - envelopeFrom [optional] Envelope sender address.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // should fail with invalid smtp settings
     try {
-        await keycloakAdapter.kcAdminClient.realms.testSMTPConnection(
+        await KeycloakManager.realms.testSMTPConnection(
             { realm: "master" },
             {
                 from: "test@test.com",
@@ -1664,10 +975,10 @@ Localization texts are used to override default Keycloak UI messages for login f
 - filter: is a JSON object that accepts this filter parameters
     - realm: [required] The name of the realm from which to fetch localization texts.
     - selectedLocale: [required] The locale code (e.g., 'en', 'it', 'fr', etc.) for which you want to retrieve the translations.
-    - 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Realm localization
-const texts= await keycloakAdapter.kcAdminClient.realms.getRealmLocalizationTexts({ 
+const texts= await KeycloakManager.realms.getRealmLocalizationTexts({ 
         realm: "realm-id",
         selectedLocale:'it'
 });
@@ -1687,8 +998,9 @@ This allows you to override default messages in the login screens and other UI c
     - key: [required] The message key or identifier to override (e.g., loginAccountTitle, errorInvalidUsername).
 - value: [required]  The actual translated text to associate with the key for the given locale.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // should add localization
-await keycloakAdapter.kcAdminClient.realms.addLocalization({ 
+await KeycloakManager.realms.addLocalization({ 
         realm: "realm-id",
         selectedLocale:'it',
         key:"theKey"
@@ -1709,15 +1021,16 @@ This function is useful to determine which locales have at least one overridden 
 Return An array of locale codes (e.g., ["en", "it", "fr"]) representing the languages that have at least 
 one customized localization entry in the given realm.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // should add localization
-await keycloakAdapter.kcAdminClient.realms.addLocalization({
+await KeycloakManager.realms.addLocalization({
     realm: "realm-id",
     selectedLocale:'it',
     key:"theKey"
 },"new Value String for key:theKey");
 
 // should get localization for specified locale
-const specificLocales= await keycloakAdapter.kcAdminClient.realms.getRealmSpecificLocales({ 
+const specificLocales= await KeycloakManager.realms.getRealmSpecificLocales({ 
         realm: "realm-id",
         selectedLocale: "it",
 });
@@ -1740,8 +1053,9 @@ This is useful when you want to remove a previously added or overridden message 
 Returns void if the deletion is successful. Will throw an error if the entry does not exist or if parameters are invalid.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // should delete localization for specified locale key 'theKey'
-await keycloakAdapter.kcAdminClient.realms.deleteRealmLocalizationTexts({ 
+await KeycloakManager.realms.deleteRealmLocalizationTexts({ 
         realm: "realm-id",
         selectedLocale: "it",
         key:'theKey'
@@ -1764,8 +1078,9 @@ It is typically used when you want to programmatically add new users to your Key
 @parameters:
 - userRepresentation: An object containing the user fields to be updated.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a new user
- const userProfile = await keycloakAdapter.kcAdminClient.users.create({
+ const userProfile = await KeycloakManager.users.create({
      username:"username",
      email: "test@keycloak.org",
      // enabled required to be true in order to send actions email
@@ -1784,8 +1099,9 @@ sessions, and group/role memberships) are permanently deleted.
 - id: [Required] the user ID to delete
 - realm [Optional] the realm name (defaults to current realm)
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete a user
- const userProfile = await keycloakAdapter.kcAdminClient.users.del({ 
+ const userProfile = await KeycloakManager.users.del({ 
      id: 'user-Id' 
  });
  ```
@@ -1800,18 +1116,19 @@ Searching by attributes is only available from Keycloak > 15
   - max: A pagination parameter used to define the maximum number of users to return (limit).
   - first: A pagination parameter used to define the number of users to skip before starting to return results (offset/limit).
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find a user with 'key:value'
-const user = await keycloakAdapter.kcAdminClient.users.find({ q: "key:value" });;
+const user = await KeycloakManager.users.find({ q: "key:value" });;
 if(user) console.log('User found:', user);
 else console.log('User not found');
 
 // find a user by name = John
-user = await keycloakAdapter.kcAdminClient.users.find({ name: "John" });;
+user = await KeycloakManager.users.find({ name: "John" });;
 if(user) console.log('User found:', user);
 else console.log('User not found');
 
 // find a user with 'name:john', skip 10 users and limt to 5
-const user = await keycloakAdapter.kcAdminClient.users.find({ q: "name:john", first:11, max:5});;
+const user = await KeycloakManager.users.find({ q: "name:john", first:11, max:5});;
 if(user) console.log('User found:', user);
 else console.log('User not found');
  ```
@@ -1820,8 +1137,9 @@ else console.log('User not found');
 findOne is method used to retrieve a specific user's details by their unique identifier (id) within a given realm. 
 It returns the full user representation if the user exists.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find a user with id:'user-id'
-const user = await keycloakAdapter.kcAdminClient.users.findOne({ id: 'user-id' });
+const user = await KeycloakManager.users.findOne({ id: 'user-id' });
 if(user) console.log('User found:', user);
 else console.log('User not found');
  ```
@@ -1834,12 +1152,13 @@ Searching by attributes is only available from Keycloak > 15
 @parameters:
  - filter is a JSON object that accepts filter parameters, such as { email: 'test@keycloak.org' }
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Return the total number of registered users
-const user_count = await keycloakAdapter.kcAdminClient.users.count();
+const user_count = await KeycloakManager.users.count();
 console.log('User found:', user_count);
 
 // Return the number of users with the name "John" 
-user_count = await keycloakAdapter.kcAdminClient.users.count({name:'Jhon'});
+user_count = await KeycloakManager.users.count({name:'Jhon'});
 console.log('User found:', user_count);
  ```
 
@@ -1854,8 +1173,9 @@ You can modify fields like firstName, lastName, email, enabled, and more.
    - realm [Optional] the realm name (defaults to current realm)
  - userRepresentation: An object containing the user fields to be updated.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Update user with id:'user-id'
-const user_count = await keycloakAdapter.kcAdminClient.users.update({ id: 'user-Id' }, {
+const user_count = await KeycloakManager.users.update({ id: 'user-Id' }, {
     firstName: 'John',
     lastName: 'Updated',
     enabled: true,
@@ -1876,8 +1196,9 @@ change the password on next login.
      - value: a String containing new password to be set
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Update user with id:'user-id'
-const user = await keycloakAdapter.kcAdminClient.users.resetPassword({ 
+const user = await KeycloakManager.users.resetPassword({ 
     id: userId,
     credential:{
         temporary: false,
@@ -1896,8 +1217,9 @@ or managing credentials such as password reset, WebAuthn deletion, etc.
    - id: [Required] the user ID to update
    - realm [Optional] the realm name (defaults to current realm)
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // get credentials info for user whose id is 'user-id'
-const ressult = await keycloakAdapter.kcAdminClient.users.getCredentials({id: 'user-id'});
+const ressult = await KeycloakManager.users.getCredentials({id: 'user-id'});
 console.log(ressult);
  ```
 
@@ -1910,8 +1232,9 @@ This is useful when you want to invalidate or remove a credential, forcing the u
    - id: [Required] the user ID to update
    - credentialId [Required] the credentils identifier
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete credentials info for user whose id is 'user-id'
-const ressult = await keycloakAdapter.kcAdminClient.users.deleteCredential({
+const ressult = await KeycloakManager.users.deleteCredential({
     id: 'user-id',
     credentialId: credential.id
 });
@@ -1922,8 +1245,9 @@ It is a method  that retrieves the user profile dictionary information.
 This includes basic user details such as username, email, first name,  last name, 
 and other attributes associated with the user profile in the Keycloak realm.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Get user profile
- const userProfile = await keycloakAdapter.kcAdminClient.users.getProfile();
+ const userProfile = await KeycloakManager.users.getProfile();
  console.log('User profile dicionary:', userProfile);
  ```
 
@@ -1934,8 +1258,9 @@ Adds a user to a specific group within the realm.
   - id [required]: The user ID of the user you want to add to the group. 
   - groupId [required]: The group ID of the group the user should be added to.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a role name called my-role
- const userGroup = await keycloakAdapter.kcAdminClient.users.addToGroup({
+ const userGroup = await KeycloakManager.users.addToGroup({
      groupId: 'group-id',
      id: 'user-id',
 });
@@ -1948,8 +1273,9 @@ Removes a user from a specific group in Keycloak.
   - id [required]: The user ID of the user you want to remove to the group. 
   - groupId [required]: The group ID of the group the user should be removed to.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a role name called my-role
- const userGroup = await keycloakAdapter.kcAdminClient.users.delFromGroup({
+ const userGroup = await KeycloakManager.users.delFromGroup({
      groupId: 'group-id',
      id: 'user-id',
 });
@@ -1963,8 +1289,9 @@ Retrieves the number of groups that a given user is a member of.
   - id: [required] The user ID of the user whose group membership count you want to retrieve.
   - search: [optional] a String containing group name such "cool-group",
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Return the total number of user groups
-const user_count = await keycloakAdapter.kcAdminClient.users.countGroups({id:'user-id'});
+const user_count = await KeycloakManager.users.countGroups({id:'user-id'});
 console.log('Groups found:', user_count);
 
  ```
@@ -1975,8 +1302,9 @@ Returns the list of groups that a given user is a member of.
   - id: [required] The user ID of the user whose group membership you want to retrieve.
   - search: [optional] a String containing group name such "cool-group",
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Return the total number of user groups
-const user_count = await keycloakAdapter.kcAdminClient.users.listGroups({id:'user-id'});
+const user_count = await KeycloakManager.users.listGroups({id:'user-id'});
 console.log('Groups found:', user_count);
 
  ```
@@ -1993,8 +1321,9 @@ Returns a promise that resolves when the roles are successfully assigned. No ret
     - id: [required] The role Id
     - name: [required] The role Name
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Assigns one realm-level role to a user whose ID is 'user-id'.
-const user_count = await keycloakAdapter.kcAdminClient.users.addRealmRoleMappings({
+const user_count = await KeycloakManager.users.addRealmRoleMappings({
     id: 'user-id',
     // at least id and name should appear
     roles: [
@@ -2019,8 +1348,9 @@ This method does not affect composite roles. It only removes directly assigned r
         - id: [required] The role Id
         - name: [required] The role Name
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // remove one realm-level role to a user whose ID is 'user-id'.
-const roles_remove = await keycloakAdapter.kcAdminClient.users.delRealmRoleMappings({
+const roles_remove = await KeycloakManager.users.delRealmRoleMappings({
     id: 'user-id',
     // at least id and name should appear
     roles: [
@@ -2043,8 +1373,9 @@ These are the roles that exist in the realm but have not yet been mapped to the 
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user for whom to list assignable realm roles.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Get assignable realm-level roles for user 'user-id'.
-const available_roles = await keycloakAdapter.kcAdminClient.users.listAvailableRealmRoleMappings({
+const available_roles = await KeycloakManager.users.listAvailableRealmRoleMappings({
     id: 'user-id',
 });
 console.log('Assignable realm-level roles for user user-id',available_roles);
@@ -2062,8 +1393,9 @@ Retrieves all realm-level and client-level roles that are currently assigned to 
 - clientMappings: object containing client roles grouped by client.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Get assigned roles for user 'user-id'.
-const roleMappings = await keycloakAdapter.kcAdminClient.users.listRoleMappings({
+const roleMappings = await KeycloakManager.users.listRoleMappings({
     id: 'user-id',
 });
 console.log(`Realm Roles assigned to user-id:`);
@@ -2094,8 +1426,9 @@ Unlike listRoleMappings, this method focuses only on realm roles and excludes cl
 
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Get assigned roles for user 'user-id'.
-const roleMappings = await keycloakAdapter.kcAdminClient.users.listRealmRoleMappings({
+const roleMappings = await KeycloakManager.users.listRealmRoleMappings({
     id: 'user-id',
 });
 console.log(`Realm roles assigned to user user-id:`);
@@ -2117,8 +1450,9 @@ Composite roles include both directly assigned realm roles and any roles inherit
 
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Get assigned roles for user 'user-id'.
-const roleMappings = await keycloakAdapter.kcAdminClient.users.listCompositeRealmRoleMappings({
+const roleMappings = await KeycloakManager.users.listCompositeRealmRoleMappings({
     id: 'user-id',
 });
 console.log(`Composite realm roles assigned to user user-id:`);
@@ -2143,8 +1477,9 @@ allowing the user to have permissions defined by those client roles.
     - [optional] Other fields
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Add client roles for user 'user-id'.
-const roleMappings = await keycloakAdapter.kcAdminClient.users.addClientRoleMappings({
+const roleMappings = await KeycloakManager.users.addClientRoleMappings({
     id: 'user-id',
     clientUniqueId: 'internal-client-id',
     
@@ -2166,9 +1501,10 @@ This is useful for determining which roles can still be mapped to the user.
   - id: [required] The ID of the user
   - clientUniqueId:[required] The internal ID of the client (not the clientId string)
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // Get all user 'user-id' available roles for client 'internal-client-id'
-const availableRoles = await keycloakAdapter.kcAdminClient.users.listAvailableClientRoleMappings({
+const availableRoles = await KeycloakManager.users.listAvailableClientRoleMappings({
     id: 'user-id',
     clientUniqueId: 'internal-client-id'
  });
@@ -2187,9 +1523,10 @@ This method returns not only directly assigned roles, but also roles inherited t
   - id: [required] The ID of the user
   - clientUniqueId:[required] The internal ID of the client (not the clientId string)
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // Get all composite roles assigned to a  user 'user-id' for client 'internal-client-id'
-const availableRoles = await keycloakAdapter.kcAdminClient.users.listCompositeClientRoleMappings({
+const availableRoles = await KeycloakManager.users.listCompositeClientRoleMappings({
     id: 'user-id',
     clientUniqueId: 'internal-client-id'
  });
@@ -2208,9 +1545,10 @@ assigned to the user from the client, without including roles inherited via comp
   - id: [required] The ID of the user
   - clientUniqueId:[required] The internal ID of the client (not the clientId string)
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // Get all roles assigned to a  user 'user-id' for client 'internal-client-id'
-const availableRoles = await keycloakAdapter.kcAdminClient.users.listClientRoleMappings({
+const availableRoles = await KeycloakManager.users.listClientRoleMappings({
     id: 'user-id',
     clientUniqueId: 'internal-client-id'
  });
@@ -2231,9 +1569,10 @@ This operation unlinks the direct association between the user and the specified
       - name:[required]: role name
       - [optional] Other fields
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // Get all roles assigned to a  user 'user-id' for client 'internal-client-id'
-await keycloakAdapter.kcAdminClient.users.delClientRoleMappings({
+await KeycloakManager.users.delClientRoleMappings({
     id: 'user-id',
      clientUniqueId: 'internal-client-id',
      roles: [{
@@ -2255,9 +1594,10 @@ Each session represents a login session associated with that user across differe
   - id: [required] The ID of the user whose sessions will be listed.
   - clientId: [optional] The internal ID of the client that owns the roles.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // Get all the user 'user-id' sessions.
-const sessions=await keycloakAdapter.kcAdminClient.users.listSessions({
+const sessions=await KeycloakManager.users.listSessions({
     id: 'user-id',
  });
  console.log("User 'user-id' sessions:",sessions);
@@ -2275,9 +1615,10 @@ without requiring the user to be actively logged in.
   - id: [required] The ID of the user whose sessions will be listeds
   - clientId: [optional] The client ID whose sessions are being checked
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // Get all the user 'user-id' sessions.
-const sessions=await keycloakAdapter.kcAdminClient.users.listOfflineSessions({ 
+const sessions=await KeycloakManager.users.listOfflineSessions({ 
     id: 'user-id', 
     clientId: 'client-id' 
 });
@@ -2294,9 +1635,10 @@ This invalidates the user’s active sessions and tokens, effectively logging th
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user whose sessions will be closed
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // Get all the user 'user-id' sessions.
-const sessions=await keycloakAdapter.kcAdminClient.users.logout({ 
+const sessions=await KeycloakManager.users.logout({ 
     id: 'user-id',
 });
  console.log('All User session closed');
@@ -2311,9 +1653,10 @@ Each consent represents a client application that the user has authorized to acc
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user whose client consents can be retrieved.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // Retrieves the list of OAuth2 client consents that the specified user has granted.
-const listConsents=await keycloakAdapter.kcAdminClient.users.listConsents({ 
+const listConsents=await KeycloakManager.users.listConsents({ 
     id: 'user-id',
 });
  console.log('All User consents:',listConsents);
@@ -2332,9 +1675,10 @@ effectively disconnecting the client from the user's account and invalidating as
     - id: [required] The ID of the user whose consent should be revoked
     - clientId: TThe client ID for which the consent should be revoked
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // Retrieves the list of OAuth2 client consents that the specified user has granted.
-await keycloakAdapter.kcAdminClient.users.revokeConsent({
+await KeycloakManager.users.revokeConsent({
     id: 'user-id',
     clientId: 'client-id',
  });
@@ -2353,9 +1697,10 @@ Returns an object containing a redirect URL or token used to impersonate the use
 - filter is a JSON object that accepts this parameters:
     - id: [required] The ID of the user to impersonate.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // Impersonate a user whose id is 'user-id'
-await keycloakAdapter.kcAdminClient.users.impersonation({id: 'user-id'},{
+await KeycloakManager.users.impersonation({id: 'user-id'},{
         user: 'user-id', 
         realm: 'realmeName' 
 });
@@ -2371,9 +1716,10 @@ This is useful if the user has linked their account with external providers like
 - filter is a JSON object that accepts this parameters:
     - id: [required] The unique ID of the user for whom you want to fetch the federated identities.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // This will return a list of all identity providers that the user has linked to their Keycloak account.
-const federatedIdentities= await keycloakAdapter.kcAdminClient.users.listFederatedIdentities({id: 'user-id'});
+const federatedIdentities= await KeycloakManager.users.listFederatedIdentities({id: 'user-id'});
 console.log("Federated Identities:", federatedIdentities);
  ```
 
@@ -2392,6 +1738,7 @@ This is typically used to associate a federated identity (such as a Google or Fa
       - userId: [required] The ID of the user in the external identity provider. 
       - userName: [required] The username in the external identity provider.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // Add user whose id is 'user-id' to a deferated 'federatedIdentity-Id' 
  const federatedIdentity = {
@@ -2399,7 +1746,7 @@ This is typically used to associate a federated identity (such as a Google or Fa
      userId: "user-id",
      userName: "username",
  };
-await keycloakAdapter.kcAdminClient.users.addToFederatedIdentity({
+await KeycloakManager.users.addToFederatedIdentity({
     id: 'user-id',
     federatedIdentityId: "federatedIdentity-Id",
     federatedIdentity:federatedIdentity,
@@ -2417,9 +1764,10 @@ This operation dissociates the external identity (e.g., a Google or Facebook acc
     - id: [required] The ID of the Keycloak user from whom the federated identity should be removed.
     - federatedIdentityId: [required] The alias of the identity provider (e.g., "google" or "facebook").
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
  // Remove a user whose id is 'user-id' from federated 'federatedIdentity-Id'
- await keycloakAdapter.kcAdminClient.users.delFromFederatedIdentity({
+ await KeycloakManager.users.delFromFederatedIdentity({
     id: 'user-id',
     federatedIdentityId: "federatedIdentity-Id",
  });
@@ -2457,8 +1805,9 @@ Creates a new client with the provided configuration
     - ....[optional] Other client fields 
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a client called my-client
- const client= await keycloakAdapter.kcAdminClient.clients.create({name: "my-client", id:"client-id"});
+ const client= await KeycloakManager.clients.create({name: "my-client", id:"client-id"});
 console.log("New Client Created:", client);
  ```
 
@@ -2474,8 +1823,9 @@ for a specific one using filters like clientId.
   - first:[optional] Pagination: index of the first result to return. 
   - max:[optional]	Pagination: maximum number of results to return.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Get client by ID: 'client-id'
-const clients= await keycloakAdapter.kcAdminClient.clients.find({ clientId:"client-id"});
+const clients= await KeycloakManager.clients.find({ clientId:"client-id"});
 console.log("Clients:", clients);
  ```
 
@@ -2486,8 +1836,9 @@ This method fetches the client’s configuration, including its settings, roles,
 - filter: A JSON structure used to filter results based on specific fields:
   - id: [optional] 	The unique identifier of the client to retrieve
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Get client by ID: 'client-id'
-const clients= await keycloakAdapter.kcAdminClient.clients.findOne({ id:"client-id"});
+const clients= await KeycloakManager.clients.findOne({ id:"client-id"});
 console.log("Clients:", clients);
  ```
 
@@ -2499,8 +1850,9 @@ This operation is irreversible and will remove the client and all its associated
 - filter: A JSON structure used to filter results based on specific fields:
   - id: [required] The internal ID of the client to delete (not clientId)
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete client by ID: 'internal-client-id'
-const clients= await keycloakAdapter.kcAdminClient.clients.del({ id:"internal-client-id"});
+const clients= await KeycloakManager.clients.del({ id:"internal-client-id"});
 console.log(`Client successfully deleted.`);
  ```
 
@@ -2513,8 +1865,9 @@ You can modify various attributes such as the client name, redirect URIs, protoc
   - id: [required] The unique ID of the client you want to update
 - clientRepresentation: [required] The new configuration for the client
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // update single client
-await keycloakAdapter.kcAdminClient.clients.update(
+await KeycloakManager.clients.update(
     { id:"internal-client-id"},
     {
         // clientId is required in client update
@@ -2539,8 +1892,9 @@ for fine-grained access control within that client.
     - description: [optional] Optional description of the role.
     - [optional] Other role fields
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Creates a new client role under a specific client.
-const role= await keycloakAdapter.kcAdminClient.clients.createRole({
+const role= await KeycloakManager.clients.createRole({
     id: 'client-id',
     name: 'roleName'
 });
@@ -2559,8 +1913,9 @@ This is useful when you want to inspect or verify the properties of a role defin
     - roleName: [required] The name of the client role you want to find.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Get client role by ID: 'internal-client-id'
-const role= await keycloakAdapter.kcAdminClient.clients.findRole({
+const role= await KeycloakManager.clients.findRole({
     id: 'internal-client-id',
     roleName:'roleName'
 });
@@ -2577,8 +1932,9 @@ This includes changing the role's name, description, or any associated metadata.
     - roleName: [required] The name of the client role you want to update
 - roleRepresentation: [required] An object with the updated properties of the role
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // update the client role
-await keycloakAdapter.kcAdminClient.clients.updateRole(
+await KeycloakManager.clients.updateRole(
     { id: 'internal-client-id',  roleName:'roleName'},
     {
         name: 'newName',
@@ -2600,8 +1956,9 @@ If the role does not exist or the operation fails, an error will be thrown.
     - roleName: [required] The name of the client role you want to delete.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delere client role by ID: 'internal-client-id'
-const role= await keycloakAdapter.kcAdminClient.clients.delRole({
+const role= await KeycloakManager.clients.delRole({
     id: 'internal-client-id',
     roleName:'roleName'
 });
@@ -2616,8 +1973,9 @@ These roles can be used to assign permissions to users or groups for the specifi
     - id: [required] The internal ID of the client (not clientId)
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list the client role
-const roles= await keycloakAdapter.kcAdminClient.clients.listRoles({
+const roles= await KeycloakManager.clients.listRoles({
     id: 'internal-client-id'
 });
 console.log("Client roles:", roles);
@@ -2632,8 +1990,9 @@ This is typically used for clients using client_credentials or authorization_cod
     - id: [required] The internal ID of the client (not clientId)
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // get client secret
-const secret= await keycloakAdapter.kcAdminClient.clients.getClientSecret({
+const secret= await KeycloakManager.clients.getClientSecret({
     id: 'internal-client-id'
 });
 console.log("Client secret:", secret);
@@ -2649,8 +2008,9 @@ It is useful when rotating credentials or recovering access.
     - id: [required] The internal ID of the client (not clientId)
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // generate new client secret
-const secret= await keycloakAdapter.kcAdminClient.clients.generateNewClientSecret({
+const secret= await KeycloakManager.clients.generateNewClientSecret({
     id: 'internal-client-id'
 });
 
@@ -2666,8 +2026,9 @@ It’s particularly useful in dynamic client registration workflows or when auto
     - id: [required] The internal ID of the client (not clientId)
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // generate new registration access token
-const result= await keycloakAdapter.kcAdminClient.clients.generateRegistrationAccessToken({
+const result= await KeycloakManager.clients.generateRegistrationAccessToken({
     id: 'internal-client-id'
 });
 
@@ -2684,8 +2045,9 @@ After invalidation, the client will no longer be able to authenticate using the 
     - id: [required] The internal ID of the client (not clientId)
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // invalidate rotation token
-await keycloakAdapter.kcAdminClient.clients.invalidateSecret({
+await KeycloakManager.clients.invalidateSecret({
     id: 'internal-client-id'
 });
 console.log("Client secret invalidated successfully.");
@@ -2704,8 +2066,9 @@ for example as a JSON file, Keycloak XML adapter config, or other formats suppor
 
 Return an array of installation provider objects, each representing a supported installation format for the client.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // get installation providers
-const providers = await keycloakAdapter.kcAdminClient.clients.getInstallationProviders({
+const providers = await KeycloakManager.clients.getInstallationProviders({
     id: 'internal-client-id'
 });
 console.log("Available installation providers:", providers);
@@ -2722,8 +2085,9 @@ This method allows you to see which policy types are supported and available to 
     - id: [required] The ID of the client (resource server) for which to list available policy providers.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // get installation providers
-const providers = await keycloakAdapter.kcAdminClient.clients.listPolicyProviders({
+const providers = await KeycloakManager.clients.listPolicyProviders({
     id: 'internal-client-id'
 });
 console.log("Available policy providers:", providers);
@@ -2743,8 +2107,9 @@ which can be used for token-based access and permissions management.
 Return an object representing the user linked to the client's service account, 
 including details such as user ID, username, email, and other user attributes.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // get service account user
-const serviceAccountUser = await keycloakAdapter.kcAdminClient.clients.getServiceAccountUser({
+const serviceAccountUser = await KeycloakManager.clients.getServiceAccountUser({
     id: 'internal-client-id'
 });
 console.log("Service Account User:", serviceAccountUser);
@@ -2761,8 +2126,9 @@ Default scopes are automatically included in tokens issued to the client.
     - clientScopeId: [required] The ID of the client scope you want to add as a default scope.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // add default client scope
- await keycloakAdapter.kcAdminClient.clients.addDefaultClientScope({
+ await KeycloakManager.clients.addDefaultClientScope({
     id: 'internal-client-id',
     clientScopeId:'client-scope-id'
 });
@@ -2779,8 +2145,9 @@ Default scopes are automatically assigned to tokens issued for the client.
     - clientScopeId: [required]  The ID of the client scope to be removed.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // cleanup default scopes
- await keycloakAdapter.kcAdminClient.clients.delDefaultClientScope({
+ await KeycloakManager.clients.delDefaultClientScope({
     id: 'internal-client-id',
     clientScopeId:'client-scope-id'
 });
@@ -2796,8 +2163,9 @@ Optional client scopes are those that are not automatically assigned to clients 
     - clientScopeId: [required]  The ID of the client scope you want to unlink from the client.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // cleanup default scopes
- await keycloakAdapter.kcAdminClient.clients.delOptionalClientScope({
+ await KeycloakManager.clients.delOptionalClientScope({
     id: 'internal-client-id',
     clientScopeId:'client-scope-id'
 });
@@ -2813,8 +2181,9 @@ Default client scopes are automatically assigned to a client during token reques
     - id: [required] The client ID of the client whose default client scopes you want to list.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list default client scopes
-const defaultScopes = await keycloakAdapter.kcAdminClient.clients.listDefaultClientScopes({
+const defaultScopes = await KeycloakManager.clients.listDefaultClientScopes({
     id: 'internal-client-id',
 });
 console.log("Default Clients Scopes:",defaultScopes);
@@ -2832,8 +2201,9 @@ Optional scopes are those that a client can request explicitly but are not autom
     - id: [required] The client ID of the client whose optional client scopes you want to list.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list optional client scopes
-const optionalScopes = await keycloakAdapter.kcAdminClient.clients.listOptionalClientScopes({
+const optionalScopes = await KeycloakManager.clients.listOptionalClientScopes({
     id: 'internal-client-id',
 });
 console.log("Optional Clients Scopes:",optionalScopes);
@@ -2850,8 +2220,9 @@ Optional scopes are not automatically applied during login unless explicitly req
     - clientScopeId: [required] The ID of the client scope you want to assign as optional.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // add optional client scope
-await keycloakAdapter.kcAdminClient.clients.addOptionalClientScope({
+await KeycloakManager.clients.addOptionalClientScope({
     id: 'internal-client-id',
     clientScopeId: 'scope-id',
 });
@@ -2867,9 +2238,10 @@ This includes realm-level roles and client-level roles that are mapped to the cl
     - id: [required] The ID of the client whose scope mappings you want to list.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // get 'internal-client-id' scope mapping
-const scopeMappings = await keycloakAdapter.kcAdminClient.clients.listScopeMappings({
+const scopeMappings = await KeycloakManager.clients.listScopeMappings({
     id: 'internal-client-id'
 });
 
@@ -2889,9 +2261,10 @@ This helps you discover which client roles you can still add as scope mappings.
     - client: [required] The client ID of the source client (the one that owns the roles to be mapped).
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // get 'internal-client-id' available roles to be mapped
-const availableRoles = await keycloakAdapter.kcAdminClient.clients.listAvailableClientScopeMappings({
+const availableRoles = await KeycloakManager.clients.listAvailableClientScopeMappings({
     id: 'internal-client-id',
     client: 'internal-client-id',
 });
@@ -2915,9 +2288,10 @@ This means the target client will inherit these roles when requesting tokens.
 
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // map available roles
-await keycloakAdapter.kcAdminClient.clients.addClientScopeMappings({
+await KeycloakManager.clients.addClientScopeMappings({
     id: 'internal-client-id',        // Target client
     client: "my-source-client-id",   // Source client
     },
@@ -2948,9 +2322,10 @@ It shows which roles from another client (source) are already mapped to the targ
 
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // list assigned role mappings
-const assignedRoles = await keycloakAdapter.kcAdminClient.clients.listClientScopeMappings({
+const assignedRoles = await KeycloakManager.clients.listClientScopeMappings({
     id: 'internal-client-id',    // Target client
     client: "my-source-client",  // Source client
 });
@@ -2968,9 +2343,10 @@ It differs from listClientScopeMappings because it expands composite roles and s
     - client: [required] The ID of the source client (the one that owns the roles)
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // list effective (composite) role mappings
-const effectiveRoles = await keycloakAdapter.kcAdminClient.clients.listCompositeClientScopeMappings({
+const effectiveRoles = await KeycloakManager.clients.listCompositeClientScopeMappings({
     id: 'internal-client-id',    // Target client
     client: "my-source-client",  // Source client
 });
@@ -2994,9 +2370,10 @@ It is the reverse of clients.addClientScopeMappings
 
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // Rremove roles from client mappings
-await keycloakAdapter.kcAdminClient.clients.delClientScopeMappings({
+await KeycloakManager.clients.delClientScopeMappings({
     id: 'internal-client-id',     // Target client
     client: "my-source-client",   // Source client
     roles: [
@@ -3019,9 +2396,10 @@ These are roles defined at the realm level that the client does not yet have map
     - id: [required] The ID of the client for which you want to list available realm-level role mappings.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // Get available realm roles for client
-const availableRealmRoles = await keycloakAdapter.kcAdminClient.clients.listAvailableRealmScopeMappings({
+const availableRealmRoles = await KeycloakManager.clients.listAvailableRealmScopeMappings({
     id: 'internal-client-id',
 });
 
@@ -3037,9 +2415,10 @@ These are roles defined at the realm level that the client does not yet have map
     - id: [required] The ID of the client for which you want to list available realm-level role mappings.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // Get available realm roles for client
-const availableRealmRoles = await keycloakAdapter.kcAdminClient.clients.listAvailableRealmScopeMappings({
+const availableRealmRoles = await KeycloakManager.clients.listAvailableRealmScopeMappings({
     id: 'internal-client-id',
 });
 
@@ -3056,9 +2435,10 @@ This shows which realm roles the client is allowed to request on behalf of users
     - id: [required] The client ID whose realm-level scope mappings you want to list
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // Get mapped realm roles for client
-const roles = await keycloakAdapter.kcAdminClient.clients.listRealmScopeMappings({
+const roles = await KeycloakManager.clients.listRealmScopeMappings({
     id: 'internal-client-id',
 });
 
@@ -3074,9 +2454,10 @@ This includes not only the roles directly mapped to the client, but also roles i
     - id: [required] The client ID whose composite realm scope mappings you want to list
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // Get mapped realm composite roles for client
-const roles = await keycloakAdapter.kcAdminClient.clients.listCompositeRealmScopeMappings({
+const roles = await KeycloakManager.clients.listCompositeRealmScopeMappings({
     id: 'internal-client-id',
 });
 
@@ -3094,9 +2475,10 @@ This effectively grants the client access to the specified realm roles.
 - roles: [required] An array of realm roles to be mapped to the client. Each role object typically contains at least id and name 
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // Add Realm scope mappings
-await keycloakAdapter.kcAdminClient.clients.addRealmScopeMappings(
+await KeycloakManager.clients.addRealmScopeMappings(
     {id:'internal-client-id'},
     [{id:'role1_id'},{id:'role1_id'}]
 );
@@ -3112,9 +2494,10 @@ This is the opposite of clients.addRealmScopeMappings.
 - roles: [required] An array of role objects you want to remove. Each role object must at least contain the id or name field.
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // remove Realm scope mappings
-await keycloakAdapter.kcAdminClient.clients.delRealmScopeMappings(
+await KeycloakManager.clients.delRealmScopeMappings(
     {id:'internal-client-id'},
     [{id:'role1_id'},{id:'role1_id'}]
 );
@@ -3130,9 +2513,10 @@ The method retrieves active user sessions for a specific client.
     - max: [optional] pagination field. Maximum number of results.
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // get client sessions
-const sessions = await keycloakAdapter.kcAdminClient.clients.listSessions({
+const sessions = await KeycloakManager.clients.listSessions({
     id: 'internal-client-id',
     first: 0,
     max: 20,
@@ -3156,9 +2540,10 @@ Offline sessions are created when a client uses offline tokens (refresh tokens w
     - max: [optional] pagination field. Maximum number of results.
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // get offline sessions
-const sessions = await keycloakAdapter.kcAdminClient.clients.listOfflineSessions({
+const sessions = await KeycloakManager.clients.listOfflineSessions({
     id: 'internal-client-id',
     first: 0,
     max: 20,
@@ -3179,9 +2564,10 @@ This includes online sessions, not offline sessions (those are retrieved with li
     - id: [required] The client ID whose session must be retrieved
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // count active sessions
-const sessionCount = await keycloakAdapter.kcAdminClient.clients.getSessionCount({
+const sessionCount = await KeycloakManager.clients.getSessionCount({
     id: 'internal-client-id'
 });
 
@@ -3198,9 +2584,10 @@ without requiring active login.
     - id: [required] The ID of the client for which you want to count offline sessions.
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // count active sessions
-const sessionCount = await keycloakAdapter.kcAdminClient.clients.getOfflineSessionCount({
+const sessionCount = await KeycloakManager.clients.getOfflineSessionCount({
     id: 'internal-client-id'
 });
 
@@ -3217,9 +2604,10 @@ client sessions and node information across multiple instances.
     - id: [required] The ID of the client for which you want to add a cluster node. 
     - node: [required] The name or identifier of the cluster node to register.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // Add Cluster Node
-await keycloakAdapter.kcAdminClient.clients.addClusterNode({
+await KeycloakManager.clients.addClusterNode({
     id: 'internal-client-id',
     node:'127.0.0.1'
 });
@@ -3237,9 +2625,10 @@ client session synchronization.
     - id: [required] The ID of the client for which you want to remove a cluster node.
     - node: [required] The name or identifier of the cluster node to remove.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // Add Cluster Node
-await keycloakAdapter.kcAdminClient.clients.deleteClusterNode({
+await KeycloakManager.clients.deleteClusterNode({
     id: 'internal-client-id',
     node:'127.0.0.1'
 });
@@ -3263,6 +2652,7 @@ This is typically used for clients that require client credentials, JWT signing,
   - realmCertificate: [optional] Indicates whether the realm certificate should be added to the keystore. Set to true to include it 
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // set Configuration
 const keystoreConfig = {
@@ -3276,7 +2666,7 @@ const keystoreConfig = {
 const attr = "jwt.credential";
 
 // Generate and download Key
-const result = await keycloakAdapter.kcAdminClient.clients.generateAndDownloadKey(
+const result = await KeycloakManager.clients.generateAndDownloadKey(
     { id: internal-client-id, attr },
     keystoreConfig,
 );
@@ -3299,11 +2689,12 @@ Unlike clients.generateAndDownloadKey, this method only generates the key and st
     - attr: [required] The name of the client attribute where the generated key will be saved
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 const attr = "jwt.credential";
 
 // Generate a Key
-const result = await keycloakAdapter.kcAdminClient.clients.generateKey(
+const result = await KeycloakManager.clients.generateKey(
     { id: internal-client-id, attr }
 );
 
@@ -3323,11 +2714,12 @@ It does not return the actual key material but provides information such as the 
     - attr: [optional] The name of the client attribute to get
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 const attr = "jwt.credential";
 
 // Get Key Info
-const keyInfo = await keycloakAdapter.kcAdminClient.clients.getKeyInfo(
+const keyInfo = await KeycloakManager.clients.getKeyInfo(
     { id: internal-client-id, attr }
 );
 
@@ -3358,6 +2750,7 @@ This is typically used when you need to retrieve the public certificate of a cli
 
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // set Configuration
 const keystoreConfig = {
@@ -3372,7 +2765,7 @@ const keystoreConfig = {
 const attr = "jwt.credential";
 
 // Generate and Key
-const cert = await keycloakAdapter.kcAdminClient.clients.downloadKey(
+const cert = await KeycloakManager.clients.downloadKey(
     { id: internal-client-id, attr },
     keystoreConfig
 );
@@ -3400,9 +2793,10 @@ that can later be linked to resources and policies.
       - ... other scope representation fields
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // createAuthorizationScope
-await keycloakAdapter.kcAdminClient.clients.createAuthorizationScope(
+await KeycloakManager.clients.createAuthorizationScope(
     { id: 'internal-client-id' },
     {
         name: "manage-orders",
@@ -3422,9 +2816,10 @@ This includes both default scopes and optional scopes that can be assigned to th
     
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // Get scopes
-const scopes= await keycloakAdapter.kcAdminClient.clients.listAllScopes({
+const scopes= await KeycloakManager.clients.listAllScopes({
     id: 'internal-client-id' 
 });
 
@@ -3446,9 +2841,10 @@ Authorization scopes define permissions that can be used in policies and permiss
   - .. other attributes: Additional attributes for the scope.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // Update the scope-id authorization scope
-const scopes= await keycloakAdapter.kcAdminClient.clients.updateAuthorizationScope(
+const scopes= await KeycloakManager.clients.updateAuthorizationScope(
     {
         id: 'internal-client-id',
         scopeId: 'scope-id'
@@ -3474,9 +2870,10 @@ Authorization scopes define permissions that can be applied to resources and pol
     - scopeId [required] The ID of the authorization scope to retrieve
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // get scope-id authorization scope
-const scope= await keycloakAdapter.kcAdminClient.clients.getAuthorizationScope({
+const scope= await KeycloakManager.clients.getAuthorizationScope({
     id: 'internal-client-id',
     scopeId: 'scope-id'
 });
@@ -3494,9 +2891,10 @@ This allows you to see which resources are governed by a particular scope in the
     - scopeId [required] The ID of the authorization scope whose associated resources you want to list.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // List all resources by scope
-const resources= await keycloakAdapter.kcAdminClient.clients.listAllResourcesByScope({
+const resources= await KeycloakManager.clients.listAllResourcesByScope({
     id: 'internal-client-id',
     scopeId: 'scope-id'
 });
@@ -3515,9 +2913,10 @@ This is helpful for understanding which permissions (policies and rules) are app
     - scopeId [required] The ID of the authorization scope whose associated permissions you want to list
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // list all permissions by scope
-const permissions= await keycloakAdapter.kcAdminClient.clients.listAllPermissionsByScope({
+const permissions= await KeycloakManager.clients.listAllPermissionsByScope({
     id: 'internal-client-id',
     scopeId: 'scope-id'
 });
@@ -3540,9 +2939,10 @@ in Keycloak’s Authorization Services (UMA 2.0) framework.
     - name: [optional] The name of the permission whose scopes should be retrieved
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // List permission scope
-const permissionScopes= await keycloakAdapter.kcAdminClient.clients.listPermissionScope({
+const permissionScopes= await KeycloakManager.clients.listPermissionScope({
         id: 'internal-client-id',
         name: "scope",
 });
@@ -3564,9 +2964,10 @@ resources that a client can protect with policies and permissions.
 - resource [required]  The resource representation object. This typically includes attributes like name, uris, type, scopes, and other Keycloak resource configuration options.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // import resource
-await keycloakAdapter.kcAdminClient.clients.importResource(
+await KeycloakManager.clients.importResource(
     {
         id: 'internal-client-id'
     },
@@ -3596,9 +2997,10 @@ and associated permissions, which can then be backed up, replicated, or modified
     - resourceId: [optional] The ID of the resource you want to export
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // resource export
-const exportedResource = await keycloakAdapter.kcAdminClient.clients.exportResource({
+const exportedResource = await KeycloakManager.clients.exportResource({
         id: 'internal-client-id'
 });
 
@@ -3622,6 +3024,7 @@ a document, or any application-specific asset. This allows you to manage fine-gr
   - owner: [optional] Defines the owner of the resource.
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // define a resource
 const newResource = {
@@ -3631,7 +3034,7 @@ const newResource = {
     type: 'REST',
 };
 // create resource
-const createdResource = await keycloakAdapter.kcAdminClient.clients.createResource(
+const createdResource = await KeycloakManager.clients.createResource(
     {id: 'internal-client-id'},
     newResource
 );
@@ -3649,9 +3052,10 @@ that can have associated scopes, policies, and permissions for fine-grained acce
     - id: [required] The ID of the client that owns the resource 
     - resourceId: [required] The ID of the resource you want to retrieve.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // get resource
-const createdResource = await keycloakAdapter.kcAdminClient.clients.getResource({
+const createdResource = await KeycloakManager.clients.getResource({
     id: 'internal-client-id',
     resourceId: '12345-abcde',
 });
@@ -3669,9 +3073,10 @@ meaning it can define resources, scopes, permissions, and policies for fine-grai
     - id: [required] The ID of the client whose resource server configuration you want to retrieve
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // get resource Server
-const resourceServer = await keycloakAdapter.kcAdminClient.clients.getResourceServer({
+const resourceServer = await KeycloakManager.clients.getResourceServer({
     id: 'internal-client-id'
 });
 
@@ -3692,6 +3097,7 @@ and policies that control fine-grained access to protected assets.
   - Other resource server settings depending on your authorization model (resources, scopes, and permissions)
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 //define resource Server
 const resourceServerRepresentation={
@@ -3700,7 +3106,7 @@ const resourceServerRepresentation={
 }
 
 // update resource Server
-await keycloakAdapter.kcAdminClient.clients.updateResourceServer(
+await KeycloakManager.clients.updateResourceServer(
     { id: 'internal-client-id' },
     resourceServerRepresentation   
 );
@@ -3718,10 +3124,11 @@ This is part of the Keycloak Authorization Services API and helps administrators
   - resourceId: [required] The ID of the resource for which to list permissions.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 
 // List permissions by resource
-const permissions= await keycloakAdapter.kcAdminClient.clients.listPermissionsByResource({ 
+const permissions= await KeycloakManager.clients.listPermissionsByResource({ 
     id: 'internal-client-id',
     resourceId: 'resource-id'
 });
@@ -3745,9 +3152,10 @@ based on policies you configure. This is part of Keycloak’s Authorization Serv
     - policies [required] Array of policy IDs associated with this permission
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // create a permission
-await keycloakAdapter.kcAdminClient.clients.createPermission({
+await KeycloakManager.clients.createPermission({
         id: 'internal-client-id',
         type: "scope",
     },
@@ -3780,9 +3188,10 @@ and this method allows you to list and filter them based on specific criteria.
     - first: [optional] Index of the first result for pagination 
     - max: [optional] Maximum number of results to return
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // search permission
-const permissions= await keycloakAdapter.kcAdminClient.clients.findPermissions({
+const permissions= await KeycloakManager.clients.findPermissions({
     id: 'internal-client-id',
     name: "View Orders",
     type: "resource",
@@ -3803,9 +3212,10 @@ Fine-grained permissions allow you to control which users/roles can manage diffe
 - status: JSON structure that defines the fine grain permission
   - enabled: [required] Whether fine-grained permissions should be enabled or disabled.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // enable fine-grained permissions for this client
-await keycloakAdapter.kcAdminClient.clients.updateFineGrainPermission(
+await KeycloakManager.clients.updateFineGrainPermission(
     { id: 'internal-client-id'},
     { enabled: true }  
 );
@@ -3820,9 +3230,10 @@ This is useful for checking which permissions are configured (e.g., managing rol
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client (the resource server) where permissions are defined
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // enable fine-grained permissions for this client
-const permissions=  await keycloakAdapter.kcAdminClient.clients.listFineGrainPermissions(
+const permissions=  await KeycloakManager.clients.listFineGrainPermissions(
     { id: 'internal-client-id'},
     { enabled: true }  
 );
@@ -3840,9 +3251,10 @@ In Keycloak’s Authorization Services, permissions can be linked to one or more
     - permissionId: [required] The ID of the permission whose associated scopes you want to retrieve.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // List associated scope
-const scopes= await keycloakAdapter.kcAdminClient.clients.getAssociatedScopes({
+const scopes= await KeycloakManager.clients.getAssociatedScopes({
     id: 'internal-client-id',
     permissionId: "123e4567-e89b-12d3-a456-426614174000",
 });
@@ -3859,9 +3271,10 @@ n Keycloak Authorization Services, permissions can be tied to one or more polici
     - permissionId: [required] The ID of the permission whose associated policies you want to retrieve.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // List associated policies
-const policies= await keycloakAdapter.kcAdminClient.clients.getAssociatedPolicies({
+const policies= await KeycloakManager.clients.getAssociatedPolicies({
         id: 'internal-client-id',
     permissionId: "123e4567-e89b-12d3-a456-426614174000",
 });
@@ -3880,9 +3293,10 @@ In Keycloak Authorization Services, permissions can be scoped to one or more res
     - permissionId: [required] The ID of the permission for which you want to fetch associated resources.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 // List associated resources
-const resources= await keycloakAdapter.kcAdminClient.clients.getAssociatedResources({
+const resources= await KeycloakManager.clients.getAssociatedResources({
     id: 'internal-client-id',
     permissionId: "123e4567-e89b-12d3-a456-426614174000",
 });
@@ -3901,10 +3315,11 @@ This allows administrators to understand which scopes are directly linked to a p
   - resourceId: [required] The ID of the resource for which to list scopes.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 
 // List permissions by resource
-const scopes= await keycloakAdapter.kcAdminClient.clients.listScopesByResource({ 
+const scopes= await KeycloakManager.clients.listScopesByResource({ 
     id: 'internal-client-id',
     resourceId: 'resource-id'
 });
@@ -3928,10 +3343,11 @@ Resources represent protected entities (such as APIs, files, or services) that c
   - owner: [optional] Filters resources by owner
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 
 // List resources
-const resources= await keycloakAdapter.kcAdminClient.clients.listResources({ 
+const resources= await KeycloakManager.clients.listResources({ 
     id: 'internal-client-id'
 });
 
@@ -3957,10 +3373,11 @@ Resources represent protected entities (APIs, files, services, etc.) that can be
   
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 
 // Update resource
-await keycloakAdapter.kcAdminClient.clients.updateResource( 
+await KeycloakManager.clients.updateResource( 
     {  
         id: 'internal-client-id',
         resourceId: 'resource-id' 
@@ -4001,10 +3418,11 @@ They can be based on users, roles, groups, conditions, or custom logic.
   
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 
 // create new policy
-await keycloakAdapter.kcAdminClient.clients.createPolicy( 
+await KeycloakManager.clients.createPolicy( 
     {  
         id: 'internal-client-id',
         type: "role",   
@@ -4037,10 +3455,11 @@ This is useful when you want to understand how a policy is referenced by other p
   - policyId: [required] The ID of the policy for which you want to list dependent policies.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 
 
 // create new policy
-const dependentPolicies= await keycloakAdapter.kcAdminClient.clients.listDependentPolicies( 
+const dependentPolicies= await KeycloakManager.clients.listDependentPolicies( 
     {  
         id: 'internal-client-id',
         policyId: "1234-abcd-policy-id",
@@ -4061,8 +3480,9 @@ contents without performing a full user login. This can help you verify client r
     - id: [required] ID of the client for which you want to generate or evaluate the access token
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // generate accesstoken
-const token = await keycloakAdapter.kcAdminClient.clients.evaluateGenerateAccessToken({
+const token = await KeycloakManager.clients.evaluateGenerateAccessToken({
     id: 'internal-client-id'
 });
 
@@ -4087,8 +3507,9 @@ token for the client.
     - id: [required] ID of the client for which you want to generate or evaluate the ID token
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // generate id token
-const token = await keycloakAdapter.kcAdminClient.clients.evaluateGenerateIdToken({
+const token = await KeycloakManager.clients.evaluateGenerateIdToken({
     id: 'internal-client-id',
 });
 
@@ -4112,8 +3533,9 @@ UserInfo response without performing a full login flow.
     - id: [required] The ID of the client for which you want to generate the UserInfo response
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // generate toke user info
-const userInfo = await keycloakAdapter.kcAdminClient.clients.evaluateGenerateUserInfo({
+const userInfo = await KeycloakManager.clients.evaluateGenerateUserInfo({
     id: 'internal-client-id',
 });
 
@@ -4142,8 +3564,9 @@ Protocol mappers define how user information (claims) is mapped into tokens (lik
     - id: [required] ID of the client for which you want to list or evaluate protocol mappers.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // List protocol mappers for client
-const protocolMappers = await keycloakAdapter.kcAdminClient.clients.evaluateListProtocolMapper({
+const protocolMappers = await KeycloakManager.clients.evaluateListProtocolMapper({
     id: 'internal-client-id',
 });
 
@@ -4176,8 +3599,9 @@ Protocol mappers define how data from user/client models is added to tokens (e.g
     - ....
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // add single protocol mapper
-await keycloakAdapter.kcAdminClient.clients.addProtocolMapper(
+await KeycloakManager.clients.addProtocolMapper(
     {id: 'internal-client-id'},
     {
         name: "become-a-farmer",
@@ -4219,8 +3643,9 @@ The method is used to update an existing protocol mapper for a specific client i
     - ....
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // update protocol mappe
-await keycloakAdapter.kcAdminClient.clients.updateProtocolMapper(
+await KeycloakManager.clients.updateProtocolMapper(
     {id: 'internal-client-id', mapperId:'mapper-id'},
     {
         name: "become-a-farmer",
@@ -4259,8 +3684,9 @@ This batch operation is efficient when you want to configure multiple mappings w
   - ....
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // add multiple protocol mappers
-await keycloakAdapter.kcAdminClient.clients.addMultipleProtocolMappers(
+await KeycloakManager.clients.addMultipleProtocolMappers(
     {id: 'internal-client-id'},
     [
         {
@@ -4311,8 +3737,9 @@ It is particularly useful when you want to verify if a mapper exists or fetch it
     - name: [required] The name of the protocol mapper to look up. (usually "openid-connect" or "saml").
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find Protocol Mapper ByName
-await keycloakAdapter.kcAdminClient.clients.findProtocolMapperByName({
+await KeycloakManager.clients.findProtocolMapperByName({
     id: 'internal-client-id',
     name: 'protocol-name',
 });
@@ -4330,8 +3757,9 @@ The method returns all protocol mappers associated with a client, filtered by a 
       - "saml"
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find protocol mappers by protocol
-const mappers = await keycloakAdapter.kcAdminClient.clients.findProtocolMappersByProtocol({
+const mappers = await KeycloakManager.clients.findProtocolMappersByProtocol({
     id: 'internal-client-id',
     protocol: 'openid-connect',
 });
@@ -4350,8 +3778,9 @@ The method retrieves the details of a specific protocol mapper by its ID for a g
     - mapperId: [required] The ID of the protocol mapper you want to fetch.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find Protocol Mapper By Id
-const mapper = await keycloakAdapter.kcAdminClient.clients.findProtocolMapperById({
+const mapper = await KeycloakManager.clients.findProtocolMapperById({
     id: 'internal-client-id',
     mapperId: 'protocol-id',
 });
@@ -4369,8 +3798,9 @@ This method is useful for inspecting or managing the token contents of a client.
     - id: [required] The internal ID of the client whose protocol mappers you want to list.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list protocol mappers
-const protocolMappers = await keycloakAdapter.kcAdminClient.clients.listProtocolMappers({
+const protocolMappers = await KeycloakManager.clients.listProtocolMappers({
     id: 'internal-client-id',
 });
 console.log("Protocol Mappers:", protocolMappers);
@@ -4388,8 +3818,9 @@ This method is useful when you want to remove an existing mapper from a client c
     - mapperId: [required] The ID of the protocol mapper to delete
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Del Protocol Mapper
-await keycloakAdapter.kcAdminClient.clients.delProtocolMapper({
+await KeycloakManager.clients.delProtocolMapper({
     id: 'internal-client-id',
     mapperId: 'mapper-id',
 });
@@ -4409,8 +3840,9 @@ method is used to create a new client scope in a Keycloak realm.
 A client scope defines a set of protocol mappers and roles that can be applied to clients,
 such as during login or token generation.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a group called my-group
- await keycloakAdapter.kcAdminClient.clientScopes.create({
+ await KeycloakManager.clientScopes.create({
      name: "scope-name",
      description: "scope-description",
      protocol: "openid-connect",
@@ -4432,8 +3864,9 @@ You can modify properties such as the scope’s name, description, attributes, o
   - other scope fields....
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // update a scope called my-scope-id
- await keycloakAdapter.kcAdminClient.clientScopes.update(
+ await KeycloakManager.clientScopes.update(
      {id:'my-scope-id'},
      {
         name: "scope-name",
@@ -4453,8 +3886,9 @@ Once deleted, the client scope will no longer be available for assignment to cli
     - id: [required] The unique ID of the client scope to delete.
     - realm: [optional] The realm where the client scope is defined.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete client scope
- await keycloakAdapter.kcAdminClient.clientScopes.del({
+ await KeycloakManager.clientScopes.del({
      id: "scope-id",
  });
  ``` 
@@ -4468,8 +3902,9 @@ It's an alternative to deleting by ID when the scope's name is known.
 - filter: parameter provided as a JSON object that accepts the following filter:
     - name: [required] The name of the client scope to delete. This must match exactly with the registered name in the realm.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // cleanup client scopes
- await keycloakAdapter.kcAdminClient.clientScopes.delByName({
+ await KeycloakManager.clientScopes.delByName({
      name: "scope-name",
  });
  ```
@@ -4486,8 +3921,9 @@ Client scopes represent a set of protocol mappers and roles that can be assigned
     - first: [optional] Index of the first result (for pagination). 
     - max: [optional] Maximum number of results to return.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Find client Scope
-const scope = await keycloakAdapter.kcAdminClient.clientScopes.find({
+const scope = await KeycloakManager.clientScopes.find({
      max: 10
  });
 console.log("Search Result:",scope);
@@ -4503,8 +3939,9 @@ It’s useful when you need the full configuration of a particular client scope,
     - realm: [optional] The realm where the client scope is defined. 
     
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Find one client Scope
-const scope = await keycloakAdapter.kcAdminClient.clientScopes.findOne({
+const scope = await KeycloakManager.clientScopes.findOne({
      id: 'my-scope-id'
  });
 console.log("Search Result:",scope);
@@ -4519,8 +3956,9 @@ including its ID, protocol, and other settings.
 - filter: parameter provided as a JSON object that accepts the following filter:
     - name: [required] The name of the client scope you're searching for.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Find client Scope by name
-const scope = await keycloakAdapter.kcAdminClient.clientScopes.findOneByName({
+const scope = await KeycloakManager.clientScopes.findOneByName({
      name: "scope-name",
  });
 console.log("Search Result:",scope);
@@ -4537,8 +3975,9 @@ Default client scopes are automatically assigned to newly created clients in tha
     - first: [optional] Index of the first result (for pagination).
     - max: [optional] Maximum number of results to return.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list default client scopes
-const scopes = await keycloakAdapter.kcAdminClient.clientScopes.listDefaultClientScopes({
+const scopes = await KeycloakManager.clientScopes.listDefaultClientScopes({
      realm: "realm-name",
  });
 console.log("Search Result:",scopes);
@@ -4554,8 +3993,9 @@ Default client scopes are automatically assigned to all newly created clients wi
     - id: [required] The ID of the client scope to add as a default.
     - realm: [optional] The realm where the client scopes are defined.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // add default client scope
-await keycloakAdapter.kcAdminClient.clientScopes.addDefaultClientScope({
+await KeycloakManager.clientScopes.addDefaultClientScope({
      id: "client-scope-id",
  });
 
@@ -4573,8 +4013,9 @@ Removing one prevents it from being included by default.
     - realm:: [optional] The realm where the client scope is defined. 
     
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete default client Scope
-await keycloakAdapter.kcAdminClient.clientScopes.delDefaultClientScope({
+await KeycloakManager.clientScopes.delDefaultClientScope({
     realm: "myrealm-name",
     id: "default-profile-scope-id",
 });
@@ -4592,8 +4033,9 @@ Optional client scopes are available for clients to select but are not automatic
     - realm:: [optional] The realm where the client scope is defined. 
     
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list default optional client scopes
-const optionalScopes= await keycloakAdapter.kcAdminClient.clientScopes.listDefaultOptionalClientScopes({
+const optionalScopes= await KeycloakManager.clientScopes.listDefaultOptionalClientScopes({
     realm: "myrealm-name",
     id: "default-profile-scope-id",
 });
@@ -4612,8 +4054,9 @@ Optional client scopes are available to clients for selection but are not automa
   - realm:: [optional] The realm where the client scope is defined. 
     
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // add default optional client scope
-await keycloakAdapter.kcAdminClient.clientScopes.addDefaultOptionalClientScope({
+await KeycloakManager.clientScopes.addDefaultOptionalClientScope({
     realm: "myrealm-name",
     id: "default-profile-scope-id",
 });
@@ -4634,8 +4077,9 @@ Removing one prevents it from being listed as optional for new clients.
     - realm:: [optional] The realm where the client scope is defined. 
     
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete optional client Scope
-await keycloakAdapter.kcAdminClient.clientScopes.delDefaultOptionalClientScope({
+await KeycloakManager.clientScopes.delDefaultOptionalClientScope({
     realm: "myrealm-name",
     id: "default-profile-scope-id",
 });
@@ -4655,8 +4099,9 @@ Protocol mappers define how user attributes, roles, or other data are mapped int
   - name: [optional] The name of the protocol mapper to find.
     
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find protocol mapper by name
-const mapper= await keycloakAdapter.kcAdminClient.clientScopes.findProtocolMapperByName({
+const mapper= await KeycloakManager.clientScopes.findProtocolMapperByName({
     realm: "myrealm-name",
     id: "mapper-id-protocol",
     name: "username",
@@ -4680,8 +4125,9 @@ Protocol mappers define how user attributes, roles, or other information are map
   - realm: [optional] The realm where the client scope is defined. 
    
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find protocol mapper by name
-const mapper= await keycloakAdapter.kcAdminClient.clientScopes.findProtocolMapper({
+const mapper= await KeycloakManager.clientScopes.findProtocolMapper({
     realm: "myrealm-name",
     id: "client-scope-id",
     mapperId: "mapper-id-123",
@@ -4705,8 +4151,9 @@ This is useful when you want to filter protocol mappers by the authentication pr
   - realm: [optional] The realm where the client scope is defined.
    
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find protocol mapper by protocol
-const mapper= await keycloakAdapter.kcAdminClient.clientScopes.findProtocolMappersByProtocol({
+const mapper= await KeycloakManager.clientScopes.findProtocolMappersByProtocol({
     realm: "myrealm-name",
     id: "client-scope-id",
     protocol: "openid-connect",
@@ -4731,9 +4178,10 @@ Deleting a mapper removes its configuration from the client scope.
   - realm: [optional] The realm where the client scope is defined.
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // Del Protocol Mapper
-await keycloakAdapter.kcAdminClient.clientScopes.delProtocolMapper({
+await KeycloakManager.clientScopes.delProtocolMapper({
     realm: "my-realm-id",
     id: "client-id",
     mapperId: "mapper-id-123",
@@ -4752,9 +4200,10 @@ Protocol mappers define how user attributes, roles, or other data are mapped int
   - realm: [optional] The realm where the client scope is defined.
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // list protocol mapper
-const mappers= await keycloakAdapter.kcAdminClient.clientScopes.listProtocolMappers({
+const mappers= await KeycloakManager.clientScopes.listProtocolMappers({
     realm: "myrealm-name",
     id: "mapper-id",
 });
@@ -4780,9 +4229,10 @@ With this method, you can configure several mappers in a single request.
     - consentRequired: [optional] Whether user consent is required. 
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // add multiple protocol mappers
-await keycloakAdapter.kcAdminClient.clientScopes.addMultipleProtocolMappers(
+await KeycloakManager.clientScopes.addMultipleProtocolMappers(
     { id: 'client-scope-id' }, 
     [
         {
@@ -4826,9 +4276,10 @@ Protocol mappers define how user attributes, roles, or other information are map
   - consentRequired: [optional] Whether user consent is required. 
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // add protocol mapper
-await keycloakAdapter.kcAdminClient.clientScopes.addProtocolMapper(
+await KeycloakManager.clientScopes.addProtocolMapper(
     { id: 'client-scope-id' }, 
    
     {
@@ -4868,9 +4319,10 @@ With this method, you can modify an existing mapper’s configuration.
   - consentRequired: [optional] Whether user consent is required. 
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // add protocol mapper
-await keycloakAdapter.kcAdminClient.clientScopes.updateProtocolMapper(
+await KeycloakManager.clientScopes.updateProtocolMapper(
     { id: 'client-scope-id' ,  mapperId: "mapper-id-123",}, 
    
     {
@@ -4902,9 +4354,10 @@ These roles determine the permissions and access tokens issued for clients using
     - realm: [optional] The realm where the client scope is defined.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // list scope mapping
-const scopeMappings= await keycloakAdapter.kcAdminClient.clientScopes.listScopeMappings({
+const scopeMappings= await KeycloakManager.clientScopes.listScopeMappings({
     realm: "myrealm-name",
     id: "client-scope-id",
 });
@@ -4925,9 +4378,10 @@ This helps identify which roles from a specific client are still available to be
     - realm: [optional] The realm where the client scope is defined.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // list available client scope mapping
-const availableRoles= await keycloakAdapter.kcAdminClient.clientScopes.listAvailableClientScopeMappings({
+const availableRoles= await KeycloakManager.clientScopes.listAvailableClientScopeMappings({
     realm: "myrealm-name",
     id: "client-scope-id",
     client:'client-id'
@@ -4956,9 +4410,10 @@ This means the client scope will include the selected roles, and any client usin
   - containerId: [optional] The ID of the client containing the role.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // add client scope mapping
-const availableRoles= await keycloakAdapter.kcAdminClient.clientScopes.addClientScopeMappings(
+const availableRoles= await KeycloakManager.clientScopes.addClientScopeMappings(
     {
         realm: "myrealm-name",
         id: "client-scope-id",
@@ -5002,9 +4457,10 @@ This allows you to revoke previously assigned client roles so they are no longer
   - containerId: [optional] The ID of the client containing the role.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // add client scope mapping
-const availableRoles= await keycloakAdapter.kcAdminClient.clientScopes.delClientScopeMappings( 
+const availableRoles= await KeycloakManager.clientScopes.delClientScopeMappings( 
     {
         realm: "myrealm-name",
         id: "client-scope-id",
@@ -5042,9 +4498,10 @@ This allows you to check which roles from a particular client are already includ
   - realm: [optional] The realm where the client scope is defined.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // list client scope mapping
-const mappedRoles= await keycloakAdapter.kcAdminClient.clientScopes.listClientScopeMappings({
+const mappedRoles= await KeycloakManager.clientScopes.listClientScopeMappings({
     realm: "myrealm-name",
     id: "client-scope-id",
     client: "client-id",
@@ -5066,9 +4523,10 @@ This is useful when you want to see the final set of roles available in a client
   - realm: [optional] The realm where the client scope is defined.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // list client scope mapping
-const mappedRoles= await keycloakAdapter.kcAdminClient.clientScopes.listCompositeClientScopeMappings({
+const mappedRoles= await KeycloakManager.clientScopes.listCompositeClientScopeMappings({
     realm: "myrealm-name",
     id: "client-scope-id",
     client: "client-id",
@@ -5089,9 +4547,10 @@ This helps you determine which realm-level roles can still be added to the clien
   - realm: [optional] The realm where the client scope is defined.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // list available realm scope mappings
-const availableRealmRoles= await keycloakAdapter.kcAdminClient.clientScopes.listAvailableRealmScopeMappings({
+const availableRealmRoles= await KeycloakManager.clientScopes.listAvailableRealmScopeMappings({
     realm: "myrealm-name",
     id: "client-scope-id",
 });
@@ -5117,9 +4576,10 @@ This means that any client using this client scope will inherit the specified re
   - containerId: [optional] The ID of the realm containing the role.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // add realm scope mappings
-const availableRealmRoles= await keycloakAdapter.kcAdminClient.clientScopes.addRealmScopeMappings(
+const availableRealmRoles= await KeycloakManager.clientScopes.addRealmScopeMappings(
     {
         realm: "myrealm-name",
         id: "client-scope-idb"
@@ -5151,9 +4611,10 @@ This revokes previously assigned realm roles, so clients using this scope will n
   - containerId: [optional] The ID of the realm containing the role.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // del realm scope mappings
-const availableRealmRoles= await keycloakAdapter.kcAdminClient.clientScopes.delRealmScopeMappings(
+const availableRealmRoles= await KeycloakManager.clientScopes.delRealmScopeMappings(
     {
         realm: "myrealm-name",
         id: "client-scope-id"
@@ -5179,9 +4640,10 @@ This allows you to see which realm-level permissions are already assigned to the
   - realm: [optional] The realm where the client scope is defined.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // list realm scope mappings
-const mappedRealmRoles= await keycloakAdapter.kcAdminClient.clientScopes.listRealmScopeMappings({
+const mappedRealmRoles= await KeycloakManager.clientScopes.listRealmScopeMappings({
     realm: "myrealm-name",
     id: "client-id-scope",
 });
@@ -5200,9 +4662,10 @@ This is useful to see the complete set of realm-level permissions a client scope
   - realm: [optional] The realm where the client scope is defined.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  
 // list composite realm scope mappings
-const mappedRealmRoles= await keycloakAdapter.kcAdminClient.clientScopes.listCompositeRealmScopeMappings({
+const mappedRealmRoles= await KeycloakManager.clientScopes.listCompositeRealmScopeMappings({
     realm: "myrealm-name",
     id: "client-id-scope",
 });
@@ -5236,8 +4699,9 @@ This method requires specifying an alias, the provider type, and configuration s
     - firstBrokerLoginFlowAlias: [optional] Flow to use on first login. 
     - config : [optional] Provider-specific configuration, e.g., client ID, client secret, endpoints, etc.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a gidentity provider
- keycloakAdapter.kcAdminClient.identityProviders.create({
+ KeycloakManager.identityProviders.create({
     alias: "google",
     providerId: "google",
     enabled: true,
@@ -5263,8 +4727,9 @@ The mapper defines how attributes, roles, or claims from the Identity Provider a
     - alias: [required] The alias of the Identity Provider to which the mapper will be attached. 
     - identityProviderMapper: [required] The mapper configuration object, which includes details like the mapper type, name, and configuration values
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a mapper
- keycloakAdapter.kcAdminClient.identityProviders.createMapper({
+ KeycloakManager.identityProviders.createMapper({
      alias: 'currentIdpAlias',
      identityProviderMapper: {
          name: "email-mapper",
@@ -5288,8 +4753,9 @@ These mappers define how attributes, roles, or claims from the external Identity
 - filter: pparameter provided as a JSON object that accepts the following filter:
     - alias: [required] TThe alias of the Identity Provider whose mappers you want to fetch.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find a mapper
- const  mappers= await keycloakAdapter.kcAdminClient.identityProviders.findMappers({
+ const  mappers= await KeycloakManager.identityProviders.findMappers({
      alias: 'currentIdpAlias',
      
  });
@@ -5308,8 +4774,9 @@ This is useful when you need to remove a mapping rule that translates attributes
     - alias: [required] The alias of the Identity Provider that owns the mapper. 
     - id : [required] The unique ID of the mapper to be deleted.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete a mapper
- await keycloakAdapter.kcAdminClient.identityProviders.delMapper({
+ await KeycloakManager.identityProviders.delMapper({
      alias: 'currentIdpAlias',
      id: 'mapperId'
  });
@@ -5327,8 +4794,9 @@ This allows you to inspect a mapper’s configuration, such as how attributes or
     - alias: [required] The alias of the Identity Provider. 
     - id: [required] The unique ID of the mapper to retrieve.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find a mapper
- const  mapper= await keycloakAdapter.kcAdminClient.identityProviders.findOneMapper({
+ const  mapper= await KeycloakManager.identityProviders.findOneMapper({
      alias: 'currentIdpAlias',
      id: 'mapperId'
  });
@@ -5345,8 +4813,9 @@ After deletion, users will no longer be able to authenticate using that Identity
 - filter: pparameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias of the Identity Provider you want to delete.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete 
- await keycloakAdapter.kcAdminClient.identityProviders.del({
+ await KeycloakManager.identityProviders.del({
      alias: 'currentIdpAlias'
  });
 
@@ -5361,8 +4830,9 @@ It is useful when you need to inspect the provider’s settings, such as its ali
 - filter: pparameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias of the Identity Provider you want to find.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find one 
- const  idp= await keycloakAdapter.kcAdminClient.identityProviders.findOne({
+ const  idp= await KeycloakManager.identityProviders.findOne({
      alias: 'currentIdpAlias'
  });
 
@@ -5379,8 +4849,9 @@ The method retrieves a list of all configured Identity Providers in the current 
 It allows you to see which providers (e.g., Google, GitHub, SAML, etc.) are available and get their basic configuration details.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find 
- const  provider= await keycloakAdapter.kcAdminClient.identityProviders.find();
+ const  provider= await KeycloakManager.identityProviders.find();
 
 console.log("Configured Identity Providers:");
 providers.forEach((provider) => {
@@ -5400,8 +4871,9 @@ It allows you to modify settings such as client ID, secret, authorization URLs, 
   - providerId: [required] The provider type (e.g., "google", "saml"). 
   - Other optional fields like displayName, config object, etc.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // update one 
- await keycloakAdapter.kcAdminClient.identityProviders.update(
+ await KeycloakManager.identityProviders.update(
      { alias: 'currentIdpAlias' },
      {
          // alias and providerId are required to update
@@ -5421,8 +4893,9 @@ This is useful when you want to check what configuration options are supported b
 - filter: pparameter provided as a JSON object that accepts the following filter:
   - providerId: [required] The ID of the Identity Provider factory to look up (e.g., "oidc", "saml", "google").
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find factory 
- const factory= await keycloakAdapter.kcAdminClient.identityProviders.findFactory({
+ const factory= await KeycloakManager.identityProviders.findFactory({
      providerId: "oidc",
  });
 
@@ -5440,8 +4913,9 @@ This is useful to list all transformations and mappings applied to users authent
 - filter: parameter provided as a JSON object that accepts the following filter:
   - alias: [required] The alias of the Identity Provider (set when the provider was created).
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find one 
- const mappers= await keycloakAdapter.kcAdminClient.identityProviders.findMappers({
+ const mappers= await KeycloakManager.identityProviders.findMappers({
      alias: "google",
  });
 
@@ -5457,8 +4931,9 @@ It’s useful when you need to inspect the configuration of a mapper before upda
   - alias: [required] The alias of the Identity Provider. 
   - id: [required] The unique ID of the mapper to fetch.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find one 
- const mapper= await keycloakAdapter.kcAdminClient.identityProviders.findOneMapper({
+ const mapper= await KeycloakManager.identityProviders.findOneMapper({
      alias: "google",
      id: "1234-abcd-5678-efgh",
  });
@@ -5486,8 +4961,9 @@ This method allows you to change the configuration of an existing mapper (e.g., 
   - identityProviderMapper: [optional] The type of mapper (e.g., "oidc-user-attribute-idp-mapper"). 
   - config: [optional] The new mapping configuration.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // update one Mapper
- const mappers= await keycloakAdapter.kcAdminClient.identityProviders.updateMapper(
+ const mappers= await KeycloakManager.identityProviders.updateMapper(
      {
          alias: "google",
          id: "1234-abcd-5678-efgh", // Mapper ID
@@ -5519,8 +4995,9 @@ This saves you from manually entering configuration details, since Keycloak can 
   - trustEmail: [optional] Whether to automatically trust emails from this IdP. 
   - alias: [optional] Alias for the Identity Provider (unique name).
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // import one Mapper
- const mappers= await keycloakAdapter.kcAdminClient.identityProviders.importFromUrl({
+ const mappers= await KeycloakManager.identityProviders.importFromUrl({
      fromUrl: "https://accounts.google.com/.well-known/openid-configuration",
      providerId: "oidc",
      alias: "google",
@@ -5542,8 +5019,9 @@ When enabled, Keycloak creates client roles (scopes) that let you define which u
   - realm: [optional] The realm where the IdP is defined.
   - other permisssion fields
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // import one permission
- const updatedPermissions= await keycloakAdapter.kcAdminClient.identityProviders.updatePermission(
+ const updatedPermissions= await KeycloakManager.identityProviders.updatePermission(
      { alias: "google"},
      { enabled: true }
  );
@@ -5560,8 +5038,9 @@ It returns whether permissions are enabled and, if so, which scope roles are ass
   - alias: [required] The alias of the Identity Provider. 
   - realm: [optional] The realm where the IdP is defined.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // import one permission
- const permissions= await keycloakAdapter.kcAdminClient.identityProviders.listPermissions({
+ const permissions= await KeycloakManager.identityProviders.listPermissions({
      alias: "google",
      realm: "myrealm",
  });
@@ -5590,8 +5069,9 @@ Create a new group in the current realme
     - {other [optional] group descriprion fields}
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a group called my-group
- keycloakAdapter.kcAdminClient.groups.create({name: "my-group"});
+ KeycloakManager.groups.create({name: "my-group"});
  ```
 
 
@@ -5605,13 +5085,14 @@ Searching by attributes is only available from Keycloak > 15
     - max: A pagination parameter used to define the maximum number of groups to return (limit).
     - first: A pagination parameter used to define the number of groups to skip before starting to return results (offset/limit).
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find a 100 groups
-const groups = await keycloakAdapter.kcAdminClient.groups.find({ max: 100 });
+const groups = await KeycloakManager.groups.find({ max: 100 });
 if(groups) console.log('Groups found:', groups);
 else console.log('Groups not found');
 
 // find a 100 groups and skip the first 50
-groups = await keycloakAdapter.kcAdminClient.groups.find({ max: 100, first:50 });
+groups = await KeycloakManager.groups.find({ max: 100, first:50 });
 if(groups) console.log('Groups found:', groups);
 else console.log('Groups not found');
  ```
@@ -5620,8 +5101,9 @@ else console.log('Groups not found');
 findOne is method used to retrieve a specific group's details by their unique identifier (id) within a given realm.
 It returns the full group representation if the group exists.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // find a group with id:'group-id'
-const group = await keycloakAdapter.kcAdminClient.groups.findOne({ id: 'group-id' });
+const group = await KeycloakManager.groups.findOne({ id: 'group-id' });
 if(group) console.log('Group found:', group);
 else console.log('Group not found');
  ```
@@ -5634,8 +5116,9 @@ Return a promise that resolves when the group is successfully deleted. No conten
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: The ID of the group to delete.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete a group with id:'group-id'
-const group = await keycloakAdapter.kcAdminClient.groups.del({ id: 'group-id' });
+const group = await KeycloakManager.groups.del({ id: 'group-id' });
  ```
 
 
@@ -5647,12 +5130,13 @@ This is useful for pagination, reporting, or general statistics regarding group 
   - realm: [optional] The name of the realm. If omitted, the default realm is used. 
   - search: [optional] A text string to filter the group count by name.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // count groups
-const result = await keycloakAdapter.kcAdminClient.groups.count();
+const result = await KeycloakManager.groups.count();
 console.log('Total groups:', result.count);
 
  // count groups with filter
-const result = await keycloakAdapter.kcAdminClient.groups.count({ search: "cool-group" });
+const result = await KeycloakManager.groups.count({ search: "cool-group" });
 console.log('Total cool-group groups:', result.count);
 
  ```
@@ -5674,8 +5158,9 @@ You can modify the group’s name, attributes, or hierarchy by providing the gro
   - description: [optional] the new group Description
   - other [optional] group descriprion fields 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // update single group
-await keycloakAdapter.kcAdminClient.groups.update(
+await KeycloakManager.groups.update(
     { id: 'group-id' },
     { name: "another-group-name", description: "another-group-description" },
 );
@@ -5693,8 +5178,9 @@ This method is useful when navigating hierarchical group structures within a Key
   - briefRepresentation: [optional] If true, returns a lightweight version of each group (default is true).
   - realm: [optional] Realm name.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list 10 subgroups
-await keycloakAdapter.kcAdminClient.groups.listSubGroups({
+await KeycloakManager.groups.listSubGroups({
     parentId: 'gropd-id',
     first: 0,
     max: 10,
@@ -5713,8 +5199,9 @@ This operation grants all users within that group the associated realm roles, ef
   - roles: [required] An array of role(RoleRepresentation) objects to assign.
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // add a role to group
-await keycloakAdapter.kcAdminClient.groups.addRealmRoleMappings({
+await KeycloakManager.groups.addRealmRoleMappings({
     id: 'gropd-id',
     // at least id and name should appear
     roles: [{
@@ -5736,8 +5223,9 @@ This helps in identifying which roles are still eligible for addition to the gro
 Return an array of RoleRepresentation objects representing the assignable realm roles for the group.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list available role-mappings
-const availableRoles= await keycloakAdapter.kcAdminClient.groups.listAvailableRealmRoleMappings({
+const availableRoles= await KeycloakManager.groups.listAvailableRealmRoleMappings({
     id: 'gropd-id'
 });
 console.log('Available realm roles for group:', availableRoles);
@@ -5756,8 +5244,9 @@ Return an object with two arrays:
 - clientMappings: a map of client IDs to the client-level roles assigned for each client.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list role-mappings
-const roleMappings= await keycloakAdapter.kcAdminClient.groups.listRoleMappings({
+const roleMappings= await KeycloakManager.groups.listRoleMappings({
     id: 'gropd-id'
 });
 console.log('Realm roles:', roleMappings.realmMappings);
@@ -5775,8 +5264,9 @@ These roles are defined at the realm level and are not tied to any specific clie
 Return An array of RoleRepresentation objects
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list realm role-mappings of group
-const realmRoles= await keycloakAdapter.kcAdminClient.groups.listRealmRoleMappings({
+const realmRoles= await KeycloakManager.groups.listRealmRoleMappings({
     id: 'gropd-id'
 });
 console.log('Realm roles assigned to group:', realmRoles.map(role => role.name));
@@ -5793,8 +5283,9 @@ This includes both directly assigned roles and those inherited through composite
 Return An array of RoleRepresentation objects that includes all realm roles, both directly assigned and inherited via composite roles.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // List realm composite role-mappings of group
-const compositeRealmRoles= await keycloakAdapter.kcAdminClient.groups.listCompositeRealmRoleMappings({
+const compositeRealmRoles= await KeycloakManager.groups.listCompositeRealmRoleMappings({
     id: 'gropd-id'
 });
 console.log('All (composite) realm roles for group:', compositeRealmRoles.map(role => role.name));
@@ -5811,8 +5302,9 @@ Composite roles inherited indirectly will not be removed.
   - roles: [required] Array of roles to be removed
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Delete realm role-mappings from group
-await keycloakAdapter.kcAdminClient.groups.delRealmRoleMappings({
+await KeycloakManager.groups.delRealmRoleMappings({
     id: 'gropd-id',
     // at least id and name should appear
     roles: [{
@@ -5833,8 +5325,9 @@ This allows all users belonging to that group to inherit the specified roles for
   - roles: [required] Array of client roles to assign to the group
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // add a client role to group
-await keycloakAdapter.kcAdminClient.groups.addClientRoleMappings({
+await KeycloakManager.groups.addClientRoleMappings({
     id: 'gropd-id',
     clientUniqueId:'internal-client-id',
     // at least id and name should appear
@@ -5855,8 +5348,9 @@ This is useful when you want to show assignable roles for a group in a specific 
   - clientUniqueId: [required] The internal ID of the client
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list available client role-mappings for group
-const availableRoles= await keycloakAdapter.kcAdminClient.groups.listAvailableClientRoleMappings({
+const availableRoles= await KeycloakManager.groups.listAvailableClientRoleMappings({
     id: 'gropd-id',
     clientUniqueId:'internal-client-id',
 });
@@ -5873,8 +5367,9 @@ This allows you to see which roles from a client the group already has.
   - clientUniqueId: [required] The internal ID of the client
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list client role-mappings of group
-const availableRoles= await keycloakAdapter.kcAdminClient.groups.listClientRoleMappings({
+const availableRoles= await KeycloakManager.groups.listClientRoleMappings({
     id: 'gropd-id',
     clientUniqueId:'internal-client-id',
 });
@@ -5891,8 +5386,9 @@ Composite roles are roles that aggregate other roles, so this method returns cli
   - clientUniqueId: [required] The internal ID of the client
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // list composite client role-mappings for group
-const compositeClientRoles= await keycloakAdapter.kcAdminClient.groups.listCompositeClientRoleMappings({
+const compositeClientRoles= await KeycloakManager.groups.listCompositeClientRoleMappings({
     id: 'gropd-id',
     clientUniqueId:'internal-client-id',
 });
@@ -5910,8 +5406,9 @@ This function deletes one or more client roles that were assigned to the group, 
   - roles: An array of role objects(RoleRepresentation) representing the client roles to be removed
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete the created role
-await keycloakAdapter.kcAdminClient.groups.delClientRoleMappings({
+await KeycloakManager.groups.delClientRoleMappings({
     id: 'gropd-id',
     clientUniqueId:'internal-client-id',
     roles: [
@@ -5935,8 +5432,9 @@ It allows you to create, update, inspect, and delete both realm-level and client
 ##### `function create(role_dictionary)`
 Create a new role
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a role name called my-role
- keycloakAdapter.kcAdminClient.roles.create({name:'my-role'});
+ KeycloakManager.roles.create({name:'my-role'});
  ```
 ##### `function createComposite(filters,[roles])`
 Create a new composite role. Composite roles in Keycloak are roles that combine other roles,
@@ -5956,6 +5454,7 @@ When you assign a composite role to a user, they automatically inherit all the r
 
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a  composite role where "admin" include anche "reader".
 const adminRole = await client.roles.findOneByName({ name: 'admin' });
 const readerRole = await client.roles.findOneByName({ name: 'reader' });
@@ -5971,7 +5470,8 @@ get all realm roles and return a JSON
     - first (number, optional): Index of the first result to return (used for pagination).
     - max (number, optional): Maximum number of results to return.
 ```js
- keycloakAdapter.kcAdminClient.roles.find();
+const KeycloakManager = require('keycloak-api-manager');
+ KeycloakManager.roles.find();
  ```
 ##### `function findOneByName(filters)`
 Get a role by name
@@ -5980,8 +5480,9 @@ Get a role by name
     - name (string, required) — The exact name of the role to retrieve.
     - realm (string, optional if set globally) — The realm where the role is defined.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // get information about 'my-role' role
- keycloakAdapter.kcAdminClient.roles.findOneByName({ name: 'my-role' });
+ KeycloakManager.roles.findOneByName({ name: 'my-role' });
  ```
 
 ##### `function findOneById(filters)`
@@ -5991,8 +5492,9 @@ Get a role by its Id
     - Id (string, required) — The Id of the role to retrieve.
     - realm (string, optional if set globally) — The realm where the role is defined.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // get information about 'my-role-id' role
- keycloakAdapter.kcAdminClient.roles.findOneById({ id: 'my-role-id' });
+ KeycloakManager.roles.findOneById({ id: 'my-role-id' });
  ```
 
 ##### `function updateByName(filters,role_dictionary)`
@@ -6003,8 +5505,9 @@ Update a role by its name
     - realm (string, optional if set globally) — The realm where the role is defined.
 - role_dictionary: A JSON object representing a role dictionary as defined in Keycloak
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // update 'my-role' role with a new description
- keycloakAdapter.kcAdminClient.roles.updateByName({ name: 'my-role' }, {description:"new Description"});
+ KeycloakManager.roles.updateByName({ name: 'my-role' }, {description:"new Description"});
  ```
 
 ##### `function updateById(filters,role_dictionary)`
@@ -6015,8 +5518,9 @@ Update a role by its Id
     - realm (string, optional if set globally) — The realm where the role is defined.
 - role_dictionary: A JSON object representing a role dictionary as defined in Keycloak
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // update role by id 'my-role-id' with a new description
- keycloakAdapter.kcAdminClient.roles.updateById({ id: 'my-role-id' }, {description:"new Description"});
+ KeycloakManager.roles.updateById({ id: 'my-role-id' }, {description:"new Description"});
  ```
 
 ##### `function delByName(filters)`
@@ -6026,8 +5530,9 @@ Delete a role by its name
     - name (string, required) — The exact name of the role to retrieve.
     - realm (string, optional if set globally) — The realm where the role is defined.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // delete role  'my-role' 
- keycloakAdapter.kcAdminClient.roles.delByName({ name: 'my-role' });
+ KeycloakManager.roles.delByName({ name: 'my-role' });
  ```
 
 ##### `function findUsersWithRole(filters)`
@@ -6037,18 +5542,20 @@ Find all users associated with a specific role
     - id: (string, optional) — The Id of the role to retrieve.
     - realm: (string, optional if set globally) — The realm where the role is defined.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Find all users associated with role named 'my-role' 
- keycloakAdapter.kcAdminClient.roles.findUsersWithRole({ name: 'my-role' });
+ KeycloakManager.roles.findUsersWithRole({ name: 'my-role' });
  ```
 
 ##### `function getCompositeRoles(filters)`
 Find all composite roles associated with a specific role.
 - filters: parameter provided as a JSON object that accepts the following parameters:
     - name: (string, optional) — The exact name of the role to retrieve.
-    - id: (string, optional) — The Id of the role to retrieve.
+    - id: (string, optional) — The id of the role to retrieve.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // Find all composite role named 'my-role' and id 'my-role-id' 
- keycloakAdapter.kcAdminClient.roles.getCompositeRoles({ id: 'my-role-id' });
+ KeycloakManager.roles.getCompositeRoles({ id: 'my-role-id' });
  ```
 
 ##### `function getCompositeRolesForRealm({roleId:roleid})`
@@ -6064,7 +5571,8 @@ for understanding and managing hierarchical role structures within a realm in Ke
 - filters: parameter provided as a JSON object that accepts the following parameters:
     - roleId: (string, required) — The Id of the role to retrieve.
 ```js
-const compositeRoles = await keycloakAdapter.kcAdminClient.roles.getCompositeRolesForRealm({ roleId: 'role-id' });
+const KeycloakManager = require('keycloak-api-manager');
+const compositeRoles = await KeycloakManager.roles.getCompositeRolesForRealm({ roleId: 'role-id' });
 console.log('admin composite roles:', compositeRoles.map(r => r.name));
  
  ```
@@ -6081,9 +5589,10 @@ This helps manage and inspect client-specific role hierarchies within the compos
 @parameters:
 - filters: parameter provided as a JSON object that accepts the following parameters:
     - roleId: (string, required) — The Id of the role to retrieve
-    - clientId: (string, required) — The Id of the client to search for composite roles
+    - clientId: (string, required) — The id of the client to search for composite roles
 ```js
-const compositeRoles = await keycloakAdapter.kcAdminClient.roles.getCompositeRolesForClient({
+const KeycloakManager = require('keycloak-api-manager');
+const compositeRoles = await KeycloakManager.roles.getCompositeRolesForClient({
     roleId: 'compositeRole-Id',
     clientId: 'client-Id'
 });
@@ -6117,8 +5626,9 @@ Components are modular providers in Keycloak, such as user federation providers 
         - bindCredential: ["secret"],
         - usersDn: ["ou=users,dc=example,dc=com"]
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // create a component called my-ldap
- const newComponent= await keycloakAdapter.kcAdminClient.components.create({
+ const newComponent= await KeycloakManager.components.create({
      name: "my-ldap",
      providerId: "ldap",
      providerType: "org.keycloak.storage.UserStorageProvider",
@@ -6156,8 +5666,9 @@ protocol mappers, authenticator factories, or other custom integrations.
         - bindCredential: ["secret"],
         - usersDn: ["ou=users,dc=example,dc=com"]
 ```js
+const KeycloakManager = require('keycloak-api-manager');
  // update a component
- await keycloakAdapter.kcAdminClient.components.update(
+ await KeycloakManager.components.update(
      {id:'component-id'},
      {
      name: "my-ldap",
@@ -6185,8 +5696,9 @@ Components in Keycloak represent pluggable providers such as LDAP user federatio
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The unique ID of the component to retrieve.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // find one by Id
-component = await keycloakAdapter.kcAdminClient.components.findOne({
+component = await KeycloakManager.components.findOne({
     id: "component-id",
 });
 
@@ -6208,8 +5720,9 @@ You can optionally filter components by their parent ID and/or provider type (e.
     - max: A pagination parameter used to define the maximum number of components to return (limit).
     - first: A pagination parameter used to define the number of components to skip before starting to return results (offset/limit).
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // find by Id
-component = await keycloakAdapter.kcAdminClient.components.find({
+component = await KeycloakManager.components.find({
     id: "component-id",
 });
 
@@ -6230,8 +5743,9 @@ Components include user federation providers (e.g., LDAP, Kerberos), authenticat
 - filter: parameter provided as a JSON object that accepts the following filter:
   - id: [required] The unique ID of the component to delete.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // del one by Id
-await keycloakAdapter.kcAdminClient.components.del({
+await KeycloakManager.components.del({
     id: "component-id",
 });
 
@@ -6250,8 +5764,9 @@ This is useful when working with hierarchical components, for example:
   - id: [required] The ID of the parent component. 
   - type: [optional] Filters sub-components by their provider type (e.g., "org.keycloak.protocol.mapper.ProtocolMapper").
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // del one by Id
-const subComponents= await keycloakAdapter.kcAdminClient.components.listSubComponents({
+const subComponents= await KeycloakManager.components.listSubComponents({
     id: "component-id", 
     type: "org.keycloak.protocol.mapper.ProtocolMapper",
 });
@@ -6291,8 +5806,9 @@ By deleting a required action, it will no longer be available for assignment to 
 - filter: parameter provided as a JSON object that accepts the following filter:
   - alias: [required] The unique alias of the required action to delete (e.g., "UPDATE_PASSWORD").
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // del one by Id
-const subComponents= await keycloakAdapter.kcAdminClient.authenticationManagement.deleteRequiredAction({
+const subComponents= await KeycloakManager.authenticationManagement.deleteRequiredAction({
     alias: "UPDATE_PROFILE",
 });
 
@@ -6316,8 +5832,9 @@ This method is typically used after checking available actions via getUnregister
   - priority: [optional] Determines the execution order among required actions. 
   - config: [optional] Extra configuration options (usually empty for built-in actions).
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // register required action
-const subComponents= await keycloakAdapter.kcAdminClient.authenticationManagement.registerRequiredAction({
+const subComponents= await KeycloakManager.authenticationManagement.registerRequiredAction({
     providerId: "terms_and_conditions",
     name: "Terms and Conditions",
     description: "Require user to accept terms before continuing",
@@ -6337,8 +5854,9 @@ The method retrieves all available required actions that exist in Keycloak but a
 This is useful if you want to see which built-in or custom required actions can still be added to the realm (e.g., custom scripts, OTP setup, email verification).
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // get unregistered required actions
-const unregistered= await keycloakAdapter.kcAdminClient.authenticationManagement.getUnregisteredRequiredActions();
+const unregistered= await KeycloakManager.authenticationManagement.getUnregisteredRequiredActions();
 
 console.log("Unregistered required actions:", unregistered);
 
@@ -6354,8 +5872,9 @@ Required actions are tasks that users may be required to perform during authenti
 - others...
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // get required actions
-const requiredActions= await keycloakAdapter.kcAdminClient.authenticationManagement.getRequiredActions();
+const requiredActions= await KeycloakManager.authenticationManagement.getRequiredActions();
 
 console.log("Registered required actions:", requiredActions);
 
@@ -6370,8 +5889,9 @@ This method is useful when you want details about a specific required action wit
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The unique alias of the required action to retrieve (e.g., "UPDATE_PASSWORD").
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // get required action for alias
-const requiredAction= await keycloakAdapter.kcAdminClient.authenticationManagement.getRequiredActionForAlias({
+const requiredAction= await KeycloakManager.authenticationManagement.getRequiredActionForAlias({
     alias:'UPDATE_PASSWORD'
 });
 
@@ -6387,8 +5907,9 @@ Priority determines the order in which required actions are executed for a user 
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action to modify.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Lower required action priority
-await keycloakAdapter.kcAdminClient.authenticationManagement.lowerRequiredActionPriority({
+await KeycloakManager.authenticationManagement.lowerRequiredActionPriority({
     alias:'UPDATE_PASSWORD'
 });
 
@@ -6405,8 +5926,9 @@ Raising the priority moves the action higher in the execution order, meaning it 
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action to modify.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // raise required action priority
-await keycloakAdapter.kcAdminClient.authenticationManagement.raiseRequiredActionPriority({
+await KeycloakManager.authenticationManagement.raiseRequiredActionPriority({
     alias:'UPDATE_PASSWORD'
 });
 
@@ -6422,8 +5944,9 @@ This includes details about the configurable options available for that required
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Get required action config description
-const configDescription= await keycloakAdapter.kcAdminClient.authenticationManagement.getRequiredActionConfigDescription({
+const configDescription= await KeycloakManager.authenticationManagement.getRequiredActionConfigDescription({
     alias: "CONFIGURE_OTP",
 });
 
@@ -6440,8 +5963,9 @@ This allows you to see the settings that have been applied to a required action,
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Get required action config
-const config= await keycloakAdapter.kcAdminClient.authenticationManagement.getRequiredActionConfig({
+const config= await KeycloakManager.authenticationManagement.getRequiredActionConfig({
     alias: "CONFIGURE_OTP",
 });
 
@@ -6457,8 +5981,9 @@ This removes any customized settings for the action, effectively resetting it to
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action.
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Remove required action config
-await keycloakAdapter.kcAdminClient.authenticationManagement.removeRequiredActionConfig({
+await KeycloakManager.authenticationManagement.removeRequiredActionConfig({
     alias: "CONFIGURE_OTP",
 });
 
@@ -6490,8 +6015,9 @@ This method allows you to modify attributes such as enabled, defaultAction, prio
   - config: [optional] Extra configuration.
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // update required action
-const requiredAction= await keycloakAdapter.kcAdminClient.authenticationManagement.updateRequiredAction(
+const requiredAction= await KeycloakManager.authenticationManagement.updateRequiredAction(
     { alias: "VERIFY_EMAIL" },
     {
         providerId: "VERIFY_EMAIL",
@@ -6519,8 +6045,9 @@ This allows you to modify settings such as OTP policies, password requirements, 
   
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // update required action config
-const requiredAction= await keycloakAdapter.kcAdminClient.authenticationManagement.updateRequiredActionConfig(
+const requiredAction= await KeycloakManager.authenticationManagement.updateRequiredActionConfig(
     { alias: "VERIFY_EMAIL" },
     {
         max_auth_age: "301",
@@ -6545,8 +6072,9 @@ This method is useful for configuring client authentication flows and assigning 
  
   
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Get client authenticator providers
-const clientAuthenticators= await keycloakAdapter.kcAdminClient.authenticationManagement.getClientAuthenticatorProviders();
+const clientAuthenticators= await KeycloakManager.authenticationManagement.getClientAuthenticatorProviders();
 
 console.log("Client authenticator providers:", clientAuthenticators);
 
@@ -6564,8 +6092,9 @@ Form action providers are used during authentication flows to perform specific a
 This method is useful for configuring authentication flows that require specific user interactions.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Get form action providers
-const formActions= await keycloakAdapter.kcAdminClient.authenticationManagement.getFormActionProviders();
+const formActions= await KeycloakManager.authenticationManagement.getFormActionProviders();
 
 console.log("Form action providers:", formActions);
 
@@ -6582,8 +6111,9 @@ Authenticators are used in authentication flows to verify users or perform speci
 This method is useful for configuring authentication flows and adding or replacing authenticators.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Get authenticator providers
-const authenticators= await keycloakAdapter.kcAdminClient.authenticationManagement.getAuthenticatorProviders();
+const authenticators= await KeycloakManager.authenticationManagement.getAuthenticatorProviders();
 
 
 console.log("Authenticator providers:", authenticators);
@@ -6602,8 +6132,9 @@ Form providers are used in authentication flows to render or handle user-facing 
 This method is useful for configuring authentication flows that require user interaction through forms.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Get form providers
-const forms= await keycloakAdapter.kcAdminClient.authenticationManagement.getFormProviders();
+const forms= await KeycloakManager.authenticationManagement.getFormProviders();
 
 
 
@@ -6618,8 +6149,9 @@ Authentication flows define the sequence of authenticators and required actions 
 This method allows you to inspect existing flows, including built-in flows like browser, direct grant, or registration, as well as custom flows.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Get flows
-const flows= await keycloakAdapter.kcAdminClient.authenticationManagement.getFlows();
+const flows= await KeycloakManager.authenticationManagement.getFlows();
 
 console.log("Authentication flows:", flows);
 
@@ -6640,8 +6172,9 @@ This method is useful for inspecting or modifying a particular flow.
   - authenticationExecutions: [optional] Executions to include in the flow.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Create flow
-await keycloakAdapter.kcAdminClient.authenticationManagement.createFlow({
+await KeycloakManager.authenticationManagement.createFlow({
     alias: "custom-browser-flow",
     description: "Custom browser authentication flow",
     providerId: "basic-flow",
@@ -6671,8 +6204,9 @@ filter: Parameter provided as a JSON object that accepts the following filter:
   - authenticationExecutions: [optional] Executions to include in the flow.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Update flow
-await keycloakAdapter.kcAdminClient.authenticationManagement.updateFlow(
+await KeycloakManager.authenticationManagement.updateFlow(
     { flowId:'flow-id' },
     {
         alias: "custom-browser-flow",
@@ -6699,8 +6233,9 @@ filter: Parameter provided as a JSON object that accepts the following filter:
     - flowId: [required] The id of the source flow to update.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Delete flow
-await keycloakAdapter.kcAdminClient.authenticationManagement.deleteFlow({ 
+await KeycloakManager.authenticationManagement.deleteFlow({ 
     flowId:'flow-id' 
 });
 
@@ -6718,8 +6253,9 @@ This is useful for creating a custom flow based on an existing built-in or custo
   - newName: [required] The alias of the new copied flow.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Copy flow
-await keycloakAdapter.kcAdminClient.authenticationManagement.copyFlow({
+await KeycloakManager.authenticationManagement.copyFlow({
     flow: "browser",
     newName: "custom-browser-flow"
 });
@@ -6739,8 +6275,9 @@ This method is useful for inspecting or modifying a particular flow.
     - flowId: [required] The id of the authentication flow to retrieve
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Get flows
-const flow= await keycloakAdapter.kcAdminClient.authenticationManagement.getFlow({
+const flow= await KeycloakManager.authenticationManagement.getFlow({
     flowId:'flow.id'
 });
 
@@ -6763,8 +6300,9 @@ This method is useful to inspect or modify the steps of a flow.
     - flow: [required] The alias of the authentication flow whose executions you want to retrieve.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Get executions
-const executions= await keycloakAdapter.kcAdminClient.authenticationManagement.getExecutions({
+const executions= await KeycloakManager.authenticationManagement.getExecutions({
     flow:'browser'
 });
 
@@ -6788,8 +6326,9 @@ This method allows you to extend a flow with additional steps or subflows.
     - authenticatorFlow: [optional] Boolean indicating if the execution is a nested flow
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // add execution to flow
-await keycloakAdapter.kcAdminClient.authenticationManagement.addExecutionToFlow({
+await KeycloakManager.authenticationManagement.addExecutionToFlow({
     flow: "browser",
     provider: "auth-otp-form",
 });
@@ -6811,8 +6350,9 @@ This allows you to nest flows, creating complex authentication sequences where o
     - description: [optional] A human-readable description of the subflow.
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // add flow to flow
-const flow= await keycloakAdapter.kcAdminClient.authenticationManagement.addFlowToFlow({
+const flow= await KeycloakManager.authenticationManagement.addFlowToFlow({
     flow: "browser",
     alias: "subFlow",
     description: "",
@@ -6841,8 +6381,9 @@ Executions are individual authenticators or subflows within a flow, and this met
     
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Update execution
-await keycloakAdapter.kcAdminClient.authenticationManagement.updateExecution(
+await KeycloakManager.authenticationManagement.updateExecution(
     { flow: "browser" },
     {
         id: "exec1-abc",
@@ -6866,8 +6407,9 @@ Executions are individual authenticators or subflows within a flow, and this met
     
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Dell execution
-await keycloakAdapter.kcAdminClient.authenticationManagement.delExecution({
+await KeycloakManager.authenticationManagement.delExecution({
     id: "exececution-id"
 });
 
@@ -6886,8 +6428,9 @@ Increasing the priority moves the execution earlier in the flow sequence, affect
     
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // raise priority execution
-await keycloakAdapter.kcAdminClient.authenticationManagement.raisePriorityExecution({
+await KeycloakManager.authenticationManagement.raisePriorityExecution({
     id: "exececution-id"
 });
 
@@ -6905,8 +6448,9 @@ Lowering the priority moves the execution later in the flow sequence, affecting 
     
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // lower priority execution
-await keycloakAdapter.kcAdminClient.authenticationManagement.lowerPriorityExecution({
+await KeycloakManager.authenticationManagement.lowerPriorityExecution({
     id: "exececution-id"
 });
 
@@ -6926,8 +6470,9 @@ Configurations allow you to customize the behavior of an authenticator or requir
     
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Create config
-const config= await keycloakAdapter.kcAdminClient.authenticationManagement.createConfig({
+const config= await KeycloakManager.authenticationManagement.createConfig({
     id: 'execution-id',
     alias: "test",
 });
@@ -6946,8 +6491,9 @@ Configurations define additional settings for authenticators or required actions
     
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Get config
-const config= await keycloakAdapter.kcAdminClient.authenticationManagement.getConfig({
+const config= await KeycloakManager.authenticationManagement.getConfig({
     id: 'execution-id',
 });
 
@@ -6967,8 +6513,9 @@ This allows you to modify existing settings, such as OTP policies, password rule
     
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Update config
-await keycloakAdapter.kcAdminClient.authenticationManagement.updateConfig({
+await KeycloakManager.authenticationManagement.updateConfig({
     id: 'config-id',
     config:{
         defaultProvider: "stringa"
@@ -6990,8 +6537,9 @@ This is useful for removing obsolete or unwanted settings from a required action
     
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // del config
-await keycloakAdapter.kcAdminClient.authenticationManagement.delConfig({
+await KeycloakManager.authenticationManagement.delConfig({
     id: 'config-id',
 });
 
@@ -7017,8 +6565,9 @@ This is useful for dynamically generating forms for configuring required actions
     
 
 ```js
+const KeycloakManager = require('keycloak-api-manager');
 // Get config description
-const configDescription= await keycloakAdapter.kcAdminClient.authenticationManagement.getConfigDescription({
+const configDescription= await KeycloakManager.authenticationManagement.getConfigDescription({
     providerId: 'provider-id',
 });
 
