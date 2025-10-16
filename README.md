@@ -119,7 +119,7 @@ const users = await KeycloakManager.users.find({ first: 0, max: 10 });
 users = await KeycloakManager.users.find({ q: "phone:123" });
 
 // Override client configuration for all further requests:
-setConfig({
+KeycloakManager.setConfig({
     realmName: 'another-realm',
 });
 

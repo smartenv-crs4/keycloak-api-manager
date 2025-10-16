@@ -83,8 +83,17 @@ exports.configure=async function(adminClientCredentials){
         //exports = kcAdminClient;
 };
 
+
+//TODO: Remove da documentare
 exports.setConfig=async function(configToOverride){
         return(kcAdminClient.setConfig(configToOverride));
+}
+//TODO: Remove da documentare
+exports.getToken=async function(configToOverride){
+        return({
+                accessToken:kcAdminClient.accessToken,
+                refreshToken:kcAdminClient.refreshToken,
+        });
 }
 
 
