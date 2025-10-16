@@ -36,6 +36,7 @@ var authenticationManagementHandler=require('./Handlers/authenticationManagement
  *    - password: [Optional] string password. Required when using the password grant type.
  *    - grantType: The OAuth2 grant type used for authentication.
  *      Possible values: 'password', 'client_credentials', 'refresh_token', etc.
+ *    - tokenLifeSpan: Lifetime of an access token expressed in seconds.
  *    - clientId: string containing the client ID configured in Keycloak. Required for all grant types.
  *    - clientSecret: [Optional] string containing the client secret of the client. Required for client_credentials or confidential clients.
  *    - totp: string for Time-based One-Time Password (TOTP) for multi-factor authentication (MFA), if enabled for the user.
@@ -51,6 +52,10 @@ exports.configure=async function(adminClientCredentials){
         delete adminClientCredentials.baseUrl;
         delete adminClientCredentials.realmName;
         await kcAdminClient.auth(adminClientCredentials);
+
+        setInterval(async ()=>{
+                await kcAdminClient.auth(adminClientCredentials);
+        },adminClientCredentials.tokenLifeSpan*1000);
 
         realmHandler.setKcAdminClient(kcAdminClient);
         exports.realms=realmHandler;
@@ -85,11 +90,11 @@ exports.configure=async function(adminClientCredentials){
 
 
 //TODO: Remove da documentare
-exports.setConfig=async function(configToOverride){
+exports.setConfig=function(configToOverride){
         return(kcAdminClient.setConfig(configToOverride));
 }
 //TODO: Remove da documentare
-exports.getToken=async function(configToOverride){
+exports.getToken=function(configToOverride){
         return({
                 accessToken:kcAdminClient.accessToken,
                 refreshToken:kcAdminClient.refreshToken,

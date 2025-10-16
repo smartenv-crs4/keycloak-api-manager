@@ -100,6 +100,7 @@ await KeycloakManager.configure({
     username: 'admin',                  // Admin username
     password: 'admin',                  // Admin password
     grantType: 'password',              // Type of authentication
+    tokenLifeSpan: 120                   // access_token Lifetime in seconds 
 });
 
 
@@ -169,6 +170,7 @@ await KeycloakManager.configure({
     username: 'admin',                  // Admin username
     password: 'admin',                  // Admin password
     grantType: 'password',              // Type of authentication
+    tokenLifeSpan: 120                  // access_token Lifetime in seconds 
 });
 ```
 
@@ -185,6 +187,7 @@ Parameters:
   Main supported options:
   - grantType: [required] The OAuth2 grant type used for authentication. example "password". Possible values: 'password', 'client_credentials', 'refresh_token', etc.
   - clientId: [required] string containing the client ID configured in Keycloak. Required for all grant types.
+  - tokenLifeSpan: [required] Lifetime of an access token expressed in seconds. It indicates how often the access token should be renewed. If set incorrectly and the Keycloak token expires before the renewal interval defined by this parameter, errors and exceptions may occur
   - username: [optional] string username. Required when using the password grant type. 
   - password: [optional] string password. Required when using the password grant type.
   - baseUrl: [Optional] Keycloak base Url 
