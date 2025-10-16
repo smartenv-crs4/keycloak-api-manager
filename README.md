@@ -19,7 +19,7 @@ it is a wrapper based on '@keycloak/keycloak-admin-client'
 - Complete wrapper for Keycloak Admin REST API 
 - Manage realms, clients, users, roles, groups, and permissions 
 - Support for both public and confidential clients 
-- Built-in token acquisition and refresh using admin credentials
+- Built-in token acquisition and refresh using admin credentials. For the refresh token, it is necessary to correctly set the tokenLifeSpan parameter during configuration
 
 ⚙️ ***Administration & Automation***
 - Create, update, and delete users, clients, and roles programmatically 

@@ -49,13 +49,15 @@ exports.configure=async function(adminClientCredentials){
             realmName:adminClientCredentials.realmName
         }
         kcAdminClient=  new keycloakAdminClient(configAdminclient);
+        let  tokenLifeSpan= adminClientCredentials.tokenLifeSpan *1000;
         delete adminClientCredentials.baseUrl;
         delete adminClientCredentials.realmName;
+        delete adminClientCredentials.tokenLifeSpan;
         await kcAdminClient.auth(adminClientCredentials);
 
         setInterval(async ()=>{
                 await kcAdminClient.auth(adminClientCredentials);
-        },adminClientCredentials.tokenLifeSpan*1000);
+        },tokenLifeSpan);
 
         realmHandler.setKcAdminClient(kcAdminClient);
         exports.realms=realmHandler;
