@@ -44,8 +44,9 @@ exports.configure=async function(adminClientCredentials){
         }
 
         kcAdminClient=  new keycloakAdminClient(configAdminclient);
-        configAdminclient.client_id=adminClientCredentials.client_id;
-        configAdminclient.client_secret=adminClientCredentials.client_secret;
+        configAdminclient.clientId=adminClientCredentials.clientId;
+        configAdminclient.clientSecret=adminClientCredentials.clientSecret;
+
 
         let  tokenLifeSpan= (adminClientCredentials.tokenLifeSpan *1000)/2;
         delete adminClientCredentials.baseUrl;
@@ -105,23 +106,29 @@ exports.getToken=function(configToOverride){
 //TODO: Remove da documentare
 //permette ad un utente o un client di autenticarsi su keycloack ed oottenere un token
 exports.auth=async function(credentials){
-        credentials.client_id=configAdminclient.client_id;
-        credentials.client_secret=configAdminclient.client_secret;
+        credentials.client_id=configAdminclient.clientId;
+        credentials.client_secret=configAdminclient.clientSecret;
         let options={
-                url: `${configAdminclient.baseUrl}/realms/${configAdminclient.realmName}/protocol/openid-connect/token` ,
-                headers: {'Authorization': 'Bearer ' + kcAdminClient.accessToken},
-                contentType: 'application/www-form-urlencoded',
+                url: `${configAdminclient.baseUrl}realms/${configAdminclient.realmName}/protocol/openid-connect/token` ,
+                headers: {'content-type': 'application/www-form-urlencoded', 'Authorization': "Bearer " + kcAdminClient.accessToken },
                 form: credentials
         }
 
-        request.post(options, function (error, response, body) {
-                if(error){
-                        console.log("Internal Server Error:", error);
-                }else{
-                        return(body);
-                }
+        console.log(options);
+
+        return new Promise((resolve, reject) => {
+                request.post(options, function (error, response, body) {
+                        if (error) {
+                                console.error("Internal Server Error:", error);
+                                reject(error);
+                        } else {
+                                resolve(JSON.parse(body)); // ✅ restituisce il valore al chiamante
+                        }
+                });
         });
-}
+};
+
+
 
 
 
