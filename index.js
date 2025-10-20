@@ -39,11 +39,14 @@ let configAdminclient=null;
  */
 exports.configure=async function(adminClientCredentials){
         configAdminclient={
-            baseUrl:adminClientCredentials.baseUrl,
-            realmName:adminClientCredentials.realmName
+                baseUrl:adminClientCredentials.baseUrl,
+                realmName:adminClientCredentials.realmName
         }
 
         kcAdminClient=  new keycloakAdminClient(configAdminclient);
+        configAdminclient.client_id=adminClientCredentials.client_id;
+        configAdminclient.client_secret=adminClientCredentials.client_secret;
+
         let  tokenLifeSpan= (adminClientCredentials.tokenLifeSpan *1000)/2;
         delete adminClientCredentials.baseUrl;
         delete adminClientCredentials.realmName;
@@ -102,11 +105,13 @@ exports.getToken=function(configToOverride){
 //TODO: Remove da documentare
 //permette ad un utente o un client di autenticarsi su keycloack ed oottenere un token
 exports.auth=async function(credentials){
+        credentials.client_id=configAdminclient.client_id;
+        credentials.client_secret=configAdminclient.client_secret;
         let options={
                 url: `${configAdminclient.baseUrl}/realms/${configAdminclient.realmName}/protocol/openid-connect/token` ,
                 headers: {'Authorization': 'Bearer ' + kcAdminClient.accessToken},
                 contentType: 'application/www-form-urlencoded',
-                body: credentials
+                form: credentials
         }
 
         request.post(options, function (error, response, body) {
