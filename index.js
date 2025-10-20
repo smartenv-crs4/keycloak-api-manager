@@ -101,7 +101,7 @@ exports.getToken=function(configToOverride){
 
 //TODO: Remove da documentare
 //permette ad un utente o un client di autenticarsi su keycloack ed oottenere un token
-exports.auth=function(credentials){
+exports.auth=async function(credentials){
         let options={
                 url: `${configAdminclient.baseUrl}/realms/${configAdminclient.realmName}/protocol/openid-connect/token` ,
                 headers: {'Authorization': 'Bearer ' + kcAdminClient.accessToken},
@@ -113,7 +113,7 @@ exports.auth=function(credentials){
                 if(error){
                         console.log("Internal Server Error:", error);
                 }else{
-                        res.send(body);
+                        return(body);
                 }
         });
 }
