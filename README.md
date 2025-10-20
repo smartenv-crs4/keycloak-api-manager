@@ -100,7 +100,7 @@ await KeycloakManager.configure({
     username: 'admin',                  // Admin username
     password: 'admin',                  // Admin password
     grantType: 'password',              // Type of authentication
-    tokenLifeSpan: 120                   // access_token Lifetime in seconds 
+    tokenLifeSpan: 120                  // access_token Lifetime in seconds 
 });
 
 
@@ -185,13 +185,13 @@ Parameters:
   If this parameter is not provided, it will not be possible to use the administrative functions of Keycloak
   exposed by this adapter, so any attempt to call KeycloakManager.{function} will result in a runtime error due to access on an undefined object
   Main supported options:
+  - baseUrl: [required] Keycloak base Url
+  - realmName: [required] A String that specifies the realm to authenticate against, if different from the "keyCloakConfig.realm" parameter.  If you intend to use Keycloak administrator credentials, this should be set to 'master'.
   - grantType: [required] The OAuth2 grant type used for authentication. example "password". Possible values: 'password', 'client_credentials', 'refresh_token', etc.
   - clientId: [required] string containing the client ID configured in Keycloak. Required for all grant types.
-  - tokenLifeSpan: [required] Lifetime of an access token expressed in seconds. It indicates how often the access token should be renewed. If set incorrectly and the Keycloak token expires before the renewal interval defined by this parameter, errors and exceptions may occur
+  - tokenLifeSpan: [required] Numeric Lifetime of an access token expressed in seconds. It indicates how often the access token should be renewed. If set incorrectly and the Keycloak token expires before the renewal interval defined by this parameter, errors and exceptions may occur
   - username: [optional] string username. Required when using the password grant type. 
   - password: [optional] string password. Required when using the password grant type.
-  - baseUrl: [Optional] Keycloak base Url 
-  - realmName: [Optional] A String that specifies the realm to authenticate against, if different from the "keyCloakConfig.realm" parameter.  If you intend to use Keycloak administrator credentials, this should be set to 'master'.
   - scope: [Optional] A string that specifies The OAuth2 scope requested during authentication (optional). Typically, not required for administrative clients. example:openid profile
   - requestOptions: [Optional] JSON parameters to configure HTTP requests (such as custom headers, timeouts, etc.). It is compatible with the Fetch API standard. Fetch request options https://developer.mozilla.org/en-US/docs/Web/API/fetch#options
   - clientSecret: [Optional] string containing the client secret of the client. Required for client_credentials or confidential clients.

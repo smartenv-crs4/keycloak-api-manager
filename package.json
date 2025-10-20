@@ -43,7 +43,6 @@
   ],
   "author": "aromanino (Crs4)",
   "license": "MIT",
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/smartenv-crs4/keycloak-api-manager.git"

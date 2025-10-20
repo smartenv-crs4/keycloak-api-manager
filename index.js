@@ -1,13 +1,5 @@
 var express = require('express');
-var conf=require('./config').conf;
-var responseinterceptor = require('responseinterceptor');
-var Keycloak =require('keycloak-connect');
-var session=require('express-session');
-//const {default: KcAdminClient} = require("@keycloak/keycloak-admin-client");
 var keycloakAdminClient=require('@keycloak/keycloak-admin-client').default;
-var keycloak = null;
-var ready=false;
-var readyQueue=[];
 var kcAdminClient=null;
 var realmHandler=require('./Handlers/realmsHandler');
 var usersHandler=require('./Handlers/usersHandler');
@@ -18,7 +10,9 @@ var groupsHandler=require('./Handlers/groupsHandler');
 var rolesHandler=require('./Handlers/rolesHandler');
 var componentsHandler=require('./Handlers/componentsHandler');
 var authenticationManagementHandler=require('./Handlers/authenticationManagementHandler');
+var request=require('request');
 
+let configAdminclient=null;
 
 /**
  * ***************************** - ENGLISH - *******************************
@@ -44,12 +38,13 @@ var authenticationManagementHandler=require('./Handlers/authenticationManagement
  *    - refreshToken: [Optional] string containing a valid refresh token to request a new access token when using the refresh_token grant type.
  */
 exports.configure=async function(adminClientCredentials){
-        let configAdminclient={
+        configAdminclient={
             baseUrl:adminClientCredentials.baseUrl,
             realmName:adminClientCredentials.realmName
         }
+
         kcAdminClient=  new keycloakAdminClient(configAdminclient);
-        let  tokenLifeSpan= adminClientCredentials.tokenLifeSpan *1000;
+        let  tokenLifeSpan= (adminClientCredentials.tokenLifeSpan *1000)/2;
         delete adminClientCredentials.baseUrl;
         delete adminClientCredentials.realmName;
         delete adminClientCredentials.tokenLifeSpan;
@@ -96,12 +91,34 @@ exports.setConfig=function(configToOverride){
         return(kcAdminClient.setConfig(configToOverride));
 }
 //TODO: Remove da documentare
+// restituisce il token utilizzato dalla libreria per comunicare con la keycloak API
 exports.getToken=function(configToOverride){
         return({
                 accessToken:kcAdminClient.accessToken,
                 refreshToken:kcAdminClient.refreshToken,
         });
 }
+
+//TODO: Remove da documentare
+//permette ad un utente o un client di autenticarsi su keycloack ed oottenere un token
+exports.auth=function(credentials){
+        let options={
+                url: `${configAdminclient.baseUrl}/realms/${configAdminclient.realmName}/protocol/openid-connect/token` ,
+                headers: {'Authorization': 'Bearer ' + kcAdminClient.accessToken},
+                contentType: 'application/www-form-urlencoded',
+                body: credentials
+        }
+
+        request.post(options, function (error, response, body) {
+                if(error){
+                        console.log("Internal Server Error:", error);
+                }else{
+                        res.send(body);
+                }
+        });
+}
+
+
 
 
 /*
