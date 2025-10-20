@@ -114,7 +114,7 @@ exports.auth=async function(credentials){
                 form: credentials
         }
 
-        console.log(options);
+
 
         return new Promise((resolve, reject) => {
                 request.post(options, function (error, response, body) {
