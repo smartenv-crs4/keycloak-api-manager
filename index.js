@@ -119,10 +119,10 @@ exports.auth=async function(credentials){
         return new Promise((resolve, reject) => {
                 request.post(options, function (error, response, body) {
                         if (error) {
-                                console.error("Internal Server Error:", error);
+                                console.error("Internal Server Error:", error); // internal error
                                 reject(error);
                         } else {
-                                resolve(JSON.parse(body)); // ✅ restituisce il valore al chiamante
+                                resolve(JSON.parse(body)); // ✅ return auth token or error due to invalid credentials
                         }
                 });
         });
