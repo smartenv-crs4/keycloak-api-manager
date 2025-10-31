@@ -113,9 +113,6 @@ exports.auth=async function(credentials){
                 headers: {'content-type': 'application/www-form-urlencoded', 'Authorization': "Bearer " + kcAdminClient.accessToken },
                 form: credentials
         }
-
-
-
         return new Promise((resolve, reject) => {
                 request.post(options, function (error, response, body) {
                         if (error) {
