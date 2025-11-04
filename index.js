@@ -96,7 +96,7 @@ exports.setConfig=function(configToOverride){
 }
 //TODO: Remove da documentare
 // restituisce il token utilizzato dalla libreria per comunicare con la keycloak API
-exports.getToken=function(configToOverride){
+exports.getToken=function(){
         return({
                 accessToken:kcAdminClient.accessToken,
                 refreshToken:kcAdminClient.refreshToken,

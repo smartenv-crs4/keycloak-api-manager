@@ -200,6 +200,101 @@ Parameters:
   - refreshToken: [Optional] string containing a valid refresh token to request a new access token when using the refresh_token grant type.
 ---
 
+## 🧰 Available Helper Functions
+
+### `function setConfig(config)`
+This function updates the runtime configuration of the Keycloak-api-manager Admin Client instance.
+It allows switching the target realm, base URL, or HTTP request options without reinitializing the client or re-authenticating.
+It’s useful when you need to interact with multiple realms or environments dynamically using the same admin client instance.
+
+**` -- @parameters -- `**
+- config: is a JSON object that accepts the following parameters:
+  - realmName: [optional] The name of the target realm for subsequent API requests. 
+  - baseUrl: [optional] The base URL of the Keycloak server (e.g., https://auth.example.com). 
+  - requestOptions: [optional] Custom HTTP options (headers, timeout, etc.) applied to API calls. 
+  - realmPath: [optional] A custom realm path if your Keycloak instance uses a non-standard realm route.
+  - other fields
+
+**` -- @notes -- `**
+Calling setConfig does not perform authentication 
+- it only changes configuration values in memory.
+- The authentication token already stored in the admin client remains active until it expires.
+- Only the properties explicitly passed in the config object are updated; all others remain unchanged.
+
+If the authenticated user does not have permissions in the new realmName, subsequent calls may fail with a 403 or 404.
+
+Typically used in multi-realm or multi-environment management scripts.
+
+```js
+const KcAdminClient = require('keycloak-api-manager');
+
+
+// Switch context to another realm dynamically
+kcAdminClient.setConfig({
+  realmName: 'customer-realm',
+});
+
+// All subsequent API calls will target "customer-realm"
+const users = await kcAdminClient.users.find();
+console.log(users);
+```
+
+### `function getToken()`
+This function retrieves the current authentication tokens used by the Keycloak-api-manager Admin Client to communicate with the Keycloak REST API.
+It returns both the access token (used for API authorization) and the refresh token (used to renew the session when the access token expires).
+
+**` -- @returns -- `**
+A JSON object containing:
+- accessToken: The active access token string currently held by the Keycloak Admin Client. 
+- refreshToken: The corresponding refresh token string, if available, used to request a new access token without re-authentication.
+
+**` -- @notes -- `**
+The tokens are managed internally by the Keycloak Admin Client after successful authentication via kcAdminClient.auth().
+The accessToken typically expires after a short period (e.g., 60 seconds by default).
+You can use these tokens to call Keycloak REST endpoints manually or to debug authorization issues.
+If the client is not authenticated or the session has expired, both values may be undefined.
+
+```js
+const KcAdminClient = require('keycloak-api-manager');
+
+// Example: retrieve and print current tokens
+try {
+  const tokens = KcAdminClient.getToken();
+  console.log('Access Token:', tokens.accessToken);
+  console.log('Refresh Token:', tokens.refreshToken);
+} catch (error) {
+  console.error('Failed to retrieve tokens:', error);
+}
+
+```
+### `function auth(credentials)`
+This function allows a user or client to authenticate against a Keycloak realm and obtain an access token (and optionally a refresh token).
+It sends a direct HTTP POST request to the Keycloak OpenID Connect token endpoint using the provided credentials.
+
+**` -- @parameters -- `**
+credentials: a JSON object containing authentication details. Supported fields include:
+- username: [optional] Username of the user (required for password grant). 
+- password: [optional] Password of the user (required for password grant). 
+- grant_type: [required] The OAuth2 grant type (e.g. "password", "client_credentials", "refresh_token"). 
+
+
+```js
+const KeycloakManager = require('keycloak-api-manager');
+
+// Example: authenticate a user via password grant
+try {
+  const tokenResponse = await KeycloakManager.auth({
+    username: "demo",
+    password: "demo123",
+    grant_type: "password",
+  });
+
+  console.log("Access Token:", tokenResponse.access_token);
+} catch (error) {
+  console.error("Authentication failed:", error);
+}
+
+```
 
 ## 🔧 Available Admin Functions
 All administrative functions that rely on Keycloak's Admin API must be invoked using the
