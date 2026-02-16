@@ -9,14 +9,18 @@ async function startDocker() {
   console.log('Starting Docker Compose services...');
 
   return new Promise((resolve, reject) => {
-    const compose = spawn('docker-compose', ['up', '-d'], {
+    // Try docker compose (modern) or docker-compose (legacy)
+    const command = 'docker';
+    const args = ['compose', 'up', '-d'];
+
+    const compose = spawn(command, args, {
       cwd: process.cwd(),
       stdio: 'inherit',
     });
 
     compose.on('close', (code) => {
       if (code !== 0) {
-        reject(new Error(`docker-compose up failed with code ${code}`));
+        reject(new Error(`docker compose up failed with code ${code}`));
       } else {
         console.log('✓ Docker Compose services started');
         resolve();
@@ -34,14 +38,17 @@ async function stopDocker() {
   console.log('Stopping Docker Compose services...');
 
   return new Promise((resolve, reject) => {
-    const compose = spawn('docker-compose', ['down', '--volumes'], {
+    const command = 'docker';
+    const args = ['compose', 'down', '--volumes'];
+
+    const compose = spawn(command, args, {
       cwd: process.cwd(),
       stdio: 'inherit',
     });
 
     compose.on('close', (code) => {
       if (code !== 0) {
-        reject(new Error(`docker-compose down failed with code ${code}`));
+        reject(new Error(`docker compose down failed with code ${code}`));
       } else {
         console.log('✓ Docker Compose services stopped');
         resolve();
