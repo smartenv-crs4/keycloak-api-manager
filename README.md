@@ -95,7 +95,7 @@ const express = require('express');
 // Initialize the manager with Keycloak credentials
 await KeycloakManager.configure({
     baseUrl: 'http://localhost:8080',   // Keycloak base URL
-    realm: 'master',                    // Realm where the admin user belongs
+    realmName: 'master',                // Realm where the admin user belongs (alias: realm)
     clientId: 'admin-cli',              // Keycloak admin client
     username: 'admin',                  // Admin username
     password: 'admin',                  // Admin password
@@ -165,7 +165,7 @@ const KeycloakManager = require('keycloak-api-manager');
 // Initialize the manager with Keycloak credentials
 await KeycloakManager.configure({
     baseUrl: 'http://localhost:8080',   // Keycloak base URL
-    realm: 'master',                    // Realm where the admin user belongs
+    realmName: 'master',                // Realm where the admin user belongs (alias: realm)
     clientId: 'admin-cli',              // Keycloak admin client
     username: 'admin',                  // Admin username
     password: 'admin',                  // Admin password
@@ -186,7 +186,8 @@ Parameters:
   exposed by this adapter, so any attempt to call KeycloakManager.{function} will result in a runtime error due to access on an undefined object
   Main supported options:
   - baseUrl: [required] Keycloak base Url
-  - realmName: [required] A String that specifies the realm to authenticate against, if different from the "keyCloakConfig.realm" parameter.  If you intend to use Keycloak administrator credentials, this should be set to 'master'.
+    - realmName: [required] A String that specifies the realm to authenticate against, if different from the "keyCloakConfig.realm" parameter.  If you intend to use Keycloak administrator credentials, this should be set to 'master'.
+    - realm: [optional] Alias of realmName for backward compatibility.
   - grantType: [required] The OAuth2 grant type used for authentication. example "password". Possible values: 'password', 'client_credentials', 'refresh_token', etc.
   - clientId: [required] string containing the client ID configured in Keycloak. Required for all grant types.
   - tokenLifeSpan: [required] Numeric Lifetime of an access token expressed in seconds. It indicates how often the access token should be renewed. If set incorrectly and the Keycloak token expires before the renewal interval defined by this parameter, errors and exceptions may occur
@@ -412,7 +413,7 @@ It’s useful for incremental updates or merging configuration pieces.
 **` -- @parameters -- `**
 - configuration: is a JSON object that accepts filter parameters
   - realm:[required] The name of the realm where the data should be imported.
-  - representation:[required] A JSON object representing part of the realm configuration to be imported(can include users, roles, groups, clients, etc.).
+  - rep:[required] A JSON object representing part of the realm configuration to be imported(can include users, roles, groups, clients, etc.).
     - ifResourceExists:[required] Defines the behavior when an imported resource already exists in the target realm.
         Options are:
       - 'FAIL' – the operation fails if a resource already exists.
@@ -1950,7 +1951,10 @@ Creates a new client with the provided configuration
 ```js
 const KeycloakManager = require('keycloak-api-manager');
  // create a client called my-client
- const client= await KeycloakManager.clients.create({name: "my-client", id:"client-id"});
+ const client= await KeycloakManager.clients.create({
+    name: "my-client",
+    clientId:"client-id"
+ });
 console.log("New Client Created:", client);
  ```
 
@@ -2333,7 +2337,7 @@ Default client scopes are automatically assigned to a client during token reques
 
 **` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
-    - id: [required] The client ID of the client whose default client scopes you want to list.
+    - id: [required] The internal ID of the client whose default client scopes you want to list.
 
 ```js
 const KeycloakManager = require('keycloak-api-manager');
@@ -2353,7 +2357,7 @@ Optional scopes are those that a client can request explicitly but are not autom
 
 **` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
-    - id: [required] The client ID of the client whose optional client scopes you want to list.
+    - id: [required] The internal ID of the client whose optional client scopes you want to list.
 
 ```js
 const KeycloakManager = require('keycloak-api-manager');
@@ -5732,7 +5736,7 @@ Get a role by its Id
 
 **` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
-    - Id (string, required) — The Id of the role to retrieve.
+    - id (string, required) — The id of the role to retrieve.
     - realm (string, optional if set globally) — The realm where the role is defined.
 ```js
 const KeycloakManager = require('keycloak-api-manager');
@@ -5759,7 +5763,7 @@ Update a role by its Id
 
 **` -- @parameters -- `**
 - filters: parameter provided as a JSON object that accepts the following parameters:
-    - name (string, required) — The exact name of the role to retrieve.
+    - id (string, required) — The id of the role to retrieve.
     - realm (string, optional if set globally) — The realm where the role is defined.
 - role_dictionary: A JSON object representing a role dictionary as defined in Keycloak
 ```js
