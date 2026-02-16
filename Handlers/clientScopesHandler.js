@@ -20,8 +20,8 @@ exports.setKcAdminClient=function(kcAdminClient){
  * A client scope defines a set of protocol mappers and roles that can be applied to clients,
  * such as during login or token generation.
  */
-exports.create=function(scopeRappresentation){
- return (kcAdminClientHandler.clientScopes.create(scopeRappresentation ));
+exports.create=function(scopeRepresentation){
+ return (kcAdminClientHandler.clientScopes.create(scopeRepresentation ));
 }
 
 
@@ -35,13 +35,13 @@ exports.create=function(scopeRappresentation){
  * - filter: parameter provided as a JSON object that accepts the following filter:
  *     - id: [required] The unique ID of the client scope to update.
  *     - realm: [optional] The realm where the client scope exists.
- * - scopeRappresentation: The updated client scope object.
+ * - scopeRepresentation: The updated client scope object.
  *     - name: [optional] The name of the scope
  *     - description: [optional] The scope description
  *     - {other scope fields}
  */
-exports.update=function(filter,scopeRappresentation){
- return (kcAdminClientHandler.clientScopes.update(filter,scopeRappresentation ));
+exports.update=function(filter,scopeRepresentation){
+ return (kcAdminClientHandler.clientScopes.update(filter,scopeRepresentation ));
 }
 
 

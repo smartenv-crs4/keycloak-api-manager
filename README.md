@@ -4042,7 +4042,7 @@ Client scopes are reusable sets of protocol mappers and role scope mappings whic
 can be assigned to clients to define what information about the user is included in tokens and what roles are available.
 
 #### `entity clientScopes functions`
-##### `function create(scopeRappresentation)`
+##### `function create(scopeRepresentation)`
 method is used to create a new client scope in a Keycloak realm.
 A client scope defines a set of protocol mappers and roles that can be applied to clients,
 such as during login or token generation.
@@ -4057,7 +4057,7 @@ const KeycloakManager = require('keycloak-api-manager');
  ```
 
 
-##### `function update(filter,scopeRappresentation)`
+##### `function update(filter,scopeRepresentation)`
 The method updates the configuration of an existing client scope in a realm.
 You can modify properties such as the scope’s name, description, attributes, or protocol mappers.
 
@@ -4065,7 +4065,7 @@ You can modify properties such as the scope’s name, description, attributes, o
 - filter: parameter provided as a JSON object that accepts the following filter:
     - id: [required] The unique ID of the client scope to update.
     - realm: [optional] The realm where the client scope exists. 
-- scopeRappresentation: The updated client scope object. for example:
+- scopeRepresentation: The updated client scope object. for example:
   - name: [optional] The name of the scope
   - description: [optional] The scope description
   - other scope fields....
@@ -4894,14 +4894,14 @@ These are providers like Google, Facebook, GitHub, SAML, OIDC, etc.
 
 #### `entity identityProviders functions`
 
-##### `function identityProviders.create(identityProvidersRappresentation)`
+##### `function identityProviders.create(identityProvidersRepresentation)`
 The method is used to create a new Identity Provider (IdP) in a Keycloak realm. 
 An IdP allows users to authenticate via external providers such as Google, Facebook, GitHub, 
 or another SAML/OIDC provider. 
 This method requires specifying an alias, the provider type, and configuration settings such as client ID, client secret, and any other provider-specific options.
 
 **` -- @parameters -- `**
-- identityProvidersRappresentation: parameter provided as a JSON object containing the configuration of the Identity Provider
+- identityProvidersRepresentation: parameter provided as a JSON object containing the configuration of the Identity Provider
     - alias: [required] Unique name for the IdP within the realm. 
     - providerId: [required] Type of provider (google, facebook, oidc, saml, etc.). 
     - enabled: [optional] Whether the IdP is enabled. Default is true. 
@@ -5284,7 +5284,7 @@ Groups are collections of users and can have roles and attributes assigned to th
 Groups help organize users and assign permissions in a scalable way
 
 #### `entity groups functions`
-##### `function create(groupRappresentation)`
+##### `function create(groupRepresentation)`
 Create a new group in the current realme
 
 **` -- @parameters -- `**
@@ -6293,7 +6293,7 @@ This allows you to modify settings such as OTP policies, password requirements, 
 **` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
     - alias: [required] The alias (providerId) of the required action to update.
-- actionRepresentation: The configuration object to update. 
+- actionConfigRepresentation: The configuration object to update. 
   
   
 ```js

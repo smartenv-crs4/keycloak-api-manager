@@ -18,7 +18,7 @@ exports.setKcAdminClient=function(kcAdminClient){
  * or another SAML/OIDC provider.
  * This method requires specifying an alias, the provider type, and configuration settings such as client ID, client secret, and any other provider-specific options.
  * @parameters:
- * - identityProvidersRappresentation: parameter provided as a JSON object containing the configuration of the Identity Provider
+ * - identityProvidersRepresentation: parameter provided as a JSON object containing the configuration of the Identity Provider
  *      - alias: [required] Unique name for the IdP within the realm.
  *      - providerId: [required] Type of provider (google, facebook, oidc, saml, etc.).
  *      - enabled: [optional] Whether the IdP is enabled. Default is true.
@@ -29,8 +29,8 @@ exports.setKcAdminClient=function(kcAdminClient){
  *      - firstBrokerLoginFlowAlias: [optional] Flow to use on first login.
  *      - config : [optional] Provider-specific configuration, e.g., client ID, client secret, endpoints, etc.
  */
-exports.create=function(identityProvidersRappresentation){
- return (kcAdminClientHandler.identityProviders.create(identityProvidersRappresentation));
+exports.create=function(identityProvidersRepresentation){
+ return (kcAdminClientHandler.identityProviders.create(identityProvidersRepresentation));
 }
 
 /**

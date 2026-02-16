@@ -218,7 +218,7 @@ exports.updateRequiredAction=function(filter,actionRepresentation){
  * @parameters:
  * - filter: parameter provided as a JSON object that accepts the following filter:
  *     - alias: [required] The alias (providerId) of the required action to update.
- * - actionRepresentation: The configuration object to update.
+ * - actionConfigRepresentation: The configuration object to update.
  */
 exports.updateRequiredActionConfig=function(filter, actionConfigRepresentation){
  return (kcAdminClientHandler.authenticationManagement.updateRequiredActionConfig(filter,actionConfigRepresentation));

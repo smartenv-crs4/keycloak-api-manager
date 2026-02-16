@@ -195,7 +195,7 @@ exports.getClientSecret=function(filter){
  *      - id: [required] The internal ID of the client (not clientId)
  */
 exports.generateNewClientSecret=function(filter){
- return (kcAdminClientHandler.clients.creatgenerateNewClientSecrete(filter));
+ return (kcAdminClientHandler.clients.generateNewClientSecret(filter));
 }
 
 

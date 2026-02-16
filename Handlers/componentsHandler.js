@@ -60,8 +60,8 @@ exports.create=function(componentRepresentation){
  *          - bindCredential: ["secret"],
  *          - usersDn: ["ou=users,dc=example,dc=com"]
  */
-exports.update=function(filters, componentRepresentation){
- return (kcAdminClientHandler.components.update(filters, componentRepresentation));
+exports.update=function(filter, componentRepresentation){
+ return (kcAdminClientHandler.components.update(filter, componentRepresentation));
 }
 
 

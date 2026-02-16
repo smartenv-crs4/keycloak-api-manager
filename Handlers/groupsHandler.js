@@ -25,8 +25,8 @@ exports.setKcAdminClient=function(kcAdminClient){
  *     - description: [optional] the new group Description
  *     - {other [optional] group description fields}
  */
-exports.create=function(groupRappresentation){
- return (kcAdminClientHandler.groups.create(groupRappresentation));
+exports.create=function(groupRepresentation){
+ return (kcAdminClientHandler.groups.create(groupRepresentation));
 }
 
 
