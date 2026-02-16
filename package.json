@@ -4,7 +4,8 @@
   "description": "Keycloak-api-manager is a lightweight Node.js wrapper for the Keycloak Admin REST API. It provides an easy-to-use functional methods and functions to manage realms, users, roles, clients, groups, and permissions directly from your application code — just like you would from the Keycloak admin console.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "test:watch": "mocha --watch --watch-extensions js"
   },
   "dependencies": {
     "@keycloak/keycloak-admin-client": "^26.3.2",
@@ -22,6 +23,11 @@
     "responseinterceptor": "^1.1.8",
     "serve-favicon": "^2.5.0",
     "underscore": "^1.13.7"
+  },
+  "devDependencies": {
+    "chai": "^4.3.10",
+    "mocha": "^10.2.0",
+    "dockerode": "^4.0.2"
   },
   "keywords": [
     "keycloak",
