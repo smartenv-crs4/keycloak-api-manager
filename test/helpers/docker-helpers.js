@@ -340,18 +340,17 @@ async function waitForHealthy(maxRetries = 30, delayMs = 2000) {
   while (retries > 0) {
     try {
       if (sshHost) {
-        // Remote Docker - check health via SSH and curl
-        const sshUser = sshCredentials.user;
-        const healthCheckCmd = `curl -sf http://localhost:8080/health/ready >/dev/null 2>&1 && echo "healthy" || echo "waiting"`;
+        // Remote Docker - check health via direct HTTP (no SSH needed)
+        const healthCheckUrl = `http://${sshHost}:8080/health/ready`;
         
         try {
-          const result = await executeCommandOutput(healthCheckCmd);
-          if (result === 'healthy') {
+          const response = await fetch(healthCheckUrl);
+          if (response.ok) {
             console.log('✓ Keycloak container is healthy');
             return;
           }
         } catch (err) {
-          // Health check might fail, that's OK, we retry
+          // Network error, container not ready yet
         }
 
         retries--;
