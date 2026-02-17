@@ -54,7 +54,7 @@ nano test/config/secrets.json
 
 ```json
 {
-  "production": {
+  "test": {
     "keycloak": {
       "baseUrl": "http://localhost:8080",
       "realm": "master",
@@ -63,9 +63,7 @@ nano test/config/secrets.json
       "adminUsername": "admin",
       "adminPassword": "admin"
     }
-  },
-  "dev": { ... },
-  "test": { ... }
+  }
 }
 ```
 
@@ -73,7 +71,7 @@ nano test/config/secrets.json
 
 ```json
 {
-  "production": {
+  "test": {
     "keycloak": {
       "baseUrl": "http://your-docker-host:8080"
     }
@@ -85,10 +83,9 @@ nano test/config/secrets.json
 
 ```json
 {
-  "production": {
+  "test": {
     "keycloak": {
-      "adminPassword": "your-real-password",
-      "clientSecret": "your-secret-uuid"
+      "adminPassword": "your-real-password"
     }
   }
 }
@@ -100,21 +97,7 @@ nano test/config/secrets.json
 
 ```bash
 npm test
-# Loads: default.json + local.json + secrets.json (production environment)
-```
-
-### Development Environment
-
-```bash
-NODE_ENV=dev npm test
-# Loads dev configuration from all config files
-```
-
-### Test Environment
-
-```bash
-NODE_ENV=test npm test
-# Loads test configuration from all config files
+# Loads: default.json + local.json + secrets.json (test environment)
 ```
 
 ### Remote/Docker Keycloak
@@ -123,7 +106,7 @@ NODE_ENV=test npm test
 ```bash
 # Edit test/config/local.json
 {
-  "production": {
+  "test": {
     "keycloak": {
       "baseUrl": "http://your-docker-host:8080"
     }
@@ -155,9 +138,6 @@ npm test -- --keycloak.baseUrl=http://remote:8080 --keycloak.adminPassword=secre
 
 # Use environment variables
 PM_KEYCLOAK_BASE_URL=http://remote:8080 PM_KEYCLOAK_ADMIN_PASSWORD=secret npm test
-
-# Run in dev mode with custom URL
-NODE_ENV=dev npm test -- --keycloak.baseUrl=http://dev-server:8080
 ```
 
 ## Security Best Practices
@@ -202,7 +182,7 @@ docker compose down
 
 ```
 📍 Keycloak Configuration (from propertiesmanager):
-   Environment: production
+   Environment: test
    Base URL: http://localhost:8080
    Realm: master
    Client ID: admin-cli
@@ -226,7 +206,7 @@ docker compose down
 
 ### Property Not Loading
 - Check file exists and has correct JSON syntax
-- Verify environment: `NODE_ENV=production|dev|test`
+- Verify environment is "test" (default)
 - Try CLI override to debug: `npm test -- --keycloak.baseUrl=http://test:8080`
 
 ### Tests Timeout

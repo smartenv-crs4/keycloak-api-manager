@@ -1,14 +1,4 @@
 {
-  "production": {
-    "keycloak": {
-      "baseUrl": "http://your-docker-host:8080"
-    }
-  },
-  "dev": {
-    "keycloak": {
-      "baseUrl": "http://localhost:8080"
-    }
-  },
   "test": {
     "keycloak": {
       "baseUrl": "http://localhost:8080"

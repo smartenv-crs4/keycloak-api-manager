@@ -35,7 +35,7 @@ const TEST_CONFIG = {
 };
 
 console.log('\n📍 Keycloak Configuration (from propertiesmanager):');
-console.log(`   Environment: ${process.env.NODE_ENV || 'production'}`);
+console.log(`   Environment: ${process.env.NODE_ENV || 'test'}`);
 console.log(`   Base URL: ${TEST_CONFIG.baseUrl}`);
 console.log(`   Realm: ${TEST_CONFIG.realmName}`);
 console.log(`   Client ID: ${TEST_CONFIG.clientId}`);

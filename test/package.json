@@ -4,8 +4,8 @@
   "description": "Test suite for keycloak-api-manager",
   "private": true,
   "scripts": {
-    "test": "mocha",
-    "test:watch": "mocha --watch --watch-extensions js"
+    "test": "NODE_ENV=test mocha",
+    "test:watch": "NODE_ENV=test mocha --watch --watch-extensions js"
   },
   "dependencies": {
     "keycloak-api-manager": "file:..",
