@@ -32,8 +32,9 @@
   },
   "devDependencies": {
     "chai": "^4.3.10",
+    "dockerode": "^4.0.2",
     "mocha": "^10.2.0",
-    "dockerode": "^4.0.2"
+    "propertiesmanager": "^4.1.0"
   },
   "keywords": [
     "keycloak",

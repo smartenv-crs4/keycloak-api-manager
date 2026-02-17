@@ -1,0 +1,13 @@
+# LOCAL CONFIGURATION - DO NOT COMMIT
+# Copy this file to config.local.properties and update with your actual values
+# config.local.properties overrides config.properties and is in .gitignore
+
+# Override with your actual Keycloak URL when using Docker/remote instance
+# keycloak.baseUrl=http://your-docker-host:8080
+
+# Override with your actual credentials
+# keycloak.adminUsername=admin
+# keycloak.adminPassword=your-password
+
+# Optional: Client Secret for client_credentials flow
+# keycloak.clientSecret=your-secret-uuid

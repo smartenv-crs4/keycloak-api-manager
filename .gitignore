@@ -21,6 +21,8 @@ coverage/
 .env
 .env.local
 .env.*.local
+config.local.properties
+config.*.local.properties
 
 # Build output
 dist/

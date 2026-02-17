@@ -1,14 +1,45 @@
 const KcAdmClient = require('@keycloak/keycloak-admin-client').default;
 const { delay } = require('async');
+const PropertiesManager = require('propertiesmanager');
+const path = require('path');
+
+/**
+ * PropertiesManager secure configuration
+ * Loads properties in priority order:
+ * 1. config.local.properties (local/sensitive - NOT COMMITTED)
+ * 2. config.properties (default/public - COMMITTED)
+ * 3. Environment variable overrides
+ * 
+ * Usage:
+ *   npm test                                                    # Uses defaults + local config
+ *   keycloak.baseUrl=http://remote:8080 npm test              # Override via CLI
+ *   KEYCLOAK_BASE_URL=http://remote:8080 npm test             # Override via ENV
+ */
+const pm = new PropertiesManager({
+  filePath: [
+    path.join(__dirname, '../config.local.properties'),  // Priority 1: Local (not committed)
+    path.join(__dirname, '../config.properties'),        // Priority 2: Default (committed)
+  ],
+  env_override: true, // Enable ENV_VARIABLE_NAME format overrides
+  env_key_prefix: 'KEYCLOAK_', // Support KEYCLOAK_xxx=value overrides
+});
 
 const TEST_CONFIG = {
-  baseUrl: process.env.KEYCLOAK_URL || 'http://localhost:8080',
-  realmName: 'test-realm',
-  username: 'admin',
-  password: 'admin',
-  clientId: 'admin-cli',
-  grantType: 'password',
+  baseUrl: pm.get('keycloak.baseUrl') || 'http://localhost:8080',
+  realmName: pm.get('keycloak.realm') || 'master',
+  username: pm.get('keycloak.adminUsername') || 'admin',
+  password: pm.get('keycloak.adminPassword') || 'admin',
+  clientId: pm.get('keycloak.clientId') || 'admin-cli',
+  clientSecret: pm.get('keycloak.clientSecret'),
+  grantType: pm.get('keycloak.grantType') || 'password',
 };
+
+console.log('\n📍 Keycloak Configuration (from propertiesmanager):');
+console.log(`   Base URL: ${TEST_CONFIG.baseUrl}`);
+console.log(`   Realm: ${TEST_CONFIG.realmName}`);
+console.log(`   Client ID: ${TEST_CONFIG.clientId}`);
+console.log(`   Grant Type: ${TEST_CONFIG.grantType}\n`);
+
 
 let adminClient = null;
 
