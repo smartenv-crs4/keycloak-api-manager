@@ -27,9 +27,11 @@ function executeCommandOutput(command) {
         }
       });
     } else {
-      // Remote SSH execution - uses ssh-agent keys, no password needed
+      // Remote SSH execution - uses SSH key directly
       const sshUser = process.env.DOCKER_SSH_USER || 'smart';
-      const sshCommand = `ssh ${sshUser}@${sshHost} "${command}"`;
+      const homeDir = require('os').homedir();
+      const keyPath = `${homeDir}/.ssh/id_ed25519`;
+      const sshCommand = `ssh -i ${keyPath} -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${sshUser}@${sshHost} "${command}"`;
       
       exec(sshCommand, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
         if (error) {
@@ -179,17 +181,21 @@ async function startDocker() {
         // Pull latest Keycloak image
         `docker pull quay.io/keycloak/keycloak:latest`,
         // Run container with health check
-        `docker run -d --name keycloak-test -p 8080:8080 \\
+        `docker run -d --name keycloak-test -p 0.0.0.0:8080:8080 \\
           -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \\
           -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \\
           -e KC_HEALTH_ENABLED=true \\
           -e KC_HOSTNAME=smart-dell-sml.crs4.it \\
+          -e KC_SCHEME=http \\
           -e KC_HTTP_PORT=8080 \\
+          -e KC_HOSTNAME_STRICT_HTTPS=false \\
           quay.io/keycloak/keycloak:latest \\
           start-dev`,
       ].join(' && ');
       
-      const sshCommand = `ssh ${sshUser}@${sshHost} "${commands.replace(/"/g, '\\"')}"`;
+      const homeDir = require('os').homedir();
+      const keyPath = `${homeDir}/.ssh/id_ed25519`;
+      const sshCommand = `ssh -i ${keyPath} -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${sshUser}@${sshHost} "${commands.replace(/"/g, '\\"')}"`;
       
       console.log(`  🔗 Connecting to ${sshUser}@${sshHost}...`);
       console.log('  ⬇️  Downloading Keycloak image & starting container...');
@@ -251,7 +257,9 @@ async function stopDocker() {
         `docker rm keycloak-test 2>/dev/null || true`,
       ].join(' && ');
       
-      const sshCommand = `ssh ${sshUser}@${sshHost} "${commands}"`;
+      const homeDir = require('os').homedir();
+      const keyPath = `${homeDir}/.ssh/id_ed25519`;
+      const sshCommand = `ssh -i ${keyPath} -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${sshUser}@${sshHost} "${commands}"`;
       
       console.log(`  🔗 Connecting to ${sshUser}@${sshHost}...`);
       
@@ -308,7 +316,9 @@ async function waitForHealthy(maxRetries = 30, delayMs = 2000) {
         // Remote Docker - check health via curl on root endpoint (returns 302 redirect when ready)
         const sshUser = process.env.DOCKER_SSH_USER || 'smart';
         const healthCheckCmd = `curl -sf -o /dev/null -w "%{http_code}" http://localhost:8080/`;
-        const sshCommand = `ssh ${sshUser}@${sshHost} "${healthCheckCmd}"`;
+        const homeDir = require('os').homedir();
+        const keyPath = `${homeDir}/.ssh/id_ed25519`;
+        const sshCommand = `ssh -i ${keyPath} -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${sshUser}@${sshHost} "${healthCheckCmd}"`;
         
         try {
           const result = await new Promise((resolve, reject) => {

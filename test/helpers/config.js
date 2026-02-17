@@ -106,6 +106,13 @@ async function initializeAdminClient() {
       if (retries > 0) {
         console.log(`Waiting for Keycloak... (${retries} retries left)`);
         await delay(2000);
+      } else {
+        console.error('OAuth2 Error Details:', {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status,
+          url: config.baseUrl
+        });
       }
     }
   }
