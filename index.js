@@ -1,5 +1,4 @@
 var express = require('express');
-var keycloakAdminClient=require('@keycloak/keycloak-admin-client').default;
 var kcAdminClient=null;
 var realmHandler=require('./Handlers/realmsHandler');
 var usersHandler=require('./Handlers/usersHandler');
@@ -13,6 +12,35 @@ var authenticationManagementHandler=require('./Handlers/authenticationManagement
 var request=require('request');
 
 let configAdminclient=null;
+let tokenRefreshInterval=null;
+let keycloakAdminClientClass=null;
+
+async function getKeycloakAdminClientClass() {
+        if (keycloakAdminClientClass) {
+                return keycloakAdminClientClass;
+        }
+
+        try {
+                const requiredModule = require('@keycloak/keycloak-admin-client');
+                keycloakAdminClientClass = requiredModule.default || requiredModule;
+                return keycloakAdminClientClass;
+        } catch (err) {
+                if (err && err.code !== 'ERR_REQUIRE_ESM') {
+                        throw err;
+                }
+        }
+
+        const importedModule = await import('@keycloak/keycloak-admin-client');
+        keycloakAdminClientClass = importedModule.default || importedModule;
+        return keycloakAdminClientClass;
+}
+
+function normalizeBaseUrl(baseUrl) {
+        if (!baseUrl) {
+                return baseUrl;
+        }
+        return baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+}
 
 /**
  * ***************************** - ENGLISH - *******************************
@@ -38,25 +66,52 @@ let configAdminclient=null;
  *    - refreshToken: [Optional] string containing a valid refresh token to request a new access token when using the refresh_token grant type.
  */
 exports.configure=async function(adminClientCredentials){
-        configAdminclient={
-                baseUrl:adminClientCredentials.baseUrl,
-                realmName:adminClientCredentials.realmName
+        if (!adminClientCredentials || typeof adminClientCredentials !== 'object') {
+                throw new Error('configure(adminClientCredentials) requires a configuration object');
         }
 
-        kcAdminClient=  new keycloakAdminClient(configAdminclient);
+        const realmName = adminClientCredentials.realmName || adminClientCredentials.realm;
+        const baseUrl = normalizeBaseUrl(adminClientCredentials.baseUrl);
+
+        if (!baseUrl) {
+                throw new Error('Missing required parameter: baseUrl');
+        }
+        if (!realmName) {
+                throw new Error('Missing required parameter: realmName (or alias: realm)');
+        }
+        if (!adminClientCredentials.clientId) {
+                throw new Error('Missing required parameter: clientId');
+        }
+
+        configAdminclient={
+                baseUrl,
+                realmName
+        }
+
+        const KeycloakAdminClient = await getKeycloakAdminClientClass();
+        kcAdminClient=  new KeycloakAdminClient(configAdminclient);
         configAdminclient.clientId=adminClientCredentials.clientId;
         configAdminclient.clientSecret=adminClientCredentials.clientSecret;
 
+        const authCredentials = { ...adminClientCredentials, baseUrl, realmName };
+        delete authCredentials.baseUrl;
+        delete authCredentials.realmName;
+        delete authCredentials.realm;
+        delete authCredentials.tokenLifeSpan;
 
-        let  tokenLifeSpan= (adminClientCredentials.tokenLifeSpan *1000)/2;
-        delete adminClientCredentials.baseUrl;
-        delete adminClientCredentials.realmName;
-        delete adminClientCredentials.tokenLifeSpan;
-        await kcAdminClient.auth(adminClientCredentials);
+        let tokenLifeSpanMs = Number(adminClientCredentials.tokenLifeSpan);
+        tokenLifeSpanMs = Number.isFinite(tokenLifeSpanMs) && tokenLifeSpanMs > 0
+                ? (tokenLifeSpanMs * 1000) / 2
+                : 30000;
+        await kcAdminClient.auth(authCredentials);
 
-        setInterval(async ()=>{
-                await kcAdminClient.auth(adminClientCredentials);
-        },tokenLifeSpan);
+        if (tokenRefreshInterval) {
+                clearInterval(tokenRefreshInterval);
+        }
+
+        tokenRefreshInterval = setInterval(async ()=>{
+                await kcAdminClient.auth(authCredentials);
+        },tokenLifeSpanMs);
 
         realmHandler.setKcAdminClient(kcAdminClient);
         exports.realms=realmHandler;

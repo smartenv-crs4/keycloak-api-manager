@@ -1,14 +1,18 @@
 const { expect } = require('chai');
-const { getAdminClient } = require('../helpers/config');
+const { getAdminClient, loadConfig } = require('../helpers/config');
 
 describe('Clients Handler', function () {
   this.timeout(15000);
   let client;
   let testClientId;
+  let testClientClientId;
+  let testClientSecret;
+  let keycloakBaseUrl;
   let testRoleId;
 
   before(async function () {
     client = getAdminClient();
+    keycloakBaseUrl = (loadConfig().baseUrl || 'http://localhost:8080').replace(/\/$/, '');
 
     // Create a test role for client role mappings
     const role = await client.roles.create(
@@ -27,6 +31,8 @@ describe('Clients Handler', function () {
           name: 'Integration Test Client',
           enabled: true,
           publicClient: false,
+          serviceAccountsEnabled: true,
+          protocol: 'openid-connect',
           standardFlowEnabled: true,
           directAccessGrantsEnabled: true,
         };
@@ -38,6 +44,7 @@ describe('Clients Handler', function () {
 
         expect(result).to.have.property('id');
         testClientId = result.id;
+        testClientClientId = clientRep.clientId;
       });
 
       it('should fail creating duplicate clientId', async function () {
@@ -141,6 +148,55 @@ describe('Clients Handler', function () {
 
         expect(secret).to.have.property('value');
         expect(secret.value).to.be.a('string');
+        testClientSecret = secret.value;
+      });
+    });
+  });
+
+  // ==================== CLIENT AUTHENTICATION ====================
+  describe('Client Authentication', function () {
+    describe('client_credentials login', function () {
+      it('should login with client_credentials and return an access token', async function () {
+        const response = await fetch(
+          `${keycloakBaseUrl}/realms/test-realm/protocol/openid-connect/token`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              grant_type: 'client_credentials',
+              client_id: testClientClientId,
+              client_secret: testClientSecret,
+            }),
+          }
+        );
+
+        const body = await response.json();
+        expect(response.status).to.equal(200);
+        expect(body).to.have.property('access_token');
+        expect(body.token_type).to.equal('Bearer');
+      });
+
+      it('should fail login with invalid client secret', async function () {
+        const response = await fetch(
+          `${keycloakBaseUrl}/realms/test-realm/protocol/openid-connect/token`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              grant_type: 'client_credentials',
+              client_id: testClientClientId,
+              client_secret: `${testClientSecret}-invalid`,
+            }),
+          }
+        );
+
+        const body = await response.json();
+        expect(response.status).to.be.oneOf([400, 401]);
+        expect(body).to.have.property('error');
       });
     });
   });

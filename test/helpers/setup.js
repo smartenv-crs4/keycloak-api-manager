@@ -16,6 +16,11 @@ exports.mochaHooks = {
 
     console.log('\n========== TEST SETUP ==========');
 
+    if (process.env.SKIP_TEST_SETUP === 'true') {
+      console.log('Skipping global test setup (SKIP_TEST_SETUP=true)\n');
+      return;
+    }
+
     // Check if using remote Keycloak (skip Docker)
     const useRemoteKeycloak = process.env.USE_REMOTE_KEYCLOAK === 'true';
     const useRemoteDocker = !!process.env.DOCKER_SSH_HOST;
@@ -82,6 +87,11 @@ exports.mochaHooks = {
     this.timeout(60000); // 1 minute max for teardown
 
     console.log('\n========== TEST TEARDOWN ==========');
+
+    if (process.env.SKIP_TEST_SETUP === 'true') {
+      console.log('Skipping global test teardown (SKIP_TEST_SETUP=true)\n');
+      return;
+    }
 
     const useRemoteKeycloak = process.env.USE_REMOTE_KEYCLOAK === 'true';
     const useRemoteDocker = !!process.env.DOCKER_SSH_HOST;

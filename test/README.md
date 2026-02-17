@@ -130,6 +130,30 @@ This reminder is intentionally duplicated from the main README.
 
 ## Usage
 
+### Live smoke test: `configure()` with `client_credentials`
+
+An opt-in live test is available in `test/specs/liveClientCredentials.test.js`.
+It calls `KeycloakManager.configure()` against a real Keycloak instance using `client_credentials`.
+
+Run it only when you explicitly enable it:
+
+```bash
+SKIP_TEST_SETUP=true \
+RUN_LIVE_CLIENT_CREDENTIALS_TEST=true \
+LIVE_KC_BASE_URL=http://smart-dell-sml.crs4.it:8080 \
+LIVE_KC_REALM=master \
+LIVE_KC_CLIENT_ID=your-client-id \
+LIVE_KC_CLIENT_SECRET=your-client-secret \
+npm test -- --spec "specs/liveClientCredentials.test.js"
+```
+
+Required variables:
+- `RUN_LIVE_CLIENT_CREDENTIALS_TEST=true`
+- `LIVE_KC_BASE_URL`
+- `LIVE_KC_REALM`
+- `LIVE_KC_CLIENT_ID`
+- `LIVE_KC_CLIENT_SECRET`
+
 ### Default (Local Docker Keycloak)
 
 ```bash
