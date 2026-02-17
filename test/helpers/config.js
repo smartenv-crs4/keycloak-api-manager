@@ -31,6 +31,15 @@ let adminClient = null;
 let propertiesLoaded = false;
 
 /**
+ * Reset configuration cache (call when local.json is updated)
+ */
+function resetConfig() {
+  TEST_CONFIG = null;
+  delete require.cache[require.resolve('propertiesmanager')];
+  propertiesLoaded = false;
+}
+
+/**
  * Loads configuration from propertiesmanager
  * Called lazily to ensure local.json is created from Docker first
  */
@@ -205,4 +214,5 @@ module.exports = {
   cleanupTestRealm,
   getAdminClient,
   resetAdminClient,
+  resetConfig,
 };

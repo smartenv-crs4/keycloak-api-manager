@@ -16,8 +16,21 @@ function delay(ms) {
 function getDockerConfig() {
   try {
     const { conf } = require('propertiesmanager');
-    
+    const keycloakConfig = conf.keycloak || {};
     const dockerConfig = conf.docker || {};
+    const baseEnvironment = {
+      KC_HEALTH_ENABLED: 'true',
+      KC_HOSTNAME: 'localhost',
+      KC_SCHEME: 'http',
+      KC_HTTP_PORT: '8080',
+      KC_HOSTNAME_STRICT_HTTPS: 'false',
+      KC_BOOTSTRAP_ADMIN_USERNAME: keycloakConfig.adminUsername || 'admin',
+      KC_BOOTSTRAP_ADMIN_PASSWORD: keycloakConfig.adminPassword || 'admin',
+    };
+    const environment = {
+      ...baseEnvironment,
+      ...(dockerConfig.environment || {}),
+    };
     
     return {
       image: dockerConfig.image || 'quay.io/keycloak/keycloak:latest',
@@ -25,13 +38,7 @@ function getDockerConfig() {
       portMapping: dockerConfig.portMapping || '0.0.0.0:8080:8080',
       remotePort: dockerConfig.remotePort || 8080,
       sshTunnelLocalPort: dockerConfig.sshTunnelLocalPort || 9999,
-      environment: dockerConfig.environment || {
-        KC_HEALTH_ENABLED: 'true',
-        KC_HOSTNAME: 'localhost',
-        KC_SCHEME: 'http',
-        KC_HTTP_PORT: '8080',
-        KC_HOSTNAME_STRICT_HTTPS: 'false'
-      }
+      environment,
     };
   } catch (err) {
     console.log('⚠ Could not load Docker config from PropertiesManager, using defaults');
@@ -220,8 +227,8 @@ async function startDocker() {
     return new Promise((resolve, reject) => {
       // Build environment variables from config
       const envVars = Object.entries(dockerConfig.environment)
-        .map(([key, value]) => `-e ${key}=${value}`)
-        .join(' \\\\n          ');
+        .map(([key, value]) => `-e "${key}=${value}"`)
+        .join(' ');
 
       const commands = [
         // Check if container already exists and stop it
@@ -230,10 +237,7 @@ async function startDocker() {
         // Pull latest Keycloak image
         `docker pull ${dockerConfig.image}`,
         // Run container with health check
-        `docker run -d --name ${dockerConfig.containerName} -p ${dockerConfig.portMapping} \\
-          ${envVars} \\
-          ${dockerConfig.image} \\
-          start-dev`,
+        `docker run -d --name ${dockerConfig.containerName} -p ${dockerConfig.portMapping} ${envVars} ${dockerConfig.image} start-dev`,
       ].join(' && ');
       
       const homeDir = require('os').homedir();

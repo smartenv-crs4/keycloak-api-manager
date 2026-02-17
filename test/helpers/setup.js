@@ -4,7 +4,7 @@
  */
 
 const { startDocker, stopDocker, waitForHealthy, updateConfigFromDocker, createSSHTunnel, closeSSHTunnel } = require('./docker-helpers');
-const { initializeAdminClient, setupTestRealm, cleanupTestRealm } = require('./config');
+const { initializeAdminClient, setupTestRealm, cleanupTestRealm, resetConfig } = require('./config');
 
 // Store tunnel state for cleanup
 let sshTunnelUrl = null;
@@ -49,6 +49,9 @@ exports.mochaHooks = {
           fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
           console.log(`✓ Updated config to use SSH tunnel: http://${sshTunnelUrl}`);
         }
+        
+        // Reset config cache so it reloads from updated local.json
+        resetConfig();
       } else {
         console.log('Starting Docker containers locally...');
         
