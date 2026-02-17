@@ -21,9 +21,14 @@ coverage/
 .env
 .env.local
 .env.*.local
-config/local.json
-config/secrets.json
-config/*.local.json
+
+# Test configuration (actual files in test/config/)
+test/config/local.json
+test/config/secrets.json
+test/config/*.local.json
+
+# Test configuration symlink (created by npm pretest)
+/config
 
 # Build output
 dist/

@@ -7,13 +7,17 @@ The test suite uses **propertiesmanager** with the standard multi-file JSON patt
 ### File Structure
 
 ```
-config/
-├── default.json          # Base configuration (COMMITTED - public defaults)
-├── local.json           # Local overrides (GIT-IGNORED - developer-specific)
-├── secrets.json         # Sensitive data (GIT-IGNORED - credentials)
-├── local.json.example   # Template for local.json
-└── secrets.json.example # Template for secrets.json
+test/
+├── config/                  # Test configuration files
+│   ├── default.json         # Base configuration (COMMITTED - public defaults)
+│   ├── local.json          # Local overrides (GIT-IGNORED - developer-specific)
+│   ├── secrets.json        # Sensitive data (GIT-IGNORED - credentials)
+│   ├── local.json.example  # Template for local.json
+│   └── secrets.json.example # Template for secrets.json
+├── ...other test files
 ```
+
+**Note:** When running `npm test`, a symbolic link `config → test/config` is automatically created in the project root (required by propertiesmanager). This symlink is git-ignored and recreated on each test run.
 
 ### Priority Order (Highest to Lowest)
 
@@ -27,17 +31,17 @@ config/
 
 ```bash
 # Copy example files
-cp config/local.json.example config/local.json
-cp config/secrets.json.example config/secrets.json
+cp test/config/local.json.example test/config/local.json
+cp test/config/secrets.json.example test/config/secrets.json
 
 # Edit for your environment
-nano config/local.json
-nano config/secrets.json
+nano test/config/local.json
+nano test/config/secrets.json
 ```
 
 ## Configuration Files
 
-### `config/default.json` (Committed - Safe Defaults)
+### `test/config/default.json` (Committed - Safe Defaults)
 
 ```json
 {
@@ -56,7 +60,7 @@ nano config/secrets.json
 }
 ```
 
-### `config/local.json` (Git-Ignored - Local Overrides)
+### `test/config/local.json` (Git-Ignored - Local Overrides)
 
 ```json
 {
@@ -68,7 +72,7 @@ nano config/secrets.json
 }
 ```
 
-### `config/secrets.json` (Git-Ignored - Credentials)
+### `test/config/secrets.json` (Git-Ignored - Credentials)
 
 ```json
 {
@@ -106,9 +110,9 @@ NODE_ENV=test npm test
 
 ### Remote/Docker Keycloak
 
-**Option 1: Via config/local.json (Recommended)**
+**Option 1: Via test/config/local.json (Recommended)**
 ```bash
-# Edit config/local.json
+# Edit test/config/local.json
 {
   "production": {
     "keycloak": {
@@ -150,14 +154,14 @@ NODE_ENV=dev npm test -- --keycloak.baseUrl=http://dev-server:8080
 ## Security Best Practices
 
 ✅ **DO:**
-- Keep `config/local.json` and `config/secrets.json` in `.gitignore`
-- Store sensitive data ONLY in `config/secrets.json`
-- Use `config/default.json` for safe public defaults
+- Keep `test/config/local.json` and `test/config/secrets.json` in `.gitignore`
+- Store sensitive data ONLY in `test/config/secrets.json`
+- Use `test/config/default.json` for safe public defaults
 - Use environment variables in CI/CD pipelines
 
 ❌ **DON'T:**
-- Commit `config/local.json` or `config/secrets.json`
-- Store production passwords in `config/default.json`
+- Commit `test/config/local.json` or `test/config/secrets.json`
+- Store production passwords in `test/config/default.json`
 - Hardcode credentials in test files
 
 ## Local Docker Setup
@@ -203,11 +207,11 @@ docker compose down
 
 ### Connection Refused
 - Check Keycloak is running: `curl http://localhost:8080`
-- Verify `keycloak.baseUrl` in `config/local.json` or `config/default.json`
+- Verify `keycloak.baseUrl` in `test/config/local.json` or `test/config/default.json`
 - Wait a few seconds for Keycloak to fully start
 
 ### Authentication Failed
-- Verify credentials in `config/secrets.json` or `config/local.json`
+- Verify credentials in `test/config/secrets.json` or `test/config/local.json`
 - Check default admin user exists in Keycloak
 - Ensure `admin-cli` client exists in realm
 

@@ -10,6 +10,7 @@
     }
   },
   "scripts": {
+    "pretest": "ln -sf test/config config",
     "test": "mocha",
     "test:watch": "mocha --watch --watch-extensions js"
   },
