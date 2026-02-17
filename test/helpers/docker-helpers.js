@@ -1,6 +1,65 @@
 const docker = require('dockerode');
 const { spawn } = require('child_process');
 const { delay } = require('async');
+const fs = require('fs');
+const path = require('path');
+
+/**
+ * Updates local.json with Docker container configuration
+ */
+async function updateConfigFromDocker() {
+  try {
+    const dockerode = new docker();
+    const containers = await dockerode.listContainers();
+    const keycloakContainer = containers.find((c) => c.Names.includes('/keycloak-test'));
+
+    if (!keycloakContainer) {
+      console.log('⚠ Keycloak container not found, using default config');
+      return;
+    }
+
+    const container = dockerode.getContainer(keycloakContainer.Id);
+    const inspect = await container.inspect();
+
+    // Extract configuration from container
+    const env = inspect.Config.Env.reduce((acc, envVar) => {
+      const [key, value] = envVar.split('=');
+      acc[key] = value;
+      return acc;
+    }, {});
+
+    // Get mapped port
+    const portBindings = inspect.NetworkSettings.Ports['8080/tcp'];
+    const hostPort = portBindings?.[0]?.HostPort || '8080';
+    const hostIp = portBindings?.[0]?.HostIp || '0.0.0.0';
+    const baseUrl = `http://localhost:${hostPort}`;
+
+    // Build config object
+    const config = {
+      test: {
+        keycloak: {
+          baseUrl,
+          realm: 'master',
+          clientId: 'admin-cli',
+          grantType: 'password',
+          adminUsername: env.KEYCLOAK_ADMIN || 'admin',
+          adminPassword: env.KEYCLOAK_ADMIN_PASSWORD || 'admin',
+        },
+      },
+    };
+
+    // Write to local.json
+    const configPath = path.join(__dirname, '../config/local.json');
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+    console.log('✓ Updated local.json with Docker container config:');
+    console.log(`  Base URL: ${baseUrl}`);
+    console.log(`  Admin User: ${config.test.keycloak.adminUsername}`);
+  } catch (err) {
+    console.log(`⚠ Failed to update config from Docker: ${err.message}`);
+    console.log('  Using default configuration');
+  }
+}
 
 /**
  * Starts Docker Compose services
@@ -108,4 +167,5 @@ module.exports = {
   startDocker,
   stopDocker,
   waitForHealthy,
+  updateConfigFromDocker,
 };

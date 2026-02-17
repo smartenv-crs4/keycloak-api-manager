@@ -3,7 +3,7 @@
  * Orchestrates Docker container lifecycle and Keycloak initialization
  */
 
-const { startDocker, stopDocker, waitForHealthy } = require('./docker-helpers');
+const { startDocker, stopDocker, waitForHealthy, updateConfigFromDocker } = require('./docker-helpers');
 const { initializeAdminClient, setupTestRealm, cleanupTestRealm } = require('./config');
 
 // Root hook plugin for Mocha
@@ -20,6 +20,9 @@ exports.mochaHooks = {
 
       // Wait for services to be healthy
       await waitForHealthy();
+
+      // Update configuration from Docker container
+      await updateConfigFromDocker();
 
       // Initialize Keycloak admin client
       await initializeAdminClient();
