@@ -15,21 +15,33 @@ exports.mochaHooks = {
 
     // Check if using remote Keycloak (skip Docker)
     const useRemoteKeycloak = process.env.USE_REMOTE_KEYCLOAK === 'true';
+    const useRemoteDocker = !!process.env.DOCKER_SSH_HOST;
 
     try {
       if (useRemoteKeycloak) {
         console.log('Using remote Keycloak (skip Docker startup)');
         console.log('Configuration from test/config/*.json files\n');
-      } else {
-        console.log('Starting Docker containers...');
+      } else if (useRemoteDocker) {
+        console.log(`Starting Docker containers on remote host ${process.env.DOCKER_SSH_HOST}...`);
         
-        // Start Docker Compose
+        // Start Docker Compose on remote host
         await startDocker();
 
-        // Wait for services to be healthy
+        // Wait for services to be healthy on remote host
         await waitForHealthy();
 
-        // Update configuration from Docker container
+        // Update configuration from remote Docker container
+        await updateConfigFromDocker();
+      } else {
+        console.log('Starting Docker containers locally...');
+        
+        // Start Docker Compose locally
+        await startDocker();
+
+        // Wait for services to be healthy locally
+        await waitForHealthy();
+
+        // Update configuration from local Docker container
         await updateConfigFromDocker();
       }
 
@@ -52,13 +64,17 @@ exports.mochaHooks = {
     console.log('\n========== TEST TEARDOWN ==========');
 
     const useRemoteKeycloak = process.env.USE_REMOTE_KEYCLOAK === 'true';
+    const useRemoteDocker = !!process.env.DOCKER_SSH_HOST;
 
     try {
       // Cleanup Keycloak test realm
       await cleanupTestRealm();
 
-      // Stop Docker Compose only if using local Docker
-      if (!useRemoteKeycloak) {
+      // Stop Docker Compose only if using local or remote Docker (not pre-deployed)
+      if (!useRemoteKeycloak && !useRemoteDocker) {
+        await stopDocker();
+      } else if (useRemoteDocker) {
+        // Stop Docker on remote host
         await stopDocker();
       }
 

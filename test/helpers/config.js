@@ -1,5 +1,11 @@
 const KcAdmClient = require('@keycloak/keycloak-admin-client').default;
-const { delay } = require('async');
+
+/**
+ * Simple delay function
+ */
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * PropertiesManager Configuration

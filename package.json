@@ -30,7 +30,7 @@
     "serve-favicon": "^2.5.0",
     "underscore": "^1.13.7"
   },
-  "devDependencies": {
+  "keywords": [
     "keycloak",
     "user",
     "login",
