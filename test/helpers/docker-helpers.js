@@ -183,6 +183,8 @@ async function startDocker() {
           -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \\
           -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \\
           -e KC_HEALTH_ENABLED=true \\
+          -e KC_HOSTNAME=smart-dell-sml.crs4.it \\
+          -e KC_HTTP_PORT=8080 \\
           quay.io/keycloak/keycloak:latest \\
           start-dev`,
       ].join(' && ');
