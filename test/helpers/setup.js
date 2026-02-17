@@ -12,17 +12,26 @@ exports.mochaHooks = {
     this.timeout(120000); // 2 minutes max for setup
 
     console.log('\n========== TEST SETUP ==========');
-    console.log('Starting Docker containers...');
+
+    // Check if using remote Keycloak (skip Docker)
+    const useRemoteKeycloak = process.env.USE_REMOTE_KEYCLOAK === 'true';
 
     try {
-      // Start Docker Compose
-      await startDocker();
+      if (useRemoteKeycloak) {
+        console.log('Using remote Keycloak (skip Docker startup)');
+        console.log('Configuration from test/config/*.json files\n');
+      } else {
+        console.log('Starting Docker containers...');
+        
+        // Start Docker Compose
+        await startDocker();
 
-      // Wait for services to be healthy
-      await waitForHealthy();
+        // Wait for services to be healthy
+        await waitForHealthy();
 
-      // Update configuration from Docker container
-      await updateConfigFromDocker();
+        // Update configuration from Docker container
+        await updateConfigFromDocker();
+      }
 
       // Initialize Keycloak admin client
       await initializeAdminClient();
@@ -42,12 +51,16 @@ exports.mochaHooks = {
 
     console.log('\n========== TEST TEARDOWN ==========');
 
+    const useRemoteKeycloak = process.env.USE_REMOTE_KEYCLOAK === 'true';
+
     try {
       // Cleanup Keycloak test realm
       await cleanupTestRealm();
 
-      // Stop Docker Compose
-      await stopDocker();
+      // Stop Docker Compose only if using local Docker
+      if (!useRemoteKeycloak) {
+        await stopDocker();
+      }
 
       console.log('✓ Test environment cleaned up\n');
     } catch (err) {

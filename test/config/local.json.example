@@ -1,7 +1,7 @@
 {
   "test": {
     "keycloak": {
-      "baseUrl": "http://localhost:8080"
+      "baseUrl": "http://smart-dell-sml.crs4.it:8080"
     }
   }
 }

@@ -93,28 +93,53 @@ nano test/config/secrets.json
 
 ## Usage
 
-### Default (Local Keycloak)
+### Default (Local Docker Keycloak)
 
 ```bash
 npm test
-# Loads: default.json + local.json + secrets.json (test environment)
+# Automatically starts Docker, creates local.json from container, runs tests
 ```
 
-### Remote/Docker Keycloak
+### Remote Keycloak (Skip Docker)
 
-**Option 1: Via test/config/local.json (Recommended)**
+If Keycloak is running on a remote server (e.g., `http://smart-dell-sml.crs4.it:8080`):
+
+**Step 1: Create configuration files**
+
 ```bash
-# Edit test/config/local.json
+# test/config/local.json
 {
   "test": {
     "keycloak": {
-      "baseUrl": "http://your-docker-host:8080"
+      "baseUrl": "http://smart-dell-sml.crs4.it:8080"
     }
   }
 }
 
-# Run tests
-npm test
+# test/config/secrets.json (if using different credentials)
+{
+  "test": {
+    "keycloak": {
+      "adminPassword": "your-admin-password"
+    }
+  }
+}
+```
+
+**Step 2: Run tests with remote flag**
+
+```bash
+USE_REMOTE_KEYCLOAK=true npm test
+```
+
+This skips Docker startup and uses your manually configured files.
+
+### Override Examples
+
+**Option 1: Via test/config/local.json (Recommended)**
+```bash
+# Already created above, just run:
+USE_REMOTE_KEYCLOAK=true npm test
 ```
 
 **Option 2: Via Environment Variable**
