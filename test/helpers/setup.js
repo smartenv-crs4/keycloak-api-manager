@@ -3,8 +3,11 @@
  * Orchestrates Docker container lifecycle and Keycloak initialization
  */
 
-const { startDocker, stopDocker, waitForHealthy, updateConfigFromDocker } = require('./docker-helpers');
+const { startDocker, stopDocker, waitForHealthy, updateConfigFromDocker, createSSHTunnel, closeSSHTunnel } = require('./docker-helpers');
 const { initializeAdminClient, setupTestRealm, cleanupTestRealm } = require('./config');
+
+// Store tunnel state for cleanup
+let sshTunnelUrl = null;
 
 // Root hook plugin for Mocha
 exports.mochaHooks = {
@@ -32,6 +35,20 @@ exports.mochaHooks = {
 
         // Update configuration from remote Docker container
         await updateConfigFromDocker();
+
+        // Create SSH tunnel for local HTTP access (avoids HTTPS enforcement)
+        sshTunnelUrl = await createSSHTunnel();
+        
+        // Update config to use tunnel
+        if (sshTunnelUrl) {
+          const fs = require('fs');
+          const path = require('path');
+          const configPath = path.join(__dirname, '../config/local.json');
+          const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+          config.test.keycloak.baseUrl = `http://${sshTunnelUrl}`;
+          fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+          console.log(`✓ Updated config to use SSH tunnel: http://${sshTunnelUrl}`);
+        }
       } else {
         console.log('Starting Docker containers locally...');
         
@@ -69,6 +86,12 @@ exports.mochaHooks = {
     try {
       // Cleanup Keycloak test realm
       await cleanupTestRealm();
+
+      // Close SSH tunnel if open
+      if (sshTunnelUrl) {
+        closeSSHTunnel();
+        sshTunnelUrl = null;
+      }
 
       // Stop Docker Compose only if using local or remote Docker (not pre-deployed)
       if (!useRemoteKeycloak && !useRemoteDocker) {

@@ -385,9 +385,80 @@ async function waitForHealthy(maxRetries = 30, delayMs = 2000) {
   throw new Error('Service failed to become healthy in time');
 }
 
+/**
+ * Create SSH tunnel for remote Keycloak access via localhost
+ * Allows HTTP access without HTTPS enforcement
+ */
+let sshTunnelProcess = null;
+
+async function createSSHTunnel() {
+  return new Promise((resolve, reject) => {
+    const sshHost = process.env.DOCKER_SSH_HOST;
+    if (!sshHost) {
+      resolve(null);
+      return;
+    }
+
+    const sshUser = process.env.DOCKER_SSH_USER || 'smart';
+    const localPort = 9999;
+    const remoteHost = 'localhost';
+    const remotePort = 8080;
+    const homeDir = require('os').homedir();
+    const keyPath = `${homeDir}/.ssh/id_ed25519`;
+
+    const tunnelCommand = [
+      'ssh',
+      '-i', keyPath,
+      '-o', 'StrictHostKeyChecking=no',
+      '-o', 'PasswordAuthentication=no',
+      '-N',
+      '-L', `127.0.0.1:${localPort}:${remoteHost}:${remotePort}`,
+      `${sshUser}@${sshHost}`
+    ];
+
+    console.log(`🔗 Creating SSH tunnel to ${sshHost}:${remotePort} -> 127.0.0.1:${localPort}...`);
+    
+    sshTunnelProcess = spawn(tunnelCommand[0], tunnelCommand.slice(1), {
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+
+    sshTunnelProcess.on('error', (err) => {
+      reject(new Error(`Failed to create SSH tunnel: ${err.message}`));
+    });
+
+    sshTunnelProcess.stderr.on('data', (data) => {
+      const msg = data.toString().trim();
+      if (msg) console.log(`🔗 SSH tunnel: ${msg}`);
+    });
+
+    // Give tunnel time to establish
+    setTimeout(() => {
+      if (sshTunnelProcess.exitCode !== null) {
+        reject(new Error('SSH tunnel process exited unexpectedly'));
+      } else {
+        console.log(`✓ SSH tunnel established on 127.0.0.1:${localPort}`);
+        resolve(`127.0.0.1:${localPort}`);
+      }
+    }, 2000);
+  });
+}
+
+/**
+ * Close SSH tunnel
+ */
+function closeSSHTunnel() {
+  if (sshTunnelProcess) {
+    sshTunnelProcess.kill('SIGTERM');
+    sshTunnelProcess = null;
+    console.log('✓ SSH tunnel closed');
+  }
+}
+
 module.exports = {
   startDocker,
   stopDocker,
   waitForHealthy,
   updateConfigFromDocker,
+  createSSHTunnel,
+  closeSSHTunnel,
 };
