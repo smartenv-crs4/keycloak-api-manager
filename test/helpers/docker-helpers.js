@@ -2,13 +2,6 @@ const docker = require('dockerode');
 const { spawn, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const readline = require('readline');
-
-// Store SSH credentials for reuse
-let sshCredentials = {
-  host: null,
-  user: null,
-};
 
 /**
  * Simple delay function
@@ -18,31 +11,7 @@ function delay(ms) {
 }
 
 /**
- * Get SSH credentials interactively from user
- */
-async function getSSHCredentials(sshHost) {
-  if (sshCredentials.host === sshHost && sshCredentials.user) {
-    return sshCredentials;
-  }
-
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    rl.question('SSH Username: ', (username) => {
-      rl.close();
-      sshCredentials.host = sshHost;
-      sshCredentials.user = username;
-      console.log(`✓ SSH Username set: ${username}`);
-      resolve(sshCredentials);
-    });
-  });
-}
-
-/**
- * Execute command locally or remotely via SSH with interactive password prompt
+ * Execute command locally or remotely via SSH (using ssh-agent for auth)
  */
 function executeCommandOutput(command) {
   return new Promise((resolve, reject) => {
@@ -58,8 +27,8 @@ function executeCommandOutput(command) {
         }
       });
     } else {
-      // Remote SSH execution with output capture
-      const sshUser = sshCredentials.user || process.env.USER;
+      // Remote SSH execution - uses ssh-agent keys, no password needed
+      const sshUser = process.env.DOCKER_SSH_USER || 'smart';
       const sshCommand = `ssh ${sshUser}@${sshHost} "${command}"`;
       
       exec(sshCommand, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
@@ -200,11 +169,8 @@ async function startDocker() {
   console.log(sshHost ? '📡 Starting Keycloak on remote host...' : 'Starting Docker Compose services...');
 
   if (sshHost) {
-    // Get SSH credentials if not already set
-    await getSSHCredentials(sshHost);
-    
     // Remote Docker - use docker run instead of compose
-    const sshUser = sshCredentials.user;
+    const sshUser = process.env.DOCKER_SSH_USER || 'smart';
     return new Promise((resolve, reject) => {
       const commands = [
         // Check if container already exists and stop it
@@ -223,8 +189,8 @@ async function startDocker() {
       
       const sshCommand = `ssh ${sshUser}@${sshHost} "${commands.replace(/"/g, '\\"')}"`;
       
-      console.log(`  🔗 Connecting as ${sshUser}@${sshHost}...`);
-      console.log('  ⬇️  Downloading Keycloak image...');
+      console.log(`  🔗 Connecting to ${sshUser}@${sshHost}...`);
+      console.log('  ⬇️  Downloading Keycloak image & starting container...');
       
       const ssh = spawn('sh', ['-c', sshCommand], {
         stdio: 'inherit',
@@ -275,11 +241,8 @@ async function stopDocker() {
   console.log(sshHost ? '📡 Stopping Keycloak on remote host...' : 'Stopping Docker Compose services...');
 
   if (sshHost) {
-    // Get SSH credentials if not already set
-    await getSSHCredentials(sshHost);
-    
     // Remote Docker - stop and remove container
-    const sshUser = sshCredentials.user;
+    const sshUser = process.env.DOCKER_SSH_USER || 'smart';
     return new Promise((resolve, reject) => {
       const commands = [
         `docker stop keycloak-test 2>/dev/null || true`,
@@ -288,7 +251,7 @@ async function stopDocker() {
       
       const sshCommand = `ssh ${sshUser}@${sshHost} "${commands}"`;
       
-      console.log(`  🔗 Connecting as ${sshUser}@${sshHost}...`);
+      console.log(`  🔗 Connecting to ${sshUser}@${sshHost}...`);
       
       const ssh = spawn('sh', ['-c', sshCommand], {
         stdio: 'inherit',
