@@ -84,13 +84,13 @@ async function updateConfigFromDocker() {
       // Remote Docker - get config via SSH commands
       console.log('📡 Reading Keycloak config from remote Docker...');
       
-      // Get container info via docker inspect
+      // Get container info via docker inspect using fixed name
       const containerInfo = await executeCommandOutput(
-        'docker inspect $(docker ps -qf "name=keycloak") 2>/dev/null || echo "[]"'
+        'docker inspect keycloak-test 2>/dev/null || echo "[]"'
       );
       
       if (containerInfo === '[]' || !containerInfo) {
-        console.log('⚠ keycloak container not found on remote host');
+        console.log('⚠ keycloak-test container not found on remote host');
         return;
       }
 
@@ -192,24 +192,39 @@ async function updateConfigFromDocker() {
 }
 
 /**
- * Starts Docker Compose services
+ * Starts Docker Compose services (or runs Keycloak container if no compose)
  */
 async function startDocker() {
   const sshHost = process.env.DOCKER_SSH_HOST;
   
-  console.log(sshHost ? '📡 Starting Docker Compose on remote host...' : 'Starting Docker Compose services...');
+  console.log(sshHost ? '📡 Starting Keycloak on remote host...' : 'Starting Docker Compose services...');
 
   if (sshHost) {
     // Get SSH credentials if not already set
     await getSSHCredentials(sshHost);
     
-    // Remote Docker - execute via SSH with interactive password prompt
+    // Remote Docker - use docker run instead of compose
     const sshUser = sshCredentials.user;
     return new Promise((resolve, reject) => {
-      const command = `docker compose up -d`;
-      const sshCommand = `ssh ${sshUser}@${sshHost} "cd keycloak-docker && ${command}"`;
+      const commands = [
+        // Check if container already exists and stop it
+        `docker stop keycloak-test 2>/dev/null || true`,
+        `docker rm keycloak-test 2>/dev/null || true`,
+        // Pull latest Keycloak image
+        `docker pull quay.io/keycloak/keycloak:latest`,
+        // Run container with health check
+        `docker run -d --name keycloak-test -p 8080:8080 \\
+          -e KEYCLOAK_ADMIN=admin \\
+          -e KEYCLOAK_ADMIN_PASSWORD=admin \\
+          -e KC_HEALTH_ENABLED=true \\
+          quay.io/keycloak/keycloak:latest \\
+          start-dev`,
+      ].join(' && ');
+      
+      const sshCommand = `ssh ${sshUser}@${sshHost} "${commands.replace(/"/g, '\\"')}"`;
       
       console.log(`  🔗 Connecting as ${sshUser}@${sshHost}...`);
+      console.log('  ⬇️  Downloading Keycloak image...');
       
       const ssh = spawn('sh', ['-c', sshCommand], {
         stdio: 'inherit',
@@ -217,9 +232,9 @@ async function startDocker() {
 
       ssh.on('close', (code) => {
         if (code !== 0) {
-          reject(new Error(`Remote docker compose up failed with code ${code}`));
+          reject(new Error(`Remote docker run failed with code ${code}`));
         } else {
-          console.log('✓ Docker Compose services started on remote host');
+          console.log('✓ Keycloak container started on remote host');
           resolve();
         }
       });
@@ -252,22 +267,26 @@ async function startDocker() {
 }
 
 /**
- * Stops Docker Compose services
+ * Stops Docker Compose services (or removes Keycloak container)
  */
 async function stopDocker() {
   const sshHost = process.env.DOCKER_SSH_HOST;
   
-  console.log(sshHost ? '📡 Stopping Docker Compose on remote host...' : 'Stopping Docker Compose services...');
+  console.log(sshHost ? '📡 Stopping Keycloak on remote host...' : 'Stopping Docker Compose services...');
 
   if (sshHost) {
     // Get SSH credentials if not already set
     await getSSHCredentials(sshHost);
     
-    // Remote Docker - execute via SSH with interactive password prompt
+    // Remote Docker - stop and remove container
     const sshUser = sshCredentials.user;
     return new Promise((resolve, reject) => {
-      const command = `docker compose down --volumes`;
-      const sshCommand = `ssh ${sshUser}@${sshHost} "cd keycloak-docker && ${command}"`;
+      const commands = [
+        `docker stop keycloak-test 2>/dev/null || true`,
+        `docker rm keycloak-test 2>/dev/null || true`,
+      ].join(' && ');
+      
+      const sshCommand = `ssh ${sshUser}@${sshHost} "${commands}"`;
       
       console.log(`  🔗 Connecting as ${sshUser}@${sshHost}...`);
       
@@ -277,9 +296,9 @@ async function stopDocker() {
 
       ssh.on('close', (code) => {
         if (code !== 0) {
-          reject(new Error(`Remote docker compose down failed with code ${code}`));
+          reject(new Error(`Remote docker stop failed with code ${code}`));
         } else {
-          console.log('✓ Docker Compose services stopped on remote host');
+          console.log('✓ Keycloak container stopped on remote host');
           resolve();
         }
       });
@@ -321,20 +340,23 @@ async function waitForHealthy(maxRetries = 30, delayMs = 2000) {
   while (retries > 0) {
     try {
       if (sshHost) {
-        // Remote Docker - check health via SSH
-        const sshUser = process.env.DOCKER_SSH_USER || process.env.USER;
-        const healthStatus = await executeCommandOutput(
-          'docker inspect $(docker ps -qf "name=keycloak") | jq -r \'.[0].State.Health.Status\''
-        );
-
-        if (healthStatus === 'healthy') {
-          console.log('✓ Keycloak container is healthy');
-          return;
+        // Remote Docker - check health via SSH and curl
+        const sshUser = sshCredentials.user;
+        const healthCheckCmd = `curl -sf http://localhost:8080/health/ready >/dev/null 2>&1 && echo "healthy" || echo "waiting"`;
+        
+        try {
+          const result = await executeCommandOutput(healthCheckCmd);
+          if (result === 'healthy') {
+            console.log('✓ Keycloak container is healthy');
+            return;
+          }
+        } catch (err) {
+          // Health check might fail, that's OK, we retry
         }
 
         retries--;
         if (retries > 0) {
-          console.log(`Waiting for Keycloak to be healthy (${healthStatus || 'unknown'})... (${retries} retries left)`);
+          console.log(`Waiting for Keycloak to be healthy... (${retries} retries left)`);
           await delay(delayMs);
         }
       } else {
