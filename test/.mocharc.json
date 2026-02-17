@@ -1,0 +1,8 @@
+{
+  "require": ["mocha.env.js"],
+  "timeout": 15000,
+  "spec": "**/*.test.js",
+  "exclude": ["node_modules/**"],
+  "reporter": "spec",
+  "parallel": false
+}

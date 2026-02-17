@@ -10,9 +10,8 @@
     }
   },
   "scripts": {
-    "pretest": "ln -sf test/config config",
-    "test": "mocha",
-    "test:watch": "mocha --watch --watch-extensions js"
+    "test": "cd test && npm test",
+    "test:watch": "cd test && npm run test:watch"
   },
   "dependencies": {
     "@keycloak/keycloak-admin-client": "^26.3.2",
@@ -32,12 +31,6 @@
     "underscore": "^1.13.7"
   },
   "devDependencies": {
-    "chai": "^4.3.10",
-    "dockerode": "^4.0.2",
-    "mocha": "^10.2.0",
-    "propertiesmanager": "^4.1.0"
-  },
-  "keywords": [
     "keycloak",
     "user",
     "login",

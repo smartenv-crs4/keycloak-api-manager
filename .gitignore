@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+test/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -26,9 +27,6 @@ coverage/
 test/config/local.json
 test/config/secrets.json
 test/config/*.local.json
-
-# Test configuration symlink (created by npm pretest)
-/config
 
 # Build output
 dist/

@@ -1,7 +1,0 @@
-{
-  "require": ["test/mocha.env.js"],
-  "timeout": 15000,
-  "spec": "test/**/*.test.js",
-  "reporter": "spec",
-  "parallel": false
-}
