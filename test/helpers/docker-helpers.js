@@ -11,6 +11,48 @@ function delay(ms) {
 }
 
 /**
+ * Load Docker configuration from PropertiesManager
+ */
+function getDockerConfig() {
+  try {
+    const { conf } = require('propertiesmanager');
+    
+    const dockerConfig = conf.docker || {};
+    
+    return {
+      image: dockerConfig.image || 'quay.io/keycloak/keycloak:latest',
+      containerName: dockerConfig.containerName || 'keycloak-test',
+      portMapping: dockerConfig.portMapping || '0.0.0.0:8080:8080',
+      remotePort: dockerConfig.remotePort || 8080,
+      sshTunnelLocalPort: dockerConfig.sshTunnelLocalPort || 9999,
+      environment: dockerConfig.environment || {
+        KC_HEALTH_ENABLED: 'true',
+        KC_HOSTNAME: 'localhost',
+        KC_SCHEME: 'http',
+        KC_HTTP_PORT: '8080',
+        KC_HOSTNAME_STRICT_HTTPS: 'false'
+      }
+    };
+  } catch (err) {
+    console.log('⚠ Could not load Docker config from PropertiesManager, using defaults');
+    return {
+      image: 'quay.io/keycloak/keycloak:latest',
+      containerName: 'keycloak-test',
+      portMapping: '0.0.0.0:8080:8080',
+      remotePort: 8080,
+      sshTunnelLocalPort: 9999,
+      environment: {
+        KC_HEALTH_ENABLED: 'true',
+        KC_HOSTNAME: 'localhost',
+        KC_SCHEME: 'http',
+        KC_HTTP_PORT: '8080',
+        KC_HOSTNAME_STRICT_HTTPS: 'false'
+      }
+    };
+  }
+}
+
+/**
  * Execute command locally or remotely via SSH (using ssh-agent for auth)
  */
 function executeCommandOutput(command) {
@@ -50,18 +92,19 @@ function executeCommandOutput(command) {
 async function updateConfigFromDocker() {
   try {
     const sshHost = process.env.DOCKER_SSH_HOST;
+    const dockerConfig = getDockerConfig();
     
     if (sshHost) {
       // Remote Docker - get config via SSH commands
       console.log('📡 Reading Keycloak config from remote Docker...');
       
-      // Get container info via docker inspect using fixed name
+      // Get container info via docker inspect using configured name
       const containerInfo = await executeCommandOutput(
-        'docker inspect keycloak-test 2>/dev/null || echo "[]"'
+        `docker inspect ${dockerConfig.containerName} 2>/dev/null || echo "[]"`
       );
       
       if (containerInfo === '[]' || !containerInfo) {
-        console.log('⚠ keycloak-test container not found on remote host');
+        console.log(`⚠ ${dockerConfig.containerName} container not found on remote host`);
         return;
       }
 
@@ -167,6 +210,7 @@ async function updateConfigFromDocker() {
  */
 async function startDocker() {
   const sshHost = process.env.DOCKER_SSH_HOST;
+  const dockerConfig = getDockerConfig();
   
   console.log(sshHost ? '📡 Starting Keycloak on remote host...' : 'Starting Docker Compose services...');
 
@@ -174,22 +218,21 @@ async function startDocker() {
     // Remote Docker - use docker run instead of compose
     const sshUser = process.env.DOCKER_SSH_USER || 'smart';
     return new Promise((resolve, reject) => {
+      // Build environment variables from config
+      const envVars = Object.entries(dockerConfig.environment)
+        .map(([key, value]) => `-e ${key}=${value}`)
+        .join(' \\\\n          ');
+
       const commands = [
         // Check if container already exists and stop it
-        `docker stop keycloak-test 2>/dev/null || true`,
-        `docker rm keycloak-test 2>/dev/null || true`,
+        `docker stop ${dockerConfig.containerName} 2>/dev/null || true`,
+        `docker rm ${dockerConfig.containerName} 2>/dev/null || true`,
         // Pull latest Keycloak image
-        `docker pull quay.io/keycloak/keycloak:latest`,
+        `docker pull ${dockerConfig.image}`,
         // Run container with health check
-        `docker run -d --name keycloak-test -p 0.0.0.0:8080:8080 \\
-          -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \\
-          -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \\
-          -e KC_HEALTH_ENABLED=true \\
-          -e KC_HOSTNAME=smart-dell-sml.crs4.it \\
-          -e KC_SCHEME=http \\
-          -e KC_HTTP_PORT=8080 \\
-          -e KC_HOSTNAME_STRICT_HTTPS=false \\
-          quay.io/keycloak/keycloak:latest \\
+        `docker run -d --name ${dockerConfig.containerName} -p ${dockerConfig.portMapping} \\
+          ${envVars} \\
+          ${dockerConfig.image} \\
           start-dev`,
       ].join(' && ');
       
@@ -208,7 +251,7 @@ async function startDocker() {
         if (code !== 0) {
           reject(new Error(`Remote docker run failed with code ${code}`));
         } else {
-          console.log('✓ Keycloak container started on remote host');
+          console.log(`✓ Keycloak container started on remote host`);
           resolve();
         }
       });
@@ -245,6 +288,7 @@ async function startDocker() {
  */
 async function stopDocker() {
   const sshHost = process.env.DOCKER_SSH_HOST;
+  const dockerConfig = getDockerConfig();
   
   console.log(sshHost ? '📡 Stopping Keycloak on remote host...' : 'Stopping Docker Compose services...');
 
@@ -253,8 +297,8 @@ async function stopDocker() {
     const sshUser = process.env.DOCKER_SSH_USER || 'smart';
     return new Promise((resolve, reject) => {
       const commands = [
-        `docker stop keycloak-test 2>/dev/null || true`,
-        `docker rm keycloak-test 2>/dev/null || true`,
+        `docker stop ${dockerConfig.containerName} 2>/dev/null || true`,
+        `docker rm ${dockerConfig.containerName} 2>/dev/null || true`,
       ].join(' && ');
       
       const homeDir = require('os').homedir();
@@ -399,8 +443,9 @@ async function createSSHTunnel() {
       return;
     }
 
+    const dockerConfig = getDockerConfig();
     const sshUser = process.env.DOCKER_SSH_USER || 'smart';
-    const localPort = 9999;
+    const localPort = dockerConfig.sshTunnelLocalPort;
     const remoteHost = 'localhost';
     const remotePort = 8080;
     const homeDir = require('os').homedir();
