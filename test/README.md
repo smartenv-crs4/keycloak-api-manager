@@ -50,6 +50,23 @@ nano test/config/secrets.json
 
 ## Configuration Files
 
+### ⚠️ Mandatory Reminder (`keycloak.baseUrl` and `keycloak.realm`)
+
+These two properties must always be available from configuration resolution:
+
+- `test.keycloak.baseUrl`
+- `test.keycloak.realm`
+
+Why:
+- `baseUrl` is required to authenticate and call Keycloak Admin APIs.
+- `realm` is required for auth/context (default is usually `master`).
+
+Behavior by mode:
+- **`USE_REMOTE_KEYCLOAK=true`**: both values must be explicitly configured in files/env/CLI.
+- **`DOCKER_SSH_HOST=...`**: defaults still matter, but `baseUrl` can be rewritten at runtime (e.g. SSH tunnel to `127.0.0.1:9999`).
+
+This reminder is intentionally duplicated from the main README.
+
 ### `test/config/default.json` (Committed - Safe Defaults)
 
 ```json
@@ -154,13 +171,12 @@ npm test -- --keycloak.baseUrl=http://your-docker-host:8080
 
 ### Remote Docker via SSH (Automatic Management)
 
-If you want **npm test** to automatically start/stop Docker Compose on a remote server via SSH:
+If you want **npm test** to automatically start/stop a Keycloak container on a remote server via SSH:
 
 **Prerequisites:**
 - SSH access to remote host
-- Docker Compose installed on remote host
-- `keycloak-docker/` directory on remote host with docker-compose.yml
-- `jq` command available on remote host (for JSON parsing)
+- Docker installed on remote host
+- SSH key authentication configured for the remote user
 
 **Step 1: Verify remote Docker setup**
 
@@ -168,11 +184,8 @@ If you want **npm test** to automatically start/stop Docker Compose on a remote 
 # Test SSH access
 ssh user@remote-host "docker ps"
 
-# Verify docker-compose available
-ssh user@remote-host "cd keycloak-docker && docker compose ps"
-
-# Verify jq available
-ssh user@remote-host "jq --version"
+# Verify docker available
+ssh user@remote-host "docker --version"
 ```
 
 **Step 2: Set SSH environment variables**
@@ -183,16 +196,16 @@ DOCKER_SSH_HOST=smart-dell-sml.crs4.it DOCKER_SSH_USER=your-username npm test
 ```
 
 **What happens automatically:**
-1. ✅ SSH to remote host and run `docker compose up -d` in `keycloak-docker/` directory
+1. ✅ SSH to remote host and run `docker pull` + `docker run` for Keycloak
 2. ✅ Wait for container health check status via SSH
-3. ✅ Query remote Docker for port mappings and credentials via `docker inspect`
-4. ✅ Generate `test/config/local.json` with correct remote URL
-5. ✅ Run all tests against remote Keycloak
-6. ✅ SSH to remote host and run `docker compose down --volumes` for cleanup
+3. ✅ Query remote Docker via `docker inspect` and generate `test/config/local.json`
+4. ✅ Create SSH tunnel (default `127.0.0.1:9999 -> remote:8080`) when needed
+5. ✅ Run tests against resolved runtime config
+6. ✅ Stop/remove remote Keycloak container and close tunnel during cleanup
 
 **Environment Variables:**
 - `DOCKER_SSH_HOST`: Remote server hostname (e.g., `smart-dell-sml.crs4.it`)
-- `DOCKER_SSH_USER`: SSH username (defaults to local `$USER`)
+- `DOCKER_SSH_USER`: SSH username (default in helpers is `smart` unless overridden)
 
 **Example Flow:**
 
@@ -202,34 +215,38 @@ DOCKER_SSH_HOST=smart-dell-sml.crs4.it npm test
 
 # Output:
 ========== TEST SETUP ==========
-📡 Starting Docker Compose on remote host...
-🔗 Remote SSH: your-username@smart-dell-sml.crs4.it
-✓ Docker Compose services started on remote host
+📡 Starting Keycloak on remote host...
+🔗 Connecting to your-username@smart-dell-sml.crs4.it...
+✓ Keycloak container started on remote host
 
 📡 Reading Keycloak config from remote Docker...
 ✓ Updated local.json with remote Docker config:
   Base URL: http://smart-dell-sml.crs4.it:8080
   Admin User: admin
 
+🔗 Creating SSH tunnel to smart-dell-sml.crs4.it:8080 -> 127.0.0.1:9999...
+✓ SSH tunnel established on 127.0.0.1:9999
+✓ Updated config to use SSH tunnel: http://127.0.0.1:9999
+
 ✓ Keycloak admin client initialized
-✓ Test realm 'test-realm' created
 ✓ Test environment ready
 
-  148 passing (15.2s)
+  ...
 
 ========== TEST TEARDOWN ==========
-📡 Stopping Docker Compose on remote host...
-✓ Docker Compose services stopped on remote host
+✓ SSH tunnel closed
+📡 Stopping Keycloak on remote host...
+✓ Keycloak container stopped on remote host
 ✓ Test environment cleaned up
 ```
 
 **Troubleshooting Remote SSH:**
 
 - **"Permission denied"**: Check SSH key authentication or try `DOCKER_SSH_USER=your-actual-username npm test`
-- **"command not found: jq"**: Install jq on remote host: `sudo apt-get install jq`
 - **"docker: command not found"**: Install Docker on remote host
-- **Connection timeout**: Check firewall allows SSH (port 22) and Keycloak port
-- **Container not found**: Ensure `keycloak-docker/` directory structure exists on remote host with running container named "keycloak"
+- **Connection timeout**: Check firewall allows SSH (port 22)
+- **OAuth/HTTPS issues**: verify runtime tunnel creation and resolved `baseUrl` in setup logs
+- **Container not found**: Ensure remote user can run Docker commands and container name matches config
 
 ### Override Examples
 
