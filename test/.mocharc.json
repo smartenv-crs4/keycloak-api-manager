@@ -1,7 +1,7 @@
 {
-  "require": ["mocha.env.js"],
+  "require": ["helpers/setup.js"],
   "timeout": 15000,
-  "spec": "**/*.test.js",
+  "spec": "specs/**/*.test.js",
   "exclude": ["node_modules/**"],
   "reporter": "spec",
   "parallel": false

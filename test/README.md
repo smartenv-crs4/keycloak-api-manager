@@ -8,16 +8,25 @@ The test suite uses **propertiesmanager** with the standard multi-file JSON patt
 
 ```
 test/
-├── config/                  # Test configuration files
-│   ├── default.json         # Base configuration (COMMITTED - public defaults)
+├── package.json            # Test dependencies (mocha, chai, dockerode, propertiesmanager)
+├── .mocharc.json           # Mocha configuration
+├── config/                 # Test configuration files
+│   ├── default.json        # Base configuration (COMMITTED - public defaults)
 │   ├── local.json          # Local overrides (GIT-IGNORED - developer-specific)
 │   ├── secrets.json        # Sensitive data (GIT-IGNORED - credentials)
 │   ├── local.json.example  # Template for local.json
 │   └── secrets.json.example # Template for secrets.json
-├── ...other test files
+├── helpers/                # Test utilities and setup
+│   ├── config.js           # Keycloak config loader
+│   ├── docker-helpers.js   # Docker container management
+│   └── setup.js            # Mocha root hooks (beforeAll/afterAll)
+└── specs/                  # Test specifications
+    ├── realms.test.js
+    ├── users.test.js
+    ├── clients.test.js
+    ├── roles.test.js
+    └── ...
 ```
-
-**Note:** When running `npm test`, a symbolic link `config → test/config` is automatically created in the project root (required by propertiesmanager). This symlink is git-ignored and recreated on each test run.
 
 ### Priority Order (Highest to Lowest)
 

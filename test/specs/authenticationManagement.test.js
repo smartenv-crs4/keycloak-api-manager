@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { getAdminClient } = require('./config');
+const { getAdminClient } = require('../helpers/config');
 
 describe('Authentication Management Handler', function () {
   this.timeout(20000);
