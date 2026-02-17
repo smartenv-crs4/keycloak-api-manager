@@ -1,40 +1,41 @@
 const KcAdmClient = require('@keycloak/keycloak-admin-client').default;
 const { delay } = require('async');
-const PropertiesManager = require('propertiesmanager');
-const path = require('path');
+const { conf } = require('propertiesmanager');
 
 /**
- * PropertiesManager secure configuration
- * Loads properties in priority order:
- * 1. config.local.properties (local/sensitive - NOT COMMITTED)
- * 2. config.properties (default/public - COMMITTED)
- * 3. Environment variable overrides
+ * PropertiesManager Configuration
+ * 
+ * Structure:
+ *   config/default.json  - Base configuration (committed, safe values)
+ *   config/local.json    - Local overrides (git-ignored, local values)
+ *   config/secrets.json  - Sensitive data (git-ignored, credentials)
+ * 
+ * Priority (highest to lowest):
+ *   1. Environment variables (PM_KEYCLOAK_BASE_URL=...)
+ *   2. Command line (--keycloak.baseUrl=...)
+ *   3. config/secrets.json
+ *   4. config/local.json
+ *   5. config/default.json
  * 
  * Usage:
- *   npm test                                                    # Uses defaults + local config
- *   keycloak.baseUrl=http://remote:8080 npm test              # Override via CLI
- *   KEYCLOAK_BASE_URL=http://remote:8080 npm test             # Override via ENV
+ *   npm test                                                # Uses default + local + secrets config
+ *   NODE_ENV=dev npm test                                  # Use dev environment config
+ *   PM_KEYCLOAK_BASE_URL=http://remote:8080 npm test      # Override via environment variable
+ *   npm test -- --keycloak.baseUrl=http://remote:8080     # Override via CLI argument
  */
-const pm = new PropertiesManager({
-  filePath: [
-    path.join(__dirname, '../config.local.properties'),  // Priority 1: Local (not committed)
-    path.join(__dirname, '../config.properties'),        // Priority 2: Default (committed)
-  ],
-  env_override: true, // Enable ENV_VARIABLE_NAME format overrides
-  env_key_prefix: 'KEYCLOAK_', // Support KEYCLOAK_xxx=value overrides
-});
 
 const TEST_CONFIG = {
-  baseUrl: pm.get('keycloak.baseUrl') || 'http://localhost:8080',
-  realmName: pm.get('keycloak.realm') || 'master',
-  username: pm.get('keycloak.adminUsername') || 'admin',
-  password: pm.get('keycloak.adminPassword') || 'admin',
-  clientId: pm.get('keycloak.clientId') || 'admin-cli',
-  clientSecret: pm.get('keycloak.clientSecret'),
-  grantType: pm.get('keycloak.grantType') || 'password',
+  baseUrl: conf.keycloak?.baseUrl || 'http://localhost:8080',
+  realmName: conf.keycloak?.realm || 'master',
+  username: conf.keycloak?.adminUsername || 'admin',
+  password: conf.keycloak?.adminPassword || 'admin',
+  clientId: conf.keycloak?.clientId || 'admin-cli',
+  clientSecret: conf.keycloak?.clientSecret,
+  grantType: conf.keycloak?.grantType || 'password',
 };
 
 console.log('\n📍 Keycloak Configuration (from propertiesmanager):');
+console.log(`   Environment: ${process.env.NODE_ENV || 'production'}`);
 console.log(`   Base URL: ${TEST_CONFIG.baseUrl}`);
 console.log(`   Realm: ${TEST_CONFIG.realmName}`);
 console.log(`   Client ID: ${TEST_CONFIG.clientId}`);

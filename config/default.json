@@ -1,0 +1,32 @@
+{
+  "production": {
+    "keycloak": {
+      "baseUrl": "http://localhost:8080",
+      "realm": "master",
+      "clientId": "admin-cli",
+      "grantType": "password",
+      "adminUsername": "admin",
+      "adminPassword": "admin"
+    }
+  },
+  "dev": {
+    "keycloak": {
+      "baseUrl": "http://localhost:8080",
+      "realm": "master",
+      "clientId": "admin-cli",
+      "grantType": "password",
+      "adminUsername": "admin",
+      "adminPassword": "admin"
+    }
+  },
+  "test": {
+    "keycloak": {
+      "baseUrl": "http://localhost:8080",
+      "realm": "master",
+      "clientId": "admin-cli",
+      "grantType": "password",
+      "adminUsername": "admin",
+      "adminPassword": "admin"
+    }
+  }
+}
