@@ -91,8 +91,8 @@ async function updateConfigFromDocker() {
             realm: 'master',
             clientId: 'admin-cli',
             grantType: 'password',
-            adminUsername: env.KEYCLOAK_ADMIN || 'admin',
-            adminPassword: env.KEYCLOAK_ADMIN_PASSWORD || 'admin',
+            adminUsername: env.KC_BOOTSTRAP_ADMIN_USERNAME || env.KEYCLOAK_ADMIN || 'admin',
+            adminPassword: env.KC_BOOTSTRAP_ADMIN_PASSWORD || env.KEYCLOAK_ADMIN_PASSWORD || 'admin',
           },
         },
       };
@@ -140,8 +140,8 @@ async function updateConfigFromDocker() {
             realm: 'master',
             clientId: 'admin-cli',
             grantType: 'password',
-            adminUsername: env.KEYCLOAK_ADMIN || 'admin',
-            adminPassword: env.KEYCLOAK_ADMIN_PASSWORD || 'admin',
+            adminUsername: env.KC_BOOTSTRAP_ADMIN_USERNAME || env.KEYCLOAK_ADMIN || 'admin',
+            adminPassword: env.KC_BOOTSTRAP_ADMIN_PASSWORD || env.KEYCLOAK_ADMIN_PASSWORD || 'admin',
           },
         },
       };
@@ -180,8 +180,8 @@ async function startDocker() {
         `docker pull quay.io/keycloak/keycloak:latest`,
         // Run container with health check
         `docker run -d --name keycloak-test -p 8080:8080 \\
-          -e KEYCLOAK_ADMIN=admin \\
-          -e KEYCLOAK_ADMIN_PASSWORD=admin \\
+          -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \\
+          -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \\
           -e KC_HEALTH_ENABLED=true \\
           quay.io/keycloak/keycloak:latest \\
           start-dev`,
