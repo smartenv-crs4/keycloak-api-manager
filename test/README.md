@@ -50,6 +50,26 @@ nano test/config/secrets.json
 
 ## Configuration Files
 
+### Difference between `default.json`, `local.json`, `secrets.json`
+
+Use the 3 files with this responsibility split:
+
+- `default.json` (**committed**): safe baseline values shared by everyone.
+  - Example: `baseUrl` for local dev, `realm`, `clientId`, non-sensitive docker defaults.
+- `local.json` (**git-ignored**): machine/environment overrides.
+  - Example: remote host URL, custom port mapping, developer-specific runtime values.
+  - In SSH Docker mode this file can be generated/updated automatically at test startup.
+- `secrets.json` (**git-ignored**): sensitive values only.
+  - Example: admin password, client secret, tokens.
+
+Practical rule:
+- If a value is safe and common -> `default.json`
+- If a value changes per machine/environment -> `local.json`
+- If a value is sensitive -> `secrets.json`
+
+Resolution priority (high -> low):
+`ENV` -> `CLI args` -> `secrets.json` -> `local.json` -> `default.json`
+
 ### ⚠️ Mandatory Reminder (`keycloak.baseUrl` and `keycloak.realm`)
 
 These two properties must always be available from configuration resolution:
