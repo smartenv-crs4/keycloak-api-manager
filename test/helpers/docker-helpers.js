@@ -2,6 +2,13 @@ const docker = require('dockerode');
 const { spawn, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
+
+// Store SSH credentials for reuse
+let sshCredentials = {
+  host: null,
+  user: null,
+};
 
 /**
  * Simple delay function
@@ -11,27 +18,58 @@ function delay(ms) {
 }
 
 /**
- * Execute command locally or remotely via SSH
+ * Get SSH credentials interactively from user
+ */
+async function getSSHCredentials(sshHost) {
+  if (sshCredentials.host === sshHost && sshCredentials.user) {
+    return sshCredentials;
+  }
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question('SSH Username: ', (username) => {
+      rl.close();
+      sshCredentials.host = sshHost;
+      sshCredentials.user = username;
+      console.log(`✓ SSH Username set: ${username}`);
+      resolve(sshCredentials);
+    });
+  });
+}
+
+/**
+ * Execute command locally or remotely via SSH with interactive password prompt
  */
 function executeCommandOutput(command) {
   return new Promise((resolve, reject) => {
     const sshHost = process.env.DOCKER_SSH_HOST;
     
-    let fullCommand = command;
-    
-    if (sshHost) {
-      const sshUser = process.env.DOCKER_SSH_USER || process.env.USER;
-      fullCommand = `ssh ${sshUser}@${sshHost} "${command}"`;
-      console.log(`  🔗 Remote SSH: ${sshUser}@${sshHost}`);
+    if (!sshHost) {
+      // Local execution
+      exec(command, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(stdout.trim());
+        }
+      });
+    } else {
+      // Remote SSH execution with output capture
+      const sshUser = sshCredentials.user || process.env.USER;
+      const sshCommand = `ssh ${sshUser}@${sshHost} "${command}"`;
+      
+      exec(sshCommand, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(stdout.trim());
+        }
+      });
     }
-
-    exec(fullCommand, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(stdout.trim());
-      }
-    });
   });
 }
 
@@ -162,19 +200,31 @@ async function startDocker() {
   console.log(sshHost ? '📡 Starting Docker Compose on remote host...' : 'Starting Docker Compose services...');
 
   if (sshHost) {
-    // Remote Docker - execute via SSH
-    const sshUser = process.env.DOCKER_SSH_USER || process.env.USER;
+    // Get SSH credentials if not already set
+    await getSSHCredentials(sshHost);
+    
+    // Remote Docker - execute via SSH with interactive password prompt
+    const sshUser = sshCredentials.user;
     return new Promise((resolve, reject) => {
-      const command = `ssh ${sshUser}@${sshHost} "cd keycloak-docker && docker compose up -d"`;
+      const command = `docker compose up -d`;
+      const sshCommand = `ssh ${sshUser}@${sshHost} "cd keycloak-docker && ${command}"`;
       
-      exec(command, (error, stdout, stderr) => {
-        if (error) {
-          reject(new Error(`Remote docker compose up failed: ${error.message}`));
+      console.log(`  🔗 Connecting as ${sshUser}@${sshHost}...`);
+      
+      const ssh = spawn('sh', ['-c', sshCommand], {
+        stdio: 'inherit',
+      });
+
+      ssh.on('close', (code) => {
+        if (code !== 0) {
+          reject(new Error(`Remote docker compose up failed with code ${code}`));
         } else {
           console.log('✓ Docker Compose services started on remote host');
           resolve();
         }
       });
+
+      ssh.on('error', reject);
     });
   } else {
     // Local Docker - original logic
@@ -210,19 +260,31 @@ async function stopDocker() {
   console.log(sshHost ? '📡 Stopping Docker Compose on remote host...' : 'Stopping Docker Compose services...');
 
   if (sshHost) {
-    // Remote Docker - execute via SSH
-    const sshUser = process.env.DOCKER_SSH_USER || process.env.USER;
+    // Get SSH credentials if not already set
+    await getSSHCredentials(sshHost);
+    
+    // Remote Docker - execute via SSH with interactive password prompt
+    const sshUser = sshCredentials.user;
     return new Promise((resolve, reject) => {
-      const command = `ssh ${sshUser}@${sshHost} "cd keycloak-docker && docker compose down --volumes"`;
+      const command = `docker compose down --volumes`;
+      const sshCommand = `ssh ${sshUser}@${sshHost} "cd keycloak-docker && ${command}"`;
       
-      exec(command, (error, stdout, stderr) => {
-        if (error) {
-          reject(new Error(`Remote docker compose down failed: ${error.message}`));
+      console.log(`  🔗 Connecting as ${sshUser}@${sshHost}...`);
+      
+      const ssh = spawn('sh', ['-c', sshCommand], {
+        stdio: 'inherit',
+      });
+
+      ssh.on('close', (code) => {
+        if (code !== 0) {
+          reject(new Error(`Remote docker compose down failed with code ${code}`));
         } else {
           console.log('✓ Docker Compose services stopped on remote host');
           resolve();
         }
       });
+
+      ssh.on('error', reject);
     });
   } else {
     // Local Docker - original logic
