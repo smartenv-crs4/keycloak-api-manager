@@ -303,17 +303,29 @@ async function waitForHealthy(maxRetries = 30, delayMs = 2000) {
   while (retries > 0) {
     try {
       if (sshHost) {
-        // Remote Docker - check health via direct HTTP (no SSH needed)
-        const healthCheckUrl = `http://${sshHost}:8080/health/ready`;
+        // Remote Docker - check health via curl on root endpoint (returns 302 redirect when ready)
+        const sshUser = process.env.DOCKER_SSH_USER || 'smart';
+        const healthCheckCmd = `curl -sf -o /dev/null -w "%{http_code}" http://localhost:8080/`;
+        const sshCommand = `ssh ${sshUser}@${sshHost} "${healthCheckCmd}"`;
         
         try {
-          const response = await fetch(healthCheckUrl);
-          if (response.ok) {
+          const result = await new Promise((resolve, reject) => {
+            exec(sshCommand, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(stdout.trim());
+              }
+            });
+          });
+          
+          // Keycloak returns 302 (redirect) when ready
+          if (result === '302' || result === '200') {
             console.log('✓ Keycloak container is healthy');
             return;
           }
         } catch (err) {
-          // Network error, container not ready yet
+          // Health check might fail, that's OK, we retry
         }
 
         retries--;
