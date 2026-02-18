@@ -201,6 +201,46 @@ Parameters:
   - refreshToken: [Optional] string containing a valid refresh token to request a new access token when using the refresh_token grant type.
 ---
 
+## 📚 Documentation Structure
+
+This project maintains comprehensive documentation across multiple files. Here's a guide to find what you need:
+
+### 🚀 Getting Started
+- **This file (README.md)** - Overview, installation, quick start, API reference
+- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - Deploy Keycloak locally or remotely with HTTP/HTTPS
+  - Interactive setup wizard (`npm run setup-keycloak`)
+  - Local vs remote deployments
+  - Certificate configuration
+  - Troubleshooting guide
+
+### 🧪 Testing & Development
+- **[test/README.md](./test/README.md)** - Complete test suite documentation
+  - Test architecture (shared realm strategy)
+  - How to run tests
+  - Test file structure and components
+  - Writing new tests
+  - Performance metrics
+  - Troubleshooting test issues
+
+- **[test/config/README.md](./test/config/README.md)** - Test configuration details
+  - Configuration file hierarchy (default.json → secrets.json → local.json)
+  - How to set up test environment
+  - Configuration schema
+  - Sensitive data management
+
+### 📋 Quick Reference
+
+| Need | Location |
+|------|----------|
+| Install and basic usage | [README.md](./README.md#-installation) (this file) |
+| Deploy Keycloak | [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md#quick-start) |
+| Run tests locally | [test/README.md](./test/README.md#running-tests) |
+| Configure tests | [test/config/README.md](./test/config/README.md) |
+| API reference | [README.md](./README.md#-available-helper-functions) (below) |
+| Test architecture | [test/README.md](./test/README.md#architecture) |
+
+---
+
 ## 🧪 Testing Reminder
 
 When running the test suite, two fields must always be resolvable from configuration (default/local/secrets/env/CLI):
@@ -246,207 +286,84 @@ Calling setConfig does not perform authentication
 
 The test environment is intentionally isolated inside the `test/` folder and uses a shared test realm approach for optimal performance.
 
-### Running Tests with Docker Compose
+### Deploying Keycloak
 
-For local development, use the included `docker-compose.yml` to spin up a Keycloak test server:
+There are two main approaches to deploy Keycloak for testing:
 
-```bash
-# Start Keycloak container in the background
-docker-compose up -d
+**1. Quick Start (Recommended)**
 
-# Wait for Keycloak to be ready (health check will verify)
-# Then run tests
-npm test
-
-# Stop and remove the Keycloak container
-docker-compose down
-```
-
-**Docker Compose Configuration** (`docker-compose.yml`):
-- **Image**: `keycloak/keycloak:latest` - Latest stable Keycloak version
-- **Port**: `8080` - Accessible at `http://localhost:8080`
-- **Admin Credentials**: `admin:admin` (default in dev setup)
-- **Database**: In-memory (`KC_DB: dev-mem`) - Perfect for testing, no persistence needed
-- **Health Check**: Automatically waits for Keycloak to be fully ready before tests can run
-- **Mode**: Development mode (`start-dev`) - No HTTPS required for local testing
-
-### Interactive Keycloak Deployment Setup
-
-Use the interactive setup script to deploy Keycloak locally or remotely with optional HTTPS support:
+Use the interactive setup wizard:
 
 ```bash
-# Launch the interactive setup wizard
 npm run setup-keycloak
-
-# or directly
-node test/setup-keycloak.js
 ```
 
-**Features**:
-- ✅ **Interactive prompts** - Choose deployment location and HTTPS mode
-- ✅ **Local deployment** - Start Keycloak on your machine (HTTP or HTTPS)
-- ✅ **Remote SSH deployment** - Deploy to remote server via SSH with automatic docker-compose copying
-- ✅ **HTTPS support** - Deploy with SSL/TLS using certificate files
-- ✅ **Automatic setup** - Creates directories, handles configuration files automatically
+This script handles everything:
+- ✅ Choose local or remote deployment
+- ✅ Configure HTTP or HTTPS
+- ✅ Automatic certificate mounting (if HTTPS)
+- ✅ Auto health checks and startup verification
 
-**Setup Steps**:
+**2. Manual Docker Compose**
 
-1. **Deployment Location**:
-   ```
-   1) Local machine (localhost:8080)
-   2) Remote machine via SSH
-   ```
-
-2. **HTTPS Configuration**:
-   ```
-   1) No, use HTTP (development)
-   2) Yes, use HTTPS (production-like) - requires certificate directory
-   ```
-
-3. **Remote Setup** (if remote location chosen):
-   - Prompts for: `user@hostname` and remote deployment path
-   - Automatically copies `docker-compose.yml`
-   - Copies certificates if HTTPS enabled
-   - Starts container remotely via SSH
-
-**Example Workflows**:
+Start Keycloak directly:
 
 ```bash
-# Local HTTP setup (development)
-npm run setup-keycloak
-# Choose: 1 (local), 1 (HTTP)
-# Result: Keycloak at http://localhost:8080
-
-# Local HTTPS setup (production-like)
-npm run setup-keycloak
-# Choose: 1 (local), 2 (HTTPS)
-# Enter: /path/to/certs  (must contain keycloak.crt and keycloak.key)
-# Result: Keycloak at https://localhost:8443
-
-# Remote HTTP setup
-npm run setup-keycloak
-# Choose: 2 (remote), 1 (HTTP)
-# Enter: smart@smart-dell-sml.crs4.it, /home/smart/keycloak
-# Result: Deployed at smart@smart-dell-sml.crs4.it:/home/smart/keycloak
-
-# Remote HTTPS setup
-npm run setup-keycloak
-# Choose: 2 (remote), 2 (HTTPS)
-# Enter: smart@smart-dell-sml.crs4.it, /home/smart/keycloak, /home/smart/certs
-# Result: Deployed with HTTPS at https://smart-dell-sml.crs4.it
+docker-compose up -d       # HTTP mode
+npm test                   # Run tests
+docker-compose down        # Cleanup
 ```
 
-**Configuration Files**:
-- `.env` - Auto-generated by setup script with deployment settings
-- `.env.example` - Example configuration (reference only)
-- `docker-compose.yml` - Updated with HTTPS support and environment variables
+**For comprehensive deployment documentation** (cert generation, HTTPS setup, remote SSH deployments, troubleshooting):
 
-**Certificate Requirements** (for HTTPS):
-- Directory must contain these files:
-  - `keycloak.crt` - X.509 certificate
-  - `keycloak.key` - Private key (unencrypted)
-- Files will be mounted read-only in the container
-- Can be self-signed for development, must be valid for production
-
-**📚 Detailed Setup Guide**:
-See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for:
-- Comprehensive usage examples
-- Troubleshooting common issues
-- Certificate generation
-- Advanced configuration options
-- Running tests with different deployments
+👉 See **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)**
 
 ### Directory Structure
 
 - `test/specs/` - All test suites (e.g., users.test.js, roles.test.js)
-- `test/config/` - Configuration files managed by propertiesmanager
+- `test/config/config/` - Configuration files managed by propertiesmanager
+  - See [test/config/README.md](./test/config/README.md) for details
 - `test/node_modules/` - Test dependencies (isolated from package root)
 - `test/setup.js` - Global Mocha hooks (runs before all tests)
 - `test/enableServerFeatures.js` - Creates shared test realm infrastructure
 - `test/testConfig.js` - Centralized configuration loader
+- `docker-compose.yml` - HTTP configuration
+- `docker-compose-https.yml` - HTTPS configuration
 
-### Configuration Management
+For complete test architecture and structure details:
 
-Tests use **[propertiesmanager](https://www.npmjs.com/package/propertiesmanager)** for hierarchical configuration:
+👉 See **[test/README.md](./test/README.md)**
 
-**`test/config/default.json`** - Base configuration with "test" environment:
-```json
-{
-  "test": {
-    "keycloak": {
-      "baseUrl": "http://127.0.0.1:9998",
-      "realmName": "master",
-      "clientId": "admin-cli",
-      "username": "admin",
-      "grantType": "password",
-      "tokenLifeSpan": 60
-    },
-    "realm": {
-      "name": "keycloak-api-manager-test-realm",
-      "client": { "clientId": "test-client", "clientSecret": "test-client-secret" },
-      "user": { "username": "test-user", "email": "test-user@test.local" },
-      "roles": ["test-role-1", "test-role-2", "test-admin-role"]
-    }
-  }
-}
-```
-
-**`test/config/secrets.json`** - Sensitive credentials (gitignored):
-```json
-{
-  "test": {
-    "keycloak": { "password": "admin" },
-    "realm": { "user": { "password": "test-password" } }
-  }
-}
-```
-
-**`test/config/local.json`** - Developer-specific overrides (gitignored, optional):
-```json
-{
-  "test": {
-    "keycloak": { "baseUrl": "http://localhost:8080" }
-  }
-}
-```
 
 Configuration files are merged in order: `default.json` → `secrets.json` → `local.json`
 
 ### Shared Test Realm
 
-All tests use a **single shared realm** (`keycloak-api-manager-test-realm`) created once before any test runs:
-
-- **Global Setup**: `setup.js` runs `enableServerFeatures()` in a Mocha `before()` hook
+All tests use a **single shared realm** (`keycloak-api-manager-test-realm`) created once before any test runs. This approach:
+- **Global Setup**: Runs once before all tests (via Mocha `before()` hook in `setup.js`)
 - **Infrastructure Created**: Test realm, client, user, roles, groups, and client scopes
-- **Performance**: Tests run ~5x faster by reusing existing infrastructure instead of creating/deleting realms per test
-- **Isolation**: Each test creates unique resources (e.g., `user-${timestamp}`) to avoid conflicts
+- **Performance**: Tests run ~5x faster than per-test realm creation approach
+- **Isolation**: Each test creates unique resources to avoid conflicts across tests
 
 ### Running Tests
 
 ```bash
-# Install dependencies and run all tests
-npm test
-
-# Or manually:
-npm --prefix test install
-npm --prefix test test
-
-# Run specific test suite
-npm --prefix test test -- --grep "Users Handler"
+npm test                                    # Run all tests
+npm --prefix test test -- --grep "Users"   # Run specific test suite
 ```
 
-**Requirements:**
-- Keycloak instance accessible at configured `baseUrl` (default: `http://127.0.0.1:9998`)
-- Admin credentials in `test/config/secrets.json`
-- If using SSH tunnel for remote Keycloak, ensure it's active before running tests
+**For detailed test information:**
 
-**Environment Variables:**
-- `NODE_ENV=test` - Automatically set by test script
-- `PROPERTIES_PATH` - Set by testConfig.js to `test/config/`
+👉 See **[test/README.md](./test/README.md)** for:
+- Test architecture and shared realm strategy
+- Running tests with various configurations
+- Writing new tests
+- Troubleshooting and performance metrics
 
-**📚 Detailed Documentation:**
-- **[Test Suite Overview](test/README.md)** - Architecture, performance metrics, troubleshooting
-- **[Configuration Guide](test/config/README.md)** - How to set up and customize test configuration
+👉 See **[test/config/README.md](./test/config/README.md)** for:
+- Configuration file setup and management
+- Setting up credentials (`secrets.json`)
+- Configuration schema and options
 
 ---
 
