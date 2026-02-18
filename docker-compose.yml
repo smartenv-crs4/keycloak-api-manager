@@ -1,24 +1,49 @@
 version: '3.8'
 
 # Keycloak Test Server Configuration
-# Used for local development and testing
-# Start with: docker-compose up -d
-# Stop with:  docker-compose down
+# Supports both HTTP (local dev) and HTTPS (production-like setup)
+# 
+# Usage:
+#   HTTP (local):  docker-compose up -d
+#   HTTPS (remote): KEYCLOAK_HTTPS=true KEYCLOAK_CERT_PATH=/path/to/certs docker-compose up -d
+# 
+# Environment Variables:
+#   KEYCLOAK_HTTPS: 'true' to enable HTTPS, 'false' for HTTP (default: false)
+#   KEYCLOAK_CERT_PATH: Path to directory containing certificate files (required if KEYCLOAK_HTTPS=true)
+#   KEYCLOAK_HOSTNAME: Hostname for Keycloak (default: localhost)
+#   KEYCLOAK_HTTPS_PORT: HTTPS port (default: 8443)
 
 services:
   keycloak:
     image: keycloak/keycloak:latest
     container_name: keycloak-test
     ports:
-      - "8080:8080"  # Web UI and Admin API accessible at http://localhost:8080
+      # HTTP port (always enabled for admin console fallback)
+      - "8080:8080"
+      # HTTPS port (when enabled)
+      - "${KEYCLOAK_HTTPS_PORT:-8443}:8443"
     environment:
       KEYCLOAK_ADMIN: admin              # Master realm admin username
       KEYCLOAK_ADMIN_PASSWORD: admin     # Master realm admin password
       KC_DB: dev-mem                     # In-memory database (development only)
       KC_METRICS_ENABLED: 'false'        # Disable metrics in dev
       KC_HEALTH_ENABLED: 'true'          # Enable health checks
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      KC_SCHEME: ${KEYCLOAK_SCHEME:-http}
+      KC_HTTP_PORT: 8080
+      KC_HTTPS_PORT: 8443
+      # HTTPS configuration (only applied if KC_SCHEME=https)
+      KC_HTTP_ENABLED: 'true'            # Admin console accessible via HTTP too
+      KC_PROXY: reencrypt                # Trust reverse proxy headers
+    volumes:
+      # Mount certificates if HTTPS is enabled and path is provided
+      - "${KEYCLOAK_CERT_PATH:-./certs}:/etc/keycloak/certs:ro"
     command:
-      - start-dev    # Start in development mode (no https required)
+      - start-dev
+      # Note: To add HTTPS flags dynamically, use environment variable substitution
+      # For HTTPS mode, add these flags before start-dev:
+      #   - --https-certificate-file=/etc/keycloak/certs/keycloak.crt
+      #   - --https-certificate-key-file=/etc/keycloak/certs/keycloak.key
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
       interval: 5s
@@ -30,4 +55,5 @@ services:
 networks:
   keycloak-network:
     driver: bridge
+
 

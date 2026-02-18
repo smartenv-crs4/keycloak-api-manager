@@ -9,6 +9,7 @@ test/package-lock.json
 # Configuration files with sensitive data
 **/config/local.json
 **/config/secrets.json
+.env
 
 # IDE
 .vscode/
