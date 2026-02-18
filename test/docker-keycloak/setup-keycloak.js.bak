@@ -379,8 +379,6 @@ KEYCLOAK_HOSTNAME=${hostname}
     log('Stopping existing containers...', 'blue');
     try {
       await execSync(`ssh ${host} 'cd "${deployPath}" && ${DOCKER_COMPOSE_CMD} -f docker-compose.yml down 2>/dev/null || ${DOCKER_COMPOSE_CMD} -f docker-compose-https.yml down 2>/dev/null || true'`);
-      // Force remove the container in case down didn't work
-      await execSync(`ssh ${host} 'docker rm -f keycloak-test 2>/dev/null || true'`);
     } catch (err) {
       // Ignore errors if containers don't exist
     }
