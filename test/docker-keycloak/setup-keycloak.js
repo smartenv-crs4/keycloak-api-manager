@@ -220,6 +220,18 @@ function execSync(command, cwd) {
   });
 }
 
+function updateTestBaseUrl(baseUrl) {
+  const configPath = path.join(__dirname, '..', 'config', 'default.json');
+  const raw = fs.readFileSync(configPath, 'utf8');
+  const config = JSON.parse(raw);
+  if (!config.test || !config.test.keycloak) {
+    throw new Error('test.keycloak not found in test/config/default.json');
+  }
+  config.test.keycloak.baseUrl = baseUrl;
+  fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+  log(`✓ Updated test baseUrl: ${baseUrl}`, 'green');
+}
+
 async function deployLocal(useHttps, certPath) {
   log('\n=== Local Deployment ===\n', 'bright');
   
@@ -451,6 +463,9 @@ async function main() {
     
     if (deployLocation === 'local') {
       await deployLocal(useHttps, certPath);
+      const protocol = useHttps ? 'https' : 'http';
+      const port = useHttps ? 8443 : 8080;
+      updateTestBaseUrl(`${protocol}://localhost:${port}`);
     } else {
       const { host } = await askRemoteDetails();
       
@@ -465,6 +480,10 @@ async function main() {
       log(`\n✓ Deployment path: ${deployPath}`, 'green');
       
       await deployRemote(host, deployPath, useHttps, certPath);
+      const protocol = useHttps ? 'https' : 'http';
+      const port = useHttps ? 8443 : 8080;
+      const hostname = host.includes('@') ? host.split('@')[1] : host;
+      updateTestBaseUrl(`${protocol}://${hostname}:${port}`);
     }
     
     log('\n✓ Deployment complete!\n', 'green');
