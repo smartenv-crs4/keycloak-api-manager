@@ -121,7 +121,7 @@ async function askRemoteDetails() {
   log('\nRemote Deployment Target', 'blue');
   log('  Specify the user and machine where Keycloak will be deployed:', 'yellow');
   log('  Format: username@hostname', 'yellow');
-  log('  Example: smart@smart-dell-sml.crs4.it', 'yellow');
+  log('  Example: user@miodomino.it', 'yellow');
   
   const host = await prompt('\nRemote host/IP (user@hostname): ');
   if (!host) {
