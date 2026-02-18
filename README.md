@@ -201,6 +201,27 @@ Parameters:
   - refreshToken: [Optional] string containing a valid refresh token to request a new access token when using the refresh_token grant type.
 ---
 
+## 🧪 Testing Reminder
+
+When running the test suite, two fields must always be resolvable from configuration (default/local/secrets/env/CLI):
+
+- `keycloak.baseUrl`: target Keycloak URL used by admin client authentication
+- `keycloak.realm`: realm used for authentication/context (usually `master`)
+
+Notes:
+- For **pre-deployed Keycloak** (`USE_REMOTE_KEYCLOAK=true`), these values must be set explicitly in test config.
+- For **remote Docker via SSH**, `baseUrl` may be auto-overridden at runtime (for example via SSH tunnel), but defaults are still required as fallback.
+- Keep this reminder in sync with `test/README.md`.
+
+Configuration file roles for tests:
+- `test/config/default.json`: committed safe defaults
+- `test/config/local.json`: git-ignored machine/environment overrides
+- `test/config/secrets.json`: git-ignored sensitive values only
+
+For full test configuration guidance see `test/README.md`.
+
+---
+
 ## 🧰 Available Helper Functions
 
 ### `function setConfig(config)`
