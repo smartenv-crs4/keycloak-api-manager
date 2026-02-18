@@ -1,27 +1,33 @@
 version: '3.8'
 
+# Keycloak Test Server Configuration
+# Used for local development and testing
+# Start with: docker-compose up -d
+# Stop with:  docker-compose down
+
 services:
   keycloak:
     image: keycloak/keycloak:latest
     container_name: keycloak-test
     ports:
-      - "8080:8080"
+      - "8080:8080"  # Web UI and Admin API accessible at http://localhost:8080
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: dev-mem
-      KC_METRICS_ENABLED: 'false'
-      KC_HEALTH_ENABLED: 'true'
+      KEYCLOAK_ADMIN: admin              # Master realm admin username
+      KEYCLOAK_ADMIN_PASSWORD: admin     # Master realm admin password
+      KC_DB: dev-mem                     # In-memory database (development only)
+      KC_METRICS_ENABLED: 'false'        # Disable metrics in dev
+      KC_HEALTH_ENABLED: 'true'          # Enable health checks
     command:
-      - start-dev
+      - start-dev    # Start in development mode (no https required)
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
       interval: 5s
       timeout: 5s
-      retries: 12
+      retries: 12    # Wait up to 60 seconds for Keycloak to be ready
     networks:
       - keycloak-network
 
 networks:
   keycloak-network:
     driver: bridge
+

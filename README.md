@@ -246,6 +246,30 @@ Calling setConfig does not perform authentication
 
 The test environment is intentionally isolated inside the `test/` folder and uses a shared test realm approach for optimal performance.
 
+### Running Tests with Docker Compose
+
+For local development, use the included `docker-compose.yml` to spin up a Keycloak test server:
+
+```bash
+# Start Keycloak container in the background
+docker-compose up -d
+
+# Wait for Keycloak to be ready (health check will verify)
+# Then run tests
+npm test
+
+# Stop and remove the Keycloak container
+docker-compose down
+```
+
+**Docker Compose Configuration** (`docker-compose.yml`):
+- **Image**: `keycloak/keycloak:latest` - Latest stable Keycloak version
+- **Port**: `8080` - Accessible at `http://localhost:8080`
+- **Admin Credentials**: `admin:admin` (default in dev setup)
+- **Database**: In-memory (`KC_DB: dev-mem`) - Perfect for testing, no persistence needed
+- **Health Check**: Automatically waits for Keycloak to be fully ready before tests can run
+- **Mode**: Development mode (`start-dev`) - No HTTPS required for local testing
+
 ### Directory Structure
 
 - `test/specs/` - All test suites (e.g., users.test.js, roles.test.js)
