@@ -348,6 +348,14 @@ npm run setup-keycloak
 - Files will be mounted read-only in the container
 - Can be self-signed for development, must be valid for production
 
+**📚 Detailed Setup Guide**:
+See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for:
+- Comprehensive usage examples
+- Troubleshooting common issues
+- Certificate generation
+- Advanced configuration options
+- Running tests with different deployments
+
 ### Directory Structure
 
 - `test/specs/` - All test suites (e.g., users.test.js, roles.test.js)
