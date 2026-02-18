@@ -110,6 +110,19 @@ These files are excluded from git (see `.gitignore`):
 }
 ```
 
+## Diagnostic Script Configuration
+
+The manual diagnostic script [test/diagnostic-protocol-mappers.js](../diagnostic-protocol-mappers.js)
+uses the same `test` configuration (including `baseUrl`, credentials, and realm settings).
+It is not part of the automated test suite and must be run manually.
+
+Run it with:
+```bash
+node test/diagnostic-protocol-mappers.js
+```
+
+Make sure `baseUrl` points to a reachable Keycloak instance and `secrets.json` contains valid credentials.
+
 ### realm (test infrastructure)
 ```json
 {
