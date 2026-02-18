@@ -330,6 +330,7 @@ docker-compose down        # Cleanup
 - `test/setup.js` - Global Mocha hooks (runs before all tests)
 - `test/enableServerFeatures.js` - Creates shared test realm infrastructure
 - `test/testConfig.js` - Centralized configuration loader
+- `test/diagnostic-protocol-mappers.js` - Manual protocol mapper diagnostic (not part of Mocha tests)
 - `test/docker-keycloak/docker-compose.yml` - HTTP configuration
 - `test/docker-keycloak/docker-compose-https.yml` - HTTPS configuration
 - `test/docker-keycloak/setup-keycloak.js` - Interactive deployment script

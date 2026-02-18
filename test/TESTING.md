@@ -127,6 +127,24 @@ npm --prefix test test -- --grep "Users Handler"
 npm --prefix test test -- --grep "should create, find, update, and delete clients"
 ```
 
+## Diagnostics
+
+### Protocol Mapper Diagnostic Script
+
+The file [test/diagnostic-protocol-mappers.js](test/diagnostic-protocol-mappers.js) is a manual troubleshooting script.
+It is not part of the automated Mocha test suite. It is used to validate protocol mapper creation via:
+
+- Direct Admin REST API calls
+- The library client (`keycloak-api-manager`)
+
+Run it manually when you need to debug protocol mapper behavior:
+
+```bash
+node test/diagnostic-protocol-mappers.js
+```
+
+It uses the same `test/config` configuration and the shared test realm.
+
 ### Expected Output
 
 ```
