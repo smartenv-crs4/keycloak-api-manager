@@ -139,57 +139,28 @@ async function askCertificatePath(isRemote = false) {
   const defaultCertFile = path.join(defaultCertPath, 'keycloak.crt');
   const defaultKeyFile = path.join(defaultCertPath, 'keycloak.key');
   
-  // If default certificates exist and we're deploying locally, use them automatically
-  if (!isRemote && fs.existsSync(defaultCertFile) && fs.existsSync(defaultKeyFile)) {
+  // For remote deployments, always use certificates from local test/docker-keycloak/certs
+  // and copy them to the remote server
+  if (isRemote) {
+    // Verify local certificates exist
+    if (!fs.existsSync(defaultCertFile) || !fs.existsSync(defaultKeyFile)) {
+      throw new Error(`Certificate files not found in ${defaultCertPath}\nExpected: keycloak.crt and keycloak.key`);
+    }
+    log(`✓ Using certificates from ${defaultCertPath}`, 'green');
+    log('  → Will be copied to remote server', 'yellow');
+    return { localPath: defaultCertPath, remotePath: null };
+  }
+  
+  // Local deployment - check for defaults first
+  if (fs.existsSync(defaultCertFile) && fs.existsSync(defaultKeyFile)) {
     log(`✓ Found default certificates in ${defaultCertPath}`, 'green');
     return { localPath: defaultCertPath, remotePath: null };
   }
   
-  // If not found and deploying locally, ask user
-  if (!isRemote) {
-    log(`  Default location: ${defaultCertPath}`, 'yellow');
-    log('  Certificate files needed: keycloak.crt and keycloak.key', 'yellow');
-  }
+  // If defaults not found, ask user for custom path
+  log(`  Default location: ${defaultCertPath}`, 'yellow');
+  log('  Certificate files needed: keycloak.crt and keycloak.key', 'yellow');
   
-  // For remote deployments, ask if certificates are already on remote
-  if (isRemote) {
-    log('  Certificates can be:', 'yellow');
-    log('    1) Already on the remote server (we will use them there)', 'yellow');
-    log('    2) On this local machine (we will copy them to remote)', 'yellow');
-    
-    let certLocation;
-    while (!['1', '2'].includes(certLocation)) {
-      certLocation = await prompt('\nCertificate location (1=remote, 2=local): ');
-      if (!['1', '2'].includes(certLocation)) {
-        log('Invalid choice. Please enter 1 or 2.', 'red');
-      }
-    }
-    
-    if (certLocation === '1') {
-      // Certificates already on remote
-      const remoteCertPath = await prompt('Certificate directory path on remote server: ');
-      if (!remoteCertPath) {
-        throw new Error('Remote certificate path is required');
-      }
-      return { localPath: null, remotePath: remoteCertPath };
-    } else {
-      // Certificates on local machine - need to copy them
-      const localCertPath = await prompt('Certificate directory path local (or press Enter for default): ');
-      const certPath = localCertPath || defaultCertPath;
-      
-      // Verify local certificates exist
-      const certFile = path.join(certPath, 'keycloak.crt');
-      const keyFile = path.join(certPath, 'keycloak.key');
-      
-      if (!fs.existsSync(certFile) || !fs.existsSync(keyFile)) {
-        throw new Error(`Certificate files not found in ${certPath}\nExpected: keycloak.crt and keycloak.key`);
-      }
-      
-      return { localPath: certPath, remotePath: null };
-    }
-  }
-  
-  // Local deployment - ask for custom path if default not used
   const certPath = await prompt('Certificate directory path (or press Enter for default): ');
   
   // Use default if user just pressed Enter
@@ -201,7 +172,7 @@ async function askCertificatePath(isRemote = false) {
     throw new Error('Certificate path is required for HTTPS');
   }
   
-  // Verify local certificate files
+  // Verify custom certificate files
   const certFile = path.join(certPath, 'keycloak.crt');
   const keyFile = path.join(certPath, 'keycloak.key');
   
