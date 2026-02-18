@@ -123,12 +123,7 @@ async function askRemoteDetails() {
     throw new Error('Host is required');
   }
   
-  const deployPath = await prompt('Remote deployment path (e.g., /home/user/keycloak): ');
-  if (!deployPath) {
-    throw new Error('Deployment path is required');
-  }
-  
-  return { host, deployPath };
+  return { host };
 }
 
 async function askCertificatePath(isRemote = false) {
@@ -192,7 +187,7 @@ function execSync(command, cwd) {
 async function deployLocal(useHttps, certPath) {
   log('\n=== Local Deployment ===\n', 'bright');
   
-  const dockerComposeDir = path.join(__dirname, '..');
+  const dockerComposeDir = __dirname;
   
   try {
     // Determine which compose file to use
@@ -283,7 +278,7 @@ KEYCLOAK_HOSTNAME=localhost
 async function deployRemote(host, deployPath, useHttps, certPath) {
   log('\n=== Remote Deployment ===\n', 'bright');
   
-  const dockerComposeDir = path.join(__dirname, '..');
+  const dockerComposeDir = __dirname;
   const dockerComposePath = path.join(dockerComposeDir, 'docker-compose.yml');
   const dockerComposeHttpsPath = path.join(dockerComposeDir, 'docker-compose-https.yml');
   
@@ -416,7 +411,18 @@ async function main() {
     if (deployLocation === 'local') {
       await deployLocal(useHttps, certPath);
     } else {
-      const { host, deployPath } = await askRemoteDetails();
+      const { host } = await askRemoteDetails();
+      
+      // Extract username from host (format: user@host or just host)
+      let username = 'root';
+      if (host.includes('@')) {
+        username = host.split('@')[0];
+      }
+      
+      // Automatically create deployment path: /home/<username>/docker-keycloak-api-manager-test
+      const deployPath = `/home/${username}/docker-keycloak-api-manager-test`;
+      log(`\n✓ Deployment path: ${deployPath}`, 'green');
+      
       await deployRemote(host, deployPath, useHttps, certPath);
     }
     

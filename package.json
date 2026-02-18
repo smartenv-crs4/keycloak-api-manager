@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm --prefix test install && npm --prefix test test",
-    "setup-keycloak": "node test/setup-keycloak.js"
+    "setup-keycloak": "node test/docker-keycloak/setup-keycloak.js"
   },
   "dependencies": {
     "@keycloak/keycloak-admin-client": "^26.3.2",

@@ -207,7 +207,7 @@ This project maintains comprehensive documentation across multiple files. Here's
 
 ### 🚀 Getting Started
 - **This file (README.md)** - Overview, installation, quick start, API reference
-- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - Deploy Keycloak locally or remotely with HTTP/HTTPS
+- **[DEPLOYMENT_GUIDE.md](./test/docker-keycloak/DEPLOYMENT_GUIDE.md)** - Deploy Keycloak locally or remotely with HTTP/HTTPS
   - Interactive setup wizard (`npm run setup-keycloak`)
   - Local vs remote deployments
   - Certificate configuration
@@ -233,7 +233,7 @@ This project maintains comprehensive documentation across multiple files. Here's
 | Need | Location |
 |------|----------|
 | Install and basic usage | [README.md](./README.md#-installation) (this file) |
-| Deploy Keycloak | [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md#quick-start) |
+| Deploy Keycloak | [DEPLOYMENT_GUIDE.md](./test/docker-keycloak/DEPLOYMENT_GUIDE.md#quick-start) |
 | Run tests locally | [test/TESTING.md](./test/TESTING.md#running-tests) |
 | Configure tests | [test/config/CONFIGURATION.md](./test/config/CONFIGURATION.md) |
 | API reference | [README.md](./README.md#-available-helper-functions) (below) |
@@ -316,7 +316,7 @@ docker-compose down        # Cleanup
 
 **For comprehensive deployment documentation** (cert generation, HTTPS setup, remote SSH deployments, troubleshooting):
 
-👉 See **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)**
+👉 See **[DEPLOYMENT_GUIDE.md](./test/docker-keycloak/DEPLOYMENT_GUIDE.md)**
 
 ### Directory Structure
 
@@ -327,9 +327,9 @@ docker-compose down        # Cleanup
 - `test/setup.js` - Global Mocha hooks (runs before all tests)
 - `test/enableServerFeatures.js` - Creates shared test realm infrastructure
 - `test/testConfig.js` - Centralized configuration loader
-- `docker-compose.yml` - HTTP configuration
-- `docker-compose-https.yml` - HTTPS configuration
-- `docker-compose-https.yml` - HTTPS configuration
+- `test/docker-keycloak/docker-compose.yml` - HTTP configuration
+- `test/docker-keycloak/docker-compose-https.yml` - HTTPS configuration
+- `test/docker-keycloak/setup-keycloak.js` - Interactive deployment script
 
 For complete test architecture and structure details:
 
