@@ -85,6 +85,16 @@ exports.configure=async function(adminClientCredentials){
         }
 
         kcAdminClient=  new keycloakAdminClient(configAdminclient);
+        const originalSetRefreshToken = kcAdminClient.setRefreshToken?.bind(kcAdminClient);
+        if (originalSetRefreshToken) {
+                kcAdminClient.setRefreshToken = (token) => {
+                        if (!token) {
+                                kcAdminClient.refreshToken = undefined;
+                                return;
+                        }
+                        return originalSetRefreshToken(token);
+                };
+        }
         configAdminclient.clientId=adminClientCredentials.clientId;
         configAdminclient.clientSecret=adminClientCredentials.clientSecret;
 
