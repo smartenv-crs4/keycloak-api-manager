@@ -35,28 +35,15 @@ npm run setup-keycloak
 # ✓ Keycloak deployed at http://smart-dell-sml.crs4.it:8080
 ```
 
-### Remote HTTPS - with Certificates on Local Machine
+### Remote HTTPS
 ```bash
 npm run setup-keycloak
 # Choose deployment: Remote (auto-selected)
 # Enable HTTPS: 2 (Yes - HTTPS)
-# Certificate location: 2 (On this local machine)
-# Certificate directory: /path/to/local/certs (or press Enter for default: test/docker-keycloak/certs)
+# → Certificates automatically loaded from: test/docker-keycloak/certs
 # Remote host/IP: smart@smart-dell-sml.crs4.it
 # ✓ Certificates copied to remote and deployed with HTTPS
 # ✓ Keycloak accessible at https://smart-dell-sml.crs4.it:8443
-```
-
-### Remote HTTPS - with Certificates Already on Remote Server
-```bash
-npm run setup-keycloak
-# Choose deployment: Remote (auto-selected)
-# Enable HTTPS: 2 (Yes - HTTPS)
-# Certificate location: 1 (Already on the remote server)
-# Certificate directory on remote: /home/smart/existing-certs
-# Remote host/IP: smart@smart-dell-sml.crs4.it
-# ✓ Uses existing certificates on remote server
-# ✓ Keycloak deployed with HTTPS at https://smart-dell-sml.crs4.it:8443
 ```
 
 ## Features
@@ -109,31 +96,28 @@ The default location allows you to:
 - Run the script without entering certificate path every time
 - Keep certificates organized with the deployment infrastructure
 
-### For Remote Deployments - Choosing Between Local and Remote Certificates
+### For Remote Deployments - Automatic Certificate Handling
 
-When deploying to a remote server with HTTPS, you have two options:
+When deploying to a remote server with HTTPS, the script **automatically**:
+1. Loads certificates from the local `test/docker-keycloak/certs/` directory
+2. Verifies they exist (fails with clear error if missing)
+3. Copies them to the remote server in `deployment_path/certs/`
+4. Uses them for the HTTPS configuration
 
-**Option 1: Certificates on Local Machine** (Script copies them automatically)
+**No manual prompts** - just ensure you have valid certificates in `test/docker-keycloak/certs/`:
 ```bash
-Certificate location (1=remote, 2=local): 2
-Certificate directory path local (or press Enter for default): [press Enter or enter /path/to/local/certs]
-# Script will verify certificates exist locally and copy them to remote
+test/docker-keycloak/certs/
+├── keycloak.crt
+└── keycloak.key
 ```
 
-**Option 2: Certificates Already on Remote Server**
-```bash
-Certificate location (1=remote, 2=local): 1
-Certificate directory on remote server: /home/user/existing-certs
-# Script will use certificates already on the remote server
-```
+### For Local Deployments - Custom Certificate Path
 
-### Custom Local Location
-You can specify a different local certificate directory when prompted:
+For local HTTPS deployments, certificates are first sought in `test/docker-keycloak/certs/`.  
+If not found there, you will be prompted to enter a custom path:
 ```bash
-Certificate directory path local (or press Enter for default): /home/user/my-certs
+Certificate directory path (or press Enter for default): /path/to/your/certs
 ```
-
-Press Enter without input to accept the default location `test/docker-keycloak/certs/`.
 
 ### Certificate Files Required
 For HTTPS deployments, ensure the certificate directory contains:
