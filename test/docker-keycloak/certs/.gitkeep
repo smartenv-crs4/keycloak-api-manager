@@ -1,0 +1,7 @@
+# This directory is for storing SSL certificates
+# Place your keycloak.crt and keycloak.key files here
+# They will NOT be committed to git (see .gitignore)
+#
+# Example:
+#   cp /path/to/your/keycloak.crt keycloak.crt
+#   cp /path/to/your/keycloak.key keycloak.key

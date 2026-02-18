@@ -11,6 +11,10 @@ test/package-lock.json
 **/config/secrets.json
 .env
 
+# SSL Certificates (keep directory but ignore certificate files)
+test/docker-keycloak/certs/keycloak.crt
+test/docker-keycloak/certs/keycloak.key
+
 # IDE
 .vscode/
 .idea/
