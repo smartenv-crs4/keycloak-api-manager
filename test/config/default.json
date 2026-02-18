@@ -1,0 +1,32 @@
+{
+  "test": {
+    "keycloak": {
+      "baseUrl": "http://127.0.0.1:9998",
+      "realmName": "master",
+      "clientId": "admin-cli",
+      "username": "admin",
+      "grantType": "password",
+      "tokenLifeSpan": 60
+    },
+    "realm": {
+      "name": "keycloak-api-manager-test-realm",
+      "client": {
+        "clientId": "test-client",
+        "clientSecret": "test-client-secret"
+      },
+      "user": {
+        "username": "test-user",
+        "email": "test-user@test.local",
+        "firstName": "Test",
+        "lastName": "User"
+      },
+      "roles": ["test-role-1", "test-role-2", "test-admin-role"],
+      "group": {
+        "name": "test-group"
+      },
+      "clientScope": {
+        "name": "test-scope"
+      }
+    }
+  }
+}

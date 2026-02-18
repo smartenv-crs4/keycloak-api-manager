@@ -198,7 +198,15 @@ exports.delFromGroup=function(parameters){
  *       - search: [optional] a String containing group name such "cool-group",
  */
 exports.countGroups=function(filter){
- return (kcAdminClientHandler.users.countGroups(filter));
+ return (kcAdminClientHandler.users.countGroups(filter).then((response)=>{
+	 if(typeof response === 'number'){
+	  return response;
+	 }
+	 if(response && typeof response.count === 'number'){
+	  return response.count;
+	 }
+	 return 0;
+ }));
 }
 
 
@@ -426,8 +434,21 @@ exports.listSessions=function(filter){
  *     - id: [required] The ID of the user whose sessions will be listed
  *     - clientId: [optional] The client ID whose sessions are being checked
  */
-exports.listOfflineSessions=function(filter){
- return (kcAdminClientHandler.users.listOfflineSessions(filter));
+exports.listOfflineSessions=async function(filter){
+ const params = { ...filter };
+
+ if (params && params.clientId) {
+  try {
+   const clients = await kcAdminClientHandler.clients.find({ clientId: params.clientId });
+   if (Array.isArray(clients) && clients.length && clients[0].id) {
+	params.clientId = clients[0].id;
+   }
+  } catch (error) {
+   // Keep original clientId and let Keycloak validate it.
+  }
+ }
+
+ return (kcAdminClientHandler.users.listOfflineSessions(params));
 }
 
 
@@ -542,18 +563,30 @@ exports.delFromFederatedIdentity=function(options){
 
 /**
  * ***************************** - getUserStorageCredentialTypes - *******************************
- * For more details, see the keycloak-admin-client package in the Keycloak GitHub repository.
+ * Retrieves configured user-storage credential types for a specific user.
+ *
+ * @parameters:
+ * - filter is a JSON object that accepts this parameters:
+ *     - id: [required] The unique ID of the user.
+ *     - realm: [optional] The realm name.
  */
-exports.getUserStorageCredentialTypes=function(){
- return (kcAdminClientHandler.users.getUserStorageCredentialTypes());
+exports.getUserStorageCredentialTypes=function(filter){
+ return (kcAdminClientHandler.users.getUserStorageCredentialTypes(filter));
 }
 
 /**
- * ***************************** - CREATE - *******************************
- * For more details, see the keycloak-admin-client package in the Keycloak GitHub repository.
+ * ***************************** - updateCredentialLabel - *******************************
+ * Updates the label of a specific credential for a user.
+ *
+ * @parameters:
+ * - filter is a JSON object that accepts this parameters:
+ *     - id: [required] The unique ID of the user.
+ *     - credentialId: [required] The unique ID of the credential.
+ *     - realm: [optional] The realm name.
+ * - label: [required] String label to assign to the credential.
  */
-exports.updateCredentialLabel=function(){
- return (kcAdminClientHandler.users.updateCredentialLabel());
+exports.updateCredentialLabel=function(filter,label){
+ return (kcAdminClientHandler.users.updateCredentialLabel(filter,label));
 }
 
 

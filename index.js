@@ -13,29 +13,70 @@ var authenticationManagementHandler=require('./Handlers/authenticationManagement
 var request=require('request');
 
 let configAdminclient=null;
+let tokenRefreshInterval=null;
 
 /**
- * ***************************** - ENGLISH - *******************************
- *
- *     Main supported options:
- *     -baseUrl: Keycloak base Url
- *     - realmName: [Optional] A String that specifies the realm to authenticate against, if different from the keyCloakConfig.realm parameter.
- *       If you intend to use Keycloak administrator credentials, this should be set to 'master'.
- *     - scope: [Optional] A string that specifies The OAuth2 scope requested during authentication (optional).
- *              Typically not required for administrative clients. example:openid profile
- *    - requestOptions: [Optional] JSON parameters to configure HTTP requests (such as custom headers, timeouts, etc.).
- *      It is compatible with the Fetch API standard. Fetch request options
- *      https://developer.mozilla.org/en-US/docs/Web/API/fetch#options
- *    - username: [Optional] string username. Required when using the password grant type.
- *    - password: [Optional] string password. Required when using the password grant type.
- *    - grantType: The OAuth2 grant type used for authentication.
- *      Possible values: 'password', 'client_credentials', 'refresh_token', etc.
- *    - tokenLifeSpan: Lifetime of an access token expressed in seconds.
- *    - clientId: string containing the client ID configured in Keycloak. Required for all grant types.
- *    - clientSecret: [Optional] string containing the client secret of the client. Required for client_credentials or confidential clients.
- *    - totp: string for Time-based One-Time Password (TOTP) for multi-factor authentication (MFA), if enabled for the user.
- *    - offlineToken: [Optional] boolean value. If true, requests an offline token (used for long-lived refresh tokens). Default is false.
- *    - refreshToken: [Optional] string containing a valid refresh token to request a new access token when using the refresh_token grant type.
+ * Configure and initialize the Keycloak Admin Client for managing Keycloak resources.
+ * 
+ * This function MUST be called before using any administrative functions exposed by this library.
+ * It sets up the admin client with proper credentials and establishes automatic token refresh.
+ * 
+ * @param {Object} adminClientCredentials - Configuration object for Keycloak Admin Client
+ * @param {string} adminClientCredentials.baseUrl - Keycloak server base URL (e.g., "http://localhost:8080")
+ * @param {string} adminClientCredentials.realmName - Realm to authenticate against (use "master" for admin operations)
+ * @param {string} adminClientCredentials.clientId - Client ID configured in Keycloak (e.g., "admin-cli")
+ * @param {string} adminClientCredentials.grantType - OAuth2 grant type ("password", "client_credentials", etc.)
+ * @param {number} adminClientCredentials.tokenLifeSpan - Access token lifetime in seconds (recommended: 60-120)
+ * @param {string} [adminClientCredentials.username] - Admin username (required for "password" grant type)
+ * @param {string} [adminClientCredentials.password] - Admin password (required for "password" grant type)
+ * @param {string} [adminClientCredentials.clientSecret] - Client secret (required for "client_credentials" or confidential clients)
+ * @param {string} [adminClientCredentials.scope] - OAuth2 scope (optional, e.g., "openid profile")
+ * @param {Object} [adminClientCredentials.requestOptions] - Custom HTTP options (headers, timeout, etc.) compatible with Fetch API
+ * @param {string} [adminClientCredentials.totp] - Time-based One-Time Password for MFA (if enabled)
+ * @param {boolean} [adminClientCredentials.offlineToken=false] - Request offline token for long-lived refresh tokens
+ * @param {string} [adminClientCredentials.refreshToken] - Existing refresh token (for "refresh_token" grant type)
+ * 
+ * @returns {Promise<void>} Resolves when configuration is complete and authentication successful
+ * 
+ * @throws {Error} If authentication fails or required parameters are missing
+ * 
+ * @example
+ * // Basic configuration with password grant
+ * await KeycloakManager.configure({
+ *   baseUrl: 'http://localhost:8080',
+ *   realmName: 'master',
+ *   clientId: 'admin-cli',
+ *   username: 'admin',
+ *   password: 'admin',
+ *   grantType: 'password',
+ *   tokenLifeSpan: 120
+ * });
+ * 
+ * @example
+ * // Configuration with client credentials
+ * await KeycloakManager.configure({
+ *   baseUrl: 'https://auth.example.com',
+ *   realmName: 'master',
+ *   clientId: 'service-account',
+ *   clientSecret: 'secret-key',
+ *   grantType: 'client_credentials',
+ *   tokenLifeSpan: 60
+ * });
+ * 
+ * @note After successful configuration, all admin handlers are exposed:
+ * - KeycloakManager.realms - Realm management
+ * - KeycloakManager.users - User management
+ * - KeycloakManager.clients - Client management
+ * - KeycloakManager.clientScopes - Client scope management
+ * - KeycloakManager.identityProviders - Identity provider management
+ * - KeycloakManager.groups - Group management
+ * - KeycloakManager.roles - Role management
+ * - KeycloakManager.components - Component management
+ * - KeycloakManager.authenticationManagement - Authentication flow management
+ * 
+ * @note Token Refresh: The client automatically refreshes the access token at intervals
+ * calculated as (tokenLifeSpan * 1000) / 2 milliseconds. Call KeycloakManager.stop()
+ * to clear the refresh interval and allow graceful process termination.
  */
 exports.configure=async function(adminClientCredentials){
         configAdminclient={
@@ -48,15 +89,25 @@ exports.configure=async function(adminClientCredentials){
         configAdminclient.clientSecret=adminClientCredentials.clientSecret;
 
 
-        let  tokenLifeSpan= (adminClientCredentials.tokenLifeSpan *1000)/2;
+        let tokenLifeSpan= Number(adminClientCredentials.tokenLifeSpan);
+        tokenLifeSpan = Number.isFinite(tokenLifeSpan) && tokenLifeSpan > 0
+                ? (tokenLifeSpan * 1000) / 2
+                : 30000;
         delete adminClientCredentials.baseUrl;
         delete adminClientCredentials.realmName;
         delete adminClientCredentials.tokenLifeSpan;
         await kcAdminClient.auth(adminClientCredentials);
 
-        setInterval(async ()=>{
+        if (tokenRefreshInterval) {
+                clearInterval(tokenRefreshInterval);
+        }
+
+        tokenRefreshInterval = setInterval(async ()=>{
                 await kcAdminClient.auth(adminClientCredentials);
         },tokenLifeSpan);
+        if (tokenRefreshInterval.unref) {
+                tokenRefreshInterval.unref();
+        }
 
         realmHandler.setKcAdminClient(kcAdminClient);
         exports.realms=realmHandler;
@@ -89,13 +140,39 @@ exports.configure=async function(adminClientCredentials){
         //exports = kcAdminClient;
 };
 
-
-//TODO: Remove da documentare
+/**
+ * Updates the runtime configuration of the Keycloak Admin Client instance.
+ * Allows switching the target realm, base URL, or HTTP request options without 
+ * reinitializing the client or re-authenticating.
+ * 
+ * @param {Object} configToOverride - Configuration object to update
+ * @param {string} [configToOverride.realmName] - The name of the target realm for subsequent API requests
+ * @param {string} [configToOverride.baseUrl] - The base URL of the Keycloak server (e.g., https://auth.example.com)
+ * @param {Object} [configToOverride.requestOptions] - Custom HTTP options (headers, timeout, etc.) applied to API calls
+ * @param {string} [configToOverride.realmPath] - A custom realm path if your Keycloak instance uses a non-standard realm route
+ * @returns {void}
+ * 
+ * @note Calling setConfig does not perform authentication - it only changes configuration values in memory.
+ * The authentication token already stored in the admin client remains active until it expires.
+ * Only the properties explicitly passed in the config object are updated; all others remain unchanged.
+ */
 exports.setConfig=function(configToOverride){
         return(kcAdminClient.setConfig(configToOverride));
 }
-//TODO: Remove da documentare
-// restituisce il token utilizzato dalla libreria per comunicare con la keycloak API
+
+/**
+ * Retrieves the current authentication tokens used by the Keycloak Admin Client.
+ * Returns both the access token (used for API authorization) and the refresh token 
+ * (used to renew the session when the access token expires).
+ * 
+ * @returns {Object} Token object containing:
+ * @returns {string} accessToken - The active access token string currently held by the Keycloak Admin Client
+ * @returns {string} refreshToken - The corresponding refresh token string, if available
+ * 
+ * @note The tokens are managed internally by the Keycloak Admin Client after successful authentication.
+ * The accessToken typically expires after a short period (e.g., 60 seconds by default).
+ * If the client is not authenticated or the session has expired, both values may be undefined.
+ */
 exports.getToken=function(){
         return({
                 accessToken:kcAdminClient.accessToken,
@@ -103,8 +180,51 @@ exports.getToken=function(){
         });
 }
 
-//TODO: Remove da documentare
-//permette ad un utente o un client di autenticarsi su keycloack ed oottenere un token
+/**
+ * Cleanly stops the Keycloak Admin Client by clearing the automatic token refresh interval.
+ * When the admin client is configured with tokenLifeSpan, it automatically refreshes 
+ * the access token at regular intervals to maintain the session.
+ * Calling stop() clears this interval, allowing your Node.js process to exit gracefully.
+ * 
+ * @returns {void}
+ * 
+ * @note This method should be called when you're done using the Keycloak Admin Client 
+ * and want to terminate your application. It's particularly important in test environments 
+ * or CLI scripts where the process needs to exit cleanly. The method is safe to call 
+ * multiple times; subsequent calls have no effect.
+ * 
+ * @example
+ * // Configure and use the admin client
+ * await KeycloakManager.configure({ ... });
+ * const users = await KeycloakManager.users.find();
+ * // Clean up and allow process to exit
+ * KeycloakManager.stop();
+ */
+exports.stop=function(){
+        if (tokenRefreshInterval) {
+                clearInterval(tokenRefreshInterval);
+                tokenRefreshInterval=null;
+        }
+}
+
+/**
+ * Allows a user or client to authenticate against a Keycloak realm and obtain an access token.
+ * Sends a direct HTTP POST request to the Keycloak OpenID Connect token endpoint using the provided credentials.
+ * 
+ * @param {Object} credentials - Authentication details
+ * @param {string} [credentials.username] - Username of the user (required for password grant)
+ * @param {string} [credentials.password] - Password of the user (required for password grant)
+ * @param {string} credentials.grant_type - The OAuth2 grant type (e.g. "password", "client_credentials", "refresh_token")
+ * @returns {Promise<Object>} Token response object from Keycloak
+ * 
+ * @example
+ * const tokenResponse = await KeycloakManager.auth({
+ *   username: "demo",
+ *   password: "demo123",
+ *   grant_type: "password",
+ * });
+ * console.log("Access Token:", tokenResponse.access_token);
+ */
 exports.auth=async function(credentials){
         credentials.client_id=configAdminclient.clientId;
         credentials.client_secret=configAdminclient.clientSecret;

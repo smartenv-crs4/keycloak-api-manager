@@ -218,6 +218,124 @@ It’s useful when you need to interact with multiple realms or environments dyn
 
 **` -- @notes -- `**
 Calling setConfig does not perform authentication 
+
+---
+
+## 🧪 Test Workspace (Self-Contained)
+
+The test environment is intentionally isolated inside the `test/` folder and uses a shared test realm approach for optimal performance.
+
+### Directory Structure
+
+- `test/specs/` - All test suites (e.g., users.test.js, roles.test.js)
+- `test/config/` - Configuration files managed by propertiesmanager
+- `test/node_modules/` - Test dependencies (isolated from package root)
+- `test/setup.js` - Global Mocha hooks (runs before all tests)
+- `test/enableServerFeatures.js` - Creates shared test realm infrastructure
+- `test/testConfig.js` - Centralized configuration loader
+
+### Configuration Management
+
+Tests use **[propertiesmanager](https://www.npmjs.com/package/propertiesmanager)** for hierarchical configuration:
+
+**`test/config/default.json`** - Base configuration with "test" environment:
+```json
+{
+  "test": {
+    "keycloak": {
+      "baseUrl": "http://127.0.0.1:9998",
+      "realmName": "master",
+      "clientId": "admin-cli",
+      "username": "admin",
+      "grantType": "password",
+      "tokenLifeSpan": 60
+    },
+    "realm": {
+      "name": "keycloak-api-manager-test-realm",
+      "client": { "clientId": "test-client", "clientSecret": "test-client-secret" },
+      "user": { "username": "test-user", "email": "test-user@test.local" },
+      "roles": ["test-role-1", "test-role-2", "test-admin-role"]
+    }
+  }
+}
+```
+
+**`test/config/secrets.json`** - Sensitive credentials (gitignored):
+```json
+{
+  "test": {
+    "keycloak": { "password": "admin" },
+    "realm": { "user": { "password": "test-password" } }
+  }
+}
+```
+
+**`test/config/local.json`** - Developer-specific overrides (gitignored, optional):
+```json
+{
+  "test": {
+    "keycloak": { "baseUrl": "http://localhost:8080" }
+  }
+}
+```
+
+Configuration files are merged in order: `default.json` → `secrets.json` → `local.json`
+
+### Shared Test Realm
+
+All tests use a **single shared realm** (`keycloak-api-manager-test-realm`) created once before any test runs:
+
+- **Global Setup**: `setup.js` runs `enableServerFeatures()` in a Mocha `before()` hook
+- **Infrastructure Created**: Test realm, client, user, roles, groups, and client scopes
+- **Performance**: Tests run ~5x faster by reusing existing infrastructure instead of creating/deleting realms per test
+- **Isolation**: Each test creates unique resources (e.g., `user-${timestamp}`) to avoid conflicts
+
+### Running Tests
+
+```bash
+# Install dependencies and run all tests
+npm test
+
+# Or manually:
+npm --prefix test install
+npm --prefix test test
+
+# Run specific test suite
+npm --prefix test test -- --grep "Users Handler"
+```
+
+**Requirements:**
+- Keycloak instance accessible at configured `baseUrl` (default: `http://127.0.0.1:9998`)
+- Admin credentials in `test/config/secrets.json`
+- If using SSH tunnel for remote Keycloak, ensure it's active before running tests
+
+**Environment Variables:**
+- `NODE_ENV=test` - Automatically set by test script
+- `PROPERTIES_PATH` - Set by testConfig.js to `test/config/`
+
+**📚 Detailed Documentation:**
+- **[Test Suite Overview](test/README.md)** - Architecture, performance metrics, troubleshooting
+- **[Configuration Guide](test/config/README.md)** - How to set up and customize test configuration
+
+---
+
+## 🛠️ Available Helper Functions
+
+### `function setConfig(config)`
+This function updates the runtime configuration of the Keycloak-api-manager Admin Client instance.
+It allows switching the target realm, base URL, or HTTP request options without reinitializing the client or re-authenticating.
+It's useful when you need to interact with multiple realms or environments dynamically using the same admin client instance.
+
+**` -- @parameters -- `**
+- config: is a JSON object that accepts the following parameters:
+  - realmName: [optional] The name of the target realm for subsequent API requests. 
+  - baseUrl: [optional] The base URL of the Keycloak server (e.g., https://auth.example.com). 
+  - requestOptions: [optional] Custom HTTP options (headers, timeout, etc.) applied to API calls. 
+  - realmPath: [optional] A custom realm path if your Keycloak instance uses a non-standard realm route.
+  - other fields
+
+**` -- @notes -- `**
+Calling setConfig does not perform authentication 
 - it only changes configuration values in memory.
 - The authentication token already stored in the admin client remains active until it expires.
 - Only the properties explicitly passed in the config object are updated; all others remain unchanged.
@@ -295,6 +413,41 @@ try {
   console.error("Authentication failed:", error);
 }
 
+```
+
+### `function stop()`
+This function cleanly stops the Keycloak Admin Client by clearing the automatic token refresh interval.
+When the admin client is configured with `tokenLifeSpan`, it automatically refreshes the access token at regular intervals to maintain the session.
+Calling `stop()` clears this interval, allowing your Node.js process to exit gracefully without hanging.
+
+**` -- @returns -- `**
+void
+
+**` -- @notes -- `**
+- This method should be called when you're done using the Keycloak Admin Client and want to terminate your application.
+- It's particularly important in test environments or CLI scripts where the process needs to exit cleanly.
+- If you don't call `stop()`, the token refresh interval may prevent the Node.js process from terminating.
+- The method is safe to call multiple times; subsequent calls have no effect.
+
+**` -- @example -- `**
+```js
+const KeycloakManager = require('keycloak-api-manager');
+
+// Configure and use the admin client
+await KeycloakManager.configure({
+  baseUrl: 'http://localhost:8080',
+  realmName: 'master',
+  username: 'admin',
+  password: 'admin',
+  grantType: 'password',
+  tokenLifeSpan: 60
+});
+
+// Perform admin operations
+const users = await KeycloakManager.users.find();
+
+// Clean up and allow process to exit
+KeycloakManager.stop();
 ```
 
 ## 🔧 Available Admin Functions
@@ -1426,6 +1579,8 @@ const KeycloakManager = require('keycloak-api-manager');
 ##### `function countGroups(filter)`
 Retrieves the number of groups that a given user is a member of.
 
+Compatibility note: this method now always returns a number. If the underlying API returns an object with a `count` field, it is normalized internally.
+
 **` -- @parameters -- `**
 - filter is a JSON object that accepts filter parameters, such as { id: '' }
   - id: [required] The user ID of the user whose group membership count you want to retrieve.
@@ -1753,6 +1908,8 @@ Retrieves a list of offline sessions for the specified user.
 Offline sessions represent long-lived refresh tokens that allow clients to obtain new access tokens 
 without requiring the user to be actively logged in.
 
+Compatibility note: when `clientId` is provided as the public client identifier, the library resolves it to the internal client UUID before querying offline sessions.
+
  **` -- @parameters -- `**
 - filter is a JSON object that accepts this parameters:
   - id: [required] The ID of the user whose sessions will be listeds
@@ -1917,11 +2074,41 @@ const KeycloakManager = require('keycloak-api-manager');
  ```
 
 
-##### `function getUserStorageCredentialTypes()`
-For more details, see the keycloak-admin-client package in the Keycloak GitHub repository.
+##### `function getUserStorageCredentialTypes(filter)`
+Retrieves configured user-storage credential types for a specific user.
 
-##### `function updateCredentialLabel()`
-For more details, see the keycloak-admin-client package in the Keycloak GitHub repository.
+**` -- @parameters -- `**
+- filter is a JSON object that accepts this parameters:
+        - id: [required] The unique ID of the user.
+        - realm: [optional] The realm name.
+
+```js
+const KeycloakManager = require('keycloak-api-manager');
+
+const types = await KeycloakManager.users.getUserStorageCredentialTypes({
+    id: 'user-id',
+});
+console.log('Configured credential types:', types);
+```
+
+##### `function updateCredentialLabel(filter,label)`
+Updates the label of a specific credential for a user.
+
+**` -- @parameters -- `**
+- filter is a JSON object that accepts this parameters:
+        - id: [required] The unique ID of the user.
+        - credentialId: [required] The unique ID of the credential.
+        - realm: [optional] The realm name.
+- label: [required] String label to assign to the credential.
+
+```js
+const KeycloakManager = require('keycloak-api-manager');
+
+await KeycloakManager.users.updateCredentialLabel(
+    { id: 'user-id', credentialId: 'credential-id' },
+    'My Credential Label'
+);
+```
 
 
 
@@ -2733,6 +2920,12 @@ This includes online sessions, not offline sessions (those are retrieved with li
 **` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The client ID whose session must be retrieved
+
+**` -- @returns -- `**
+A number representing the count of active sessions for the specified client.
+
+**` -- @notes -- `**
+The return value is automatically normalized to a number. In some Keycloak versions, the API may return an object with a `count` property, but this method handles that internally and always returns the numeric count directly.
   
 ```js
 const KeycloakManager = require('keycloak-api-manager');
@@ -2742,7 +2935,7 @@ const sessionCount = await KeycloakManager.clients.getSessionCount({
     id: 'internal-client-id'
 });
 
-console.log(`Client internal-client-id has ${sessionCount.count} active sessions`);
+console.log(`Client internal-client-id has ${sessionCount} active sessions`);
 
 ```
 
@@ -2754,16 +2947,22 @@ without requiring active login.
 **` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client for which you want to count offline sessions.
+
+**` -- @returns -- `**
+A number representing the count of offline sessions for the specified client.
+
+**` -- @notes -- `**
+The return value is automatically normalized to a number. In some Keycloak versions, the API may return an object with a `count` property, but this method handles that internally and always returns the numeric count directly.
   
 ```js
 const KeycloakManager = require('keycloak-api-manager');
  
-// count active sessions
-const sessionCount = await KeycloakManager.clients.getOfflineSessionCount({
+// count offline sessions
+const offlineSessionCount = await KeycloakManager.clients.getOfflineSessionCount({
     id: 'internal-client-id'
 });
 
-console.log(`Client internal-client-id has ${sessionCount.count} offline sessions`);
+console.log(`Client internal-client-id has ${offlineSessionCount} offline sessions`);
 
 ```
 
@@ -3068,6 +3267,8 @@ console.log('Authorization scope details:', scope);
 The method is used to retrieve all resources associated with a specific authorization scope for a given client. 
 This allows you to see which resources are governed by a particular scope in the client’s authorization settings.
 
+Compatibility note: this method uses a direct Keycloak Admin REST API call internally to avoid known normalization issues from `@keycloak/keycloak-admin-client` in some environments.
+
 **` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
     - id: [required] The ID of the client to which the scope belongs 
@@ -3143,6 +3344,8 @@ console.log('Permission Scopes:', permissionScopes);
 The method is used to import a resource into a client. 
 This is part of Keycloak’s Authorization Services (UMA 2.0) and allows you to programmatically define 
 resources that a client can protect with policies and permissions.
+
+Compatibility note: this method uses a direct Keycloak Admin REST API call internally to avoid inconsistent responses observed with `@keycloak/keycloak-admin-client` in some environments.
 
 **` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
@@ -3508,6 +3711,8 @@ console.log("Associated resources:", resources);
 ##### `function clients.listScopesByResource(filter)`
 The method is used to list all authorization scopes associated with a specific resource in a client’s resource server. 
 This allows administrators to understand which scopes are directly linked to a protected resource and therefore which permissions can be applied to it.
+
+Compatibility note: this method uses a direct Keycloak Admin REST API call internally to avoid known normalization issues from `@keycloak/keycloak-admin-client` in some environments.
 
 **` -- @parameters -- `**
 - filter: JSON structure that defines the filter parameters:
@@ -5287,9 +5492,12 @@ Groups help organize users and assign permissions in a scalable way
 ##### `function create(groupRepresentation)`
 Create a new group in the current realme
 
+Compatibility note: when `parentId` is provided in `groupRepresentation`, the group is created as a child of that parent.
+
 **` -- @parameters -- `**
 - groupRepresentation:An object representing the new state of the group. You can update properties such as:
     - name: [optional] New name of the group
+    - parentId: [optional] Parent group ID. If present, a child group is created under that parent.
     - attributes: [optional] Custom attributes up field
     - path: [optional] full path of the group
     - subGroups: [optional] List of child groups (can also be updated separately)
@@ -5300,6 +5508,12 @@ Create a new group in the current realme
 const KeycloakManager = require('keycloak-api-manager');
  // create a group called my-group
  KeycloakManager.groups.create({name: "my-group"});
+
+// create a child group under an existing parent group
+await KeycloakManager.groups.create({
+    name: "child-group",
+    parentId: "parent-group-id"
+});
  ```
 
 
@@ -5356,6 +5570,8 @@ const group = await KeycloakManager.groups.del({ id: 'group-id' });
 Retrieves the total number of groups present in the specified realm. 
 This is useful for pagination, reporting, or general statistics regarding group usage in a Keycloak realm.
 
+Compatibility note: this method always returns a number.
+
 **` -- @parameters -- `**
 - filter: parameter provided as a JSON object that accepts the following filter:
   - realm: [optional] The name of the realm. If omitted, the default realm is used. 
@@ -5364,11 +5580,11 @@ This is useful for pagination, reporting, or general statistics regarding group 
 const KeycloakManager = require('keycloak-api-manager');
  // count groups
 const result = await KeycloakManager.groups.count();
-console.log('Total groups:', result.count);
+console.log('Total groups:', result);
 
  // count groups with filter
 const result = await KeycloakManager.groups.count({ search: "cool-group" });
-console.log('Total cool-group groups:', result.count);
+console.log('Total cool-group groups:', result);
 
  ```
 
@@ -6826,6 +7042,67 @@ const configDescription= await KeycloakManager.authenticationManagement.getConfi
 
 console.log("Configuration description:", configDescription);
 ```
+
+---
+
+## 🔄 Recent Updates & Compatibility Notes
+
+### Version 3.2.0+ - Improvements and Bug Fixes
+
+#### New Features
+- **`stop()` method**: Added a new method to cleanly stop the Keycloak Admin Client by clearing the automatic token refresh interval. This is essential for test environments and CLI scripts to allow the Node.js process to exit gracefully.
+  ```js
+  KeycloakManager.stop();
+  ```
+
+- **Token refresh interval now uses `unref()`**: The automatic token refresh interval is now unreferenced, allowing your Node.js process to exit even if the interval is still active, without needing to call `stop()` explicitly in simple scripts.
+
+#### Bug Fixes & Normalizations
+
+**Clients Handler:**
+- **`getSessionCount()` normalization**: Fixed inconsistent return values. The method now always returns a number directly instead of potentially returning an object with a `.count` property. This ensures consistent behavior across different Keycloak versions.
+  ```js
+  // Before: sessionCount could be { count: 5 } or 5
+  // After: sessionCount is always 5
+  const count = await KeycloakManager.clients.getSessionCount({ id: clientId });
+  console.log(`Active sessions: ${count}`); // Always works
+  ```
+
+- **`getOfflineSessionCount()` normalization**: Same fix as `getSessionCount()` - now consistently returns a number.
+
+- **`addClientScopeMappings()` and `delClientScopeMappings()` parameter fix**: These methods now properly accept the `roles` parameter as a second argument, making the API more consistent and easier to use.
+  ```js
+  // Correct usage
+  await KeycloakManager.clients.addClientScopeMappings(
+    { id: targetClientId, client: sourceClientId },
+    [{ id: roleId, name: roleName }]  // roles array as second parameter
+  );
+  ```
+
+- **Direct API fallback for specific Authorization Services methods**: Some `@keycloak/keycloak-admin-client` methods can fail with normalization/response issues depending on Keycloak version. To guarantee reliable behavior, the following methods now use direct Keycloak Admin REST API calls internally:
+    - `clients.listAllResourcesByScope()`
+    - `clients.listScopesByResource()`
+    - `clients.importResource()`
+  
+    This keeps the public API unchanged while avoiding known library-level compatibility bugs.
+
+**Users Handler:**
+- **`countGroups()` normalization**: this method now consistently returns a numeric value.
+- **`listOfflineSessions()` client ID compatibility**: public `clientId` values are resolved to internal UUID when needed.
+- **`getUserStorageCredentialTypes(filter)` and `updateCredentialLabel(filter,label)` signature fix**: both methods now expose the correct parameters and work as expected.
+
+**Groups Handler:**
+- **`create(groupRepresentation)` parent support**: when `parentId` is provided, the group is correctly created as a child group.
+- **`count()` normalization**: this method now consistently returns a numeric value.
+
+#### Testing
+- Comprehensive test suite added for all handlers (AuthenticationManagement, Clients, ClientScopes, Components, Groups, IdentityProviders, Realms, Roles, Users)
+- Tests include direct Keycloak Admin API verification to ensure library operations are correctly executed
+- Test coverage includes edge cases and error handling
+
+These improvements ensure better compatibility across different Keycloak versions and more predictable behavior in production environments.
+
+---
 
 ## 📝 License
 

@@ -11,6 +11,52 @@ exports.setKcAdminClient=function(kcAdminClient){
  kcAdminClientHandler=kcAdminClient;
 }
 
+/**
+ * Helper function to make direct HTTP calls to Keycloak Admin API.
+ * Used when @keycloak/keycloak-admin-client has bugs or inconsistencies.
+ * 
+ * @param {string} path - API path relative to baseUrl (e.g., '/admin/realms/...')
+ * @param {string} method - HTTP method (GET, POST, PUT, DELETE)
+ * @param {Object} body - Request body for POST/PUT requests
+ * @returns {Promise<any>} Response data from Keycloak
+ */
+async function directKeycloakApiCall(path, method = 'GET', body = null) {
+ const config = kcAdminClientHandler.baseUrl ? 
+  { baseUrl: kcAdminClientHandler.baseUrl, realmName: kcAdminClientHandler.realmName } :
+  kcAdminClientHandler.getConfig();
+  
+ const url = `${config.baseUrl}${path}`;
+ const token = kcAdminClientHandler.accessToken;
+ 
+ const options = {
+  method,
+  headers: {
+   'Authorization': `Bearer ${token}`,
+   'Content-Type': 'application/json',
+   'Accept': 'application/json'
+  }
+ };
+ 
+ if (body && (method === 'POST' || method === 'PUT')) {
+  options.body = JSON.stringify(body);
+ }
+ 
+ const response = await fetch(url, options);
+ 
+ if (!response.ok) {
+  const errorText = await response.text();
+  throw new Error(`HTTP ${response.status}: ${errorText}`);
+ }
+ 
+ const contentType = response.headers.get('content-type');
+ if (contentType && contentType.includes('application/json')) {
+  return await response.json();
+ }
+ 
+ return await response.text();
+}
+
+
 
 /**
  * ***************************** - CREATE - *******************************
@@ -415,8 +461,9 @@ exports.listAvailableClientScopeMappings=function(filter){
  *           - name: [required] The role name
  *           - {other RoleRepresentation fields}
  */
-exports.addClientScopeMappings=function(filter){
- return (kcAdminClientHandler.clients.addClientScopeMappings(filter));
+exports.addClientScopeMappings=function(filter,roles){
+ const payload = roles || (filter && filter.roles);
+ return (kcAdminClientHandler.clients.addClientScopeMappings(filter,payload));
 }
 
 
@@ -462,8 +509,9 @@ exports.listCompositeClientScopeMappings=function(filter){
  *           - name: [required] The role name
  *           - {other RoleRepresentation fields}
  */
-exports.delClientScopeMappings=function(filter){
- return (kcAdminClientHandler.clients.delClientScopeMappings(filter));
+exports.delClientScopeMappings=function(filter,roles){
+ const payload = roles || (filter && filter.roles);
+ return (kcAdminClientHandler.clients.delClientScopeMappings(filter,payload));
 }
 
 
@@ -585,12 +633,28 @@ exports.listOfflineSessions=function(filter){
  * ***************************** - getSessionCount - *******************************
  * The method retrieves the number of active user sessions for a given client.
  * This includes online sessions, not offline sessions (those are retrieved with listOfflineSessions).
+ * 
  * @parameters:
  * - filter: JSON structure that defines the filter parameters:
  *     - id: [required] The client ID whose session must be retrieved
+ * 
+ * @returns {Promise<number>} A number representing the count of active sessions
+ * 
+ * @note The return value is automatically normalized to a number. In some Keycloak versions, 
+ * the API may return an object with a `count` property, but this method handles that internally 
+ * and always returns the numeric count directly.
  */
 exports.getSessionCount=function(filter){
- return (kcAdminClientHandler.clients.getSessionCount(filter));
+ return kcAdminClientHandler.clients.getSessionCount(filter)
+	.then((result) => {
+	 if (typeof result === 'number') {
+		return result;
+	 }
+	 if (result && typeof result.count === 'number') {
+		return result.count;
+	 }
+	 return result;
+	});
 }
 
 
@@ -602,12 +666,28 @@ exports.getSessionCount=function(filter){
  * The method retrieves the number of offline sessions associated with a given client.
  * Offline sessions represent sessions where the user has a valid offline token, typically used for long-lived access
  * without requiring active login.
+ * 
  * @parameters:
  * - filter: JSON structure that defines the filter parameters:
  *     - id: [required] The ID of the client for which you want to count offline sessions.
+ * 
+ * @returns {Promise<number>} A number representing the count of offline sessions
+ * 
+ * @note The return value is automatically normalized to a number. In some Keycloak versions, 
+ * the API may return an object with a `count` property, but this method handles that internally 
+ * and always returns the numeric count directly.
  */
 exports.getOfflineSessionCount=function(filter){
- return (kcAdminClientHandler.clients.getOfflineSessionCount(filter));
+ return kcAdminClientHandler.clients.getOfflineSessionCount(filter)
+	.then((result) => {
+	 if (typeof result === 'number') {
+		return result;
+	 }
+	 if (result && typeof result.count === 'number') {
+		return result.count;
+	 }
+	 return result;
+	});
 }
 
 
@@ -800,13 +880,22 @@ exports.getAuthorizationScope=function(filter){
  * ***************************** - listAllResourcesByScope - *******************************
  * The method is used to retrieve all resources associated with a specific authorization scope for a given client.
  * This allows you to see which resources are governed by a particular scope in the client’s authorization settings.
+ *
  * @parameters:
  * - filter: JSON structure that defines the filter parameters:
  *      - id: [required] The ID of the client to which the scope belongs
  *      - scopeId [required] The ID of the authorization scope whose associated resources you want to list.
+ *
+ * @note This method uses a direct Keycloak Admin REST API call instead of
+ * @keycloak/keycloak-admin-client due to compatibility issues (missingNormalization)
+ * observed in some Keycloak/library combinations.
  */
-exports.listAllResourcesByScope=function(filter){
- return (kcAdminClientHandler.clients.listAllResourcesByScope(filter));
+exports.listAllResourcesByScope=async function(filter){
+	const config = kcAdminClientHandler.getConfig ? kcAdminClientHandler.getConfig() : 
+		{ realmName: kcAdminClientHandler.realmName };
+	const realm = filter.realm || config.realmName;
+	const path = `/admin/realms/${realm}/clients/${filter.id}/authz/resource-server/scope/${filter.scopeId}/resources`;
+	return await directKeycloakApiCall(path, 'GET');
 }
 
 
@@ -847,13 +936,21 @@ exports.listPermissionScope=function(filter){
  * The method is used to import a resource into a client.
  * This is part of Keycloak’s Authorization Services (UMA 2.0) and allows you to programmatically define
  * resources that a client can protect with policies and permissions.
+ *
  * @parameters:
  * - filter: JSON structure that defines the filter parameters:
  *     - id: [required] The ID of the client to which the resource should be imported
  * - resource [required]  The resource representation object. This typically includes attributes like name, uris, type, scopes, and other Keycloak resource configuration options.
+ *
+ * @note This method uses a direct Keycloak Admin REST API call to avoid response
+ * inconsistencies seen with @keycloak/keycloak-admin-client in some environments.
  */
-exports.importResource=function(filter,resource){
- return (kcAdminClientHandler.clients.importResource(filter,resource));
+exports.importResource=async function(filter,resource){
+	const config = kcAdminClientHandler.getConfig ? kcAdminClientHandler.getConfig() : 
+		{ realmName: kcAdminClientHandler.realmName };
+	const realm = filter.realm || config.realmName;
+	const path = `/admin/realms/${realm}/clients/${filter.id}/authz/resource-server/import`;
+	return await directKeycloakApiCall(path, 'POST', resource);
 }
 
 
@@ -1083,13 +1180,22 @@ exports.getAssociatedResources=function(filter){
  * ***************************** - listScopesByResource - *******************************
  * The method is used to list all authorization scopes associated with a specific resource in a client’s resource server.
  * This allows administrators to understand which scopes are directly linked to a protected resource and therefore which permissions can be applied to it.
+ *
  * @parameters:
  * - filter: JSON structure that defines the filter parameters:
  *     - id: [required] The ID of the client (the resource server).
  *     - resourceId: [required] The ID of the resource for which to list scopes.
+ *
+ * @note This method uses a direct Keycloak Admin REST API call instead of
+ * @keycloak/keycloak-admin-client due to compatibility issues (missingNormalization)
+ * observed in some Keycloak/library combinations.
  */
-exports.listScopesByResource=function(filter){
- return (kcAdminClientHandler.clients.listScopesByResource(filter));
+exports.listScopesByResource=async function(filter){
+	const config = kcAdminClientHandler.getConfig ? kcAdminClientHandler.getConfig() : 
+		{ realmName: kcAdminClientHandler.realmName };
+	const realm = filter.realm || config.realmName;
+	const path = `/admin/realms/${realm}/clients/${filter.id}/authz/resource-server/resource/${filter.resourceId}/scopes`;
+	return await directKeycloakApiCall(path, 'GET');
 }
 
 

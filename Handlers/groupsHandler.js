@@ -26,6 +26,13 @@ exports.setKcAdminClient=function(kcAdminClient){
  *     - {other [optional] group description fields}
  */
 exports.create=function(groupRepresentation){
+ if(groupRepresentation && groupRepresentation.parentId){
+  const { parentId, ...childGroupRepresentation } = groupRepresentation;
+  return (kcAdminClientHandler.groups.createChildGroup(
+   { id: parentId },
+   childGroupRepresentation
+  ));
+ }
  return (kcAdminClientHandler.groups.create(groupRepresentation));
 }
 
@@ -82,7 +89,15 @@ exports.del=function(filter){
  *     - search: [optional] A text string to filter the group count by name
  */
 exports.count=function(filter){
- return (kcAdminClientHandler.groups.count(filter));
+ return (kcAdminClientHandler.groups.count(filter).then((response)=>{
+     if(typeof response === 'number'){
+      return response;
+     }
+     if(response && typeof response.count === 'number'){
+      return response.count;
+     }
+     return 0;
+ }));
 }
 
 
