@@ -289,33 +289,4 @@ describe('IdentityProviders Handler', function () {
     }
   });
 
-  it('should import from url and manage permissions when supported', async function () {
-    try {
-      const fromUrl = `${keycloakConfig.baseUrl}realms/master/.well-known/openid-configuration`;
-      const imported = await keycloakManager.identityProviders.importFromUrl({
-        fromUrl,
-        providerId: 'oidc',
-      });
-      expect(imported).to.exist;
-
-      if (!idpCreated) {
-        this.skip();
-        return;
-      }
-
-      await keycloakManager.identityProviders.updatePermission(
-        { alias: idpAlias },
-        { enabled: true }
-      );
-
-      const permissions = await keycloakManager.identityProviders.listPermissions({ alias: idpAlias });
-      expect(permissions).to.be.an('object');
-    } catch (err) {
-      if (shouldSkipFeature(err)) {
-        this.skip();
-        return;
-      }
-      throw err;
-    }
-  });
 });

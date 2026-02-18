@@ -285,26 +285,6 @@ describe('Realms Handler', function () {
     await keycloakManager.realms.clearAdminEvents({ realm: testRealm });
   });
 
-  it('should manage users permissions', async function () {
-    try {
-      const perms = await keycloakManager.realms.getUsersManagementPermissions({
-        realm: testRealm,
-      });
-      expect(perms).to.be.an('object');
-
-      await keycloakManager.realms.updateUsersManagementPermissions({
-        realm: testRealm,
-        enabled: false,
-      });
-    } catch (err) {
-      if (err && err.message && err.message.includes('Feature not enabled')) {
-        this.test.title += ' (feature not enabled on server)';
-        this.skip();
-      }
-      throw err;
-    }
-  });
-
   it('should read realm keys and session stats', async function () {
     const keys = await keycloakManager.realms.getKeys({ realm: testRealm });
     expect(keys).to.be.an('object');

@@ -285,8 +285,19 @@ exports.invalidateSecret=function(filter){
  *      - id: [required] The internal ID of the client (not clientId)
  *
  */
-exports.getInstallationProviders=function(filter){
- return (kcAdminClientHandler.clients.getInstallationProviders(filter));
+exports.getInstallationProviders=async function(filter){
+ try {
+  const token = kcAdminClientHandler.accessToken;
+  const realmName = kcAdminClientHandler.realmName;
+  const path = `/admin/realms/${realmName}/clients/${filter.id}/installation/providers`;
+  const { makeRequest } = require('./httpApiHelper');
+  return await makeRequest(token, 'GET', path);
+ } catch (err) {
+  if (kcAdminClientHandler.clients && kcAdminClientHandler.clients.getInstallationProviders) {
+   return kcAdminClientHandler.clients.getInstallationProviders(filter);
+  }
+  throw err;
+ }
 }
 
 
@@ -300,8 +311,19 @@ exports.getInstallationProviders=function(filter){
  * - filter: JSON structure that defines the filter parameters:
  *      - id: [required] The ID of the client (resource server) for which to list available policy providers.
  */
-exports.listPolicyProviders=function(filter){
- return (kcAdminClientHandler.clients.listPolicyProviders(filter));
+exports.listPolicyProviders=async function(filter){
+ try {
+  const token = kcAdminClientHandler.accessToken;
+  const realmName = kcAdminClientHandler.realmName;
+  const path = `/admin/realms/${realmName}/clients/${filter.id}/authz/resource-server/policy-providers`;
+  const { makeRequest } = require('./httpApiHelper');
+  return await makeRequest(token, 'GET', path);
+ } catch (err) {
+  if (kcAdminClientHandler.clients && kcAdminClientHandler.clients.listPolicyProviders) {
+   return kcAdminClientHandler.clients.listPolicyProviders(filter);
+  }
+  throw err;
+ }
 }
 
 
@@ -773,8 +795,20 @@ exports.generateKey=function(filter){
  *     - id: [required] The ID of the client whose key information should be retrieved
  *     - attr: [optional] The name of the client attribute to get
  */
-exports.getKeyInfo=function(filter){
- return (kcAdminClientHandler.clients.getKeyInfo(filter));
+exports.getKeyInfo=async function(filter){
+ try {
+  const token = kcAdminClientHandler.accessToken;
+  const realmName = kcAdminClientHandler.realmName;
+  const attr = filter.attr || 'jwt.credential';
+  const path = `/admin/realms/${realmName}/clients/${filter.id}/certificates/${attr}`;
+  const { makeRequest } = require('./httpApiHelper');
+  return await makeRequest(token, 'GET', path);
+ } catch (err) {
+  if (kcAdminClientHandler.clients && kcAdminClientHandler.clients.getKeyInfo) {
+   return kcAdminClientHandler.clients.getKeyInfo(filter);
+  }
+  throw err;
+ }
 }
 
 
@@ -1113,8 +1147,20 @@ exports.findPermissions=function(filter){
  * - status: JSON structure that defines the fine grain permission
  *     - enabled: [required] Whether fine-grained permissions should be enabled or disabled.
  */
-exports.updateFineGrainPermission=function(filter,status){
- return (kcAdminClientHandler.clients.updateFineGrainPermission(filter,status));
+exports.updateFineGrainPermission=async function(filter,status){
+ try {
+  const token = kcAdminClientHandler.accessToken;
+  const realmName = kcAdminClientHandler.realmName;
+  const path = `/admin/realms/${realmName}/clients/${filter.id}/management/permissions`;
+  const { makeRequest } = require('./httpApiHelper');
+  return await makeRequest(token, 'PUT', path, status);
+ } catch (err) {
+  // Fallback to library implementation if HTTP call fails
+  if (kcAdminClientHandler.clients && kcAdminClientHandler.clients.updateFineGrainPermission) {
+   return kcAdminClientHandler.clients.updateFineGrainPermission(filter,status);
+  }
+  throw err;
+ }
 }
 
 
@@ -1126,8 +1172,20 @@ exports.updateFineGrainPermission=function(filter,status){
  * - filter: JSON structure that defines the filter parameters:
  *     - id: [required] The ID of the client (the resource server) where permissions are defined
  */
-exports.listFineGrainPermissions=function(filter){
- return (kcAdminClientHandler.clients.listFineGrainPermissions(filter));
+exports.listFineGrainPermissions=async function(filter){
+ try {
+  const token = kcAdminClientHandler.accessToken;
+  const realmName = kcAdminClientHandler.realmName;
+  const path = `/admin/realms/${realmName}/clients/${filter.id}/management/permissions`;
+  const { makeRequest } = require('./httpApiHelper');
+  return await makeRequest(token, 'GET', path);
+ } catch (err) {
+  // Fallback to library implementation if HTTP call fails
+  if (kcAdminClientHandler.clients && kcAdminClientHandler.clients.listFineGrainPermissions) {
+   return kcAdminClientHandler.clients.listFineGrainPermissions(filter);
+  }
+  throw err;
+ }
 }
 
 
@@ -1369,8 +1427,19 @@ exports.evaluateListProtocolMapper=function(filter){
  *         - {others}
  *     - {others}
  */
-exports.addProtocolMapper=function(filter,protocolMapperRepresentation){
- return (kcAdminClientHandler.clients.addProtocolMapper(filter,protocolMapperRepresentation));
+exports.addProtocolMapper=async function(filter,protocolMapperRepresentation){
+ try {
+  const token = kcAdminClientHandler.accessToken;
+  const realmName = kcAdminClientHandler.realmName;
+  const path = `/admin/realms/${realmName}/clients/${filter.id}/protocol-mappers/models`;
+  const { makeRequest } = require('./httpApiHelper');
+  return await makeRequest(token, 'POST', path, protocolMapperRepresentation);
+ } catch (err) {
+  if (kcAdminClientHandler.clients && kcAdminClientHandler.clients.addProtocolMapper) {
+   return kcAdminClientHandler.clients.addProtocolMapper(filter,protocolMapperRepresentation);
+  }
+  throw err;
+ }
 }
 
 
@@ -1396,8 +1465,20 @@ exports.addProtocolMapper=function(filter,protocolMapperRepresentation){
  *          - {other}
  *    - {other}
  */
-exports.updateProtocolMapper=function(filter,protocolMapperRepresentation){
- return (kcAdminClientHandler.clients.updateProtocolMapper(filter,protocolMapperRepresentation));
+exports.updateProtocolMapper=async function(filter,protocolMapperRepresentation){
+ try {
+  const token = kcAdminClientHandler.accessToken;
+  const realmName = kcAdminClientHandler.realmName;
+  const path = `/admin/realms/${realmName}/clients/${filter.id}/protocol-mappers/models/${filter.mapperId}`;
+  const { makeRequest } = require('./httpApiHelper');
+  return await makeRequest(token, 'PUT', path, protocolMapperRepresentation);
+ } catch (err) {
+  // Fallback to library implementation if HTTP call fails
+  if (kcAdminClientHandler.clients && kcAdminClientHandler.clients.updateProtocolMapper) {
+   return kcAdminClientHandler.clients.updateProtocolMapper(filter,protocolMapperRepresentation);
+  }
+  throw err;
+ }
 }
 
 
@@ -1428,8 +1509,19 @@ exports.updateProtocolMapper=function(filter,protocolMapperRepresentation){
  *          - {other}
  *    - {other}
  */
-exports.addMultipleProtocolMappers=function(filter,protocolMapperRepresentation){
- return (kcAdminClientHandler.clients.addMultipleProtocolMappers(filter,protocolMapperRepresentation));
+exports.addMultipleProtocolMappers=async function(filter,protocolMapperRepresentation){
+ try {
+  const token = kcAdminClientHandler.accessToken;
+  const realmName = kcAdminClientHandler.realmName;
+  const path = `/admin/realms/${realmName}/clients/${filter.id}/protocol-mappers/add-models`;
+  const { makeRequest } = require('./httpApiHelper');
+  return await makeRequest(token, 'POST', path, protocolMapperRepresentation);
+ } catch (err) {
+  if (kcAdminClientHandler.clients && kcAdminClientHandler.clients.addMultipleProtocolMappers) {
+   return kcAdminClientHandler.clients.addMultipleProtocolMappers(filter,protocolMapperRepresentation);
+  }
+  throw err;
+ }
 }
 
 
@@ -1511,7 +1603,19 @@ exports.listProtocolMappers=function(filter){
  *     - id: [required] The internal client ID of the client
  *     - mapperId: [required] The ID of the protocol mapper to delete
  */
-exports.delProtocolMapper=function(filter){
- return (kcAdminClientHandler.clients.delProtocolMapper(filter));
+exports.delProtocolMapper=async function(filter){
+ try {
+  const token = kcAdminClientHandler.accessToken;
+  const realmName = kcAdminClientHandler.realmName;
+  const path = `/admin/realms/${realmName}/clients/${filter.id}/protocol-mappers/models/${filter.mapperId}`;
+  const { makeRequest } = require('./httpApiHelper');
+  return await makeRequest(token, 'DELETE', path);
+ } catch (err) {
+  // Fallback to library implementation if HTTP call fails
+  if (kcAdminClientHandler.clients && kcAdminClientHandler.clients.delProtocolMapper) {
+   return kcAdminClientHandler.clients.delProtocolMapper(filter);
+  }
+  throw err;
+ }
 }
 

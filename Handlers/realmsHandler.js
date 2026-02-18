@@ -362,8 +362,19 @@ exports.clearAdminEvents=function(realmFilter){
  * - realmFilter: is a JSON object that accepts filter parameters
  *      - realm: [required] The name of the realm for which you want to retrieve the user management permission settings.
  */
-exports.getUsersManagementPermissions=function(realmFilter){
- return(kcAdminClientHandler.realms.getUsersManagementPermissions(realmFilter));
+exports.getUsersManagementPermissions=async function(realmFilter){
+ try {
+  const token = kcAdminClientHandler.accessToken;
+  const realmName = realmFilter.realm;
+  const path = `/admin/realms/${realmName}/users-management-permissions`;
+  const { makeRequest } = require('./httpApiHelper');
+  return await makeRequest(token, 'GET', path);
+ } catch (err) {
+  if (kcAdminClientHandler.realms && kcAdminClientHandler.realms.getUsersManagementPermissions) {
+   return kcAdminClientHandler.realms.getUsersManagementPermissions(realmFilter);
+  }
+  throw err;
+ }
 }
 
 
@@ -379,8 +390,19 @@ exports.getUsersManagementPermissions=function(realmFilter){
  *           - true: Activates fine-grained permissions for user management.
  *           - false: Disables fine-grained permissions and falls back to standard admin roles.
  */
-exports.updateUsersManagementPermissions=function(updateParameters){
- return(kcAdminClientHandler.realms.updateUsersManagementPermissions(updateParameters));
+exports.updateUsersManagementPermissions=async function(updateParameters){
+ try {
+  const token = kcAdminClientHandler.accessToken;
+  const realmName = updateParameters.realm;
+  const path = `/admin/realms/${realmName}/users-management-permissions`;
+  const { makeRequest } = require('./httpApiHelper');
+  return await makeRequest(token, 'PUT', path, { enabled: updateParameters.enabled });
+ } catch (err) {
+  if (kcAdminClientHandler.realms && kcAdminClientHandler.realms.updateUsersManagementPermissions) {
+   return kcAdminClientHandler.realms.updateUsersManagementPermissions(updateParameters);
+  }
+  throw err;
+ }
 }
 
 /**

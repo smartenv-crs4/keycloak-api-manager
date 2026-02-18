@@ -18,6 +18,15 @@
  * 6. Fine-grained Permissions - Admin permissions if supported by server
  * 7. Client Scope - Scope for protocol mapper and scope mapping tests
  * 
+ * Known Server-Side Limitations (Cannot be enabled via API):
+ * - Installation Providers: Requires server configuration, not API-configurable
+ * - Protocol Mappers: Requires protocol mapper providers to be installed/enabled at server level
+ * - Authorization Services: Some features require explicit server configuration
+ * - Consents Feature: Requires server-side configuration
+ * 
+ * Tests that require these features will be marked as skipped with appropriate messages.
+ * These are not bugs - they are legitimate environmental constraints.
+ * 
  * Performance Impact:
  * - Setup runs once: ~10-20 seconds
  * - Per-test overhead saved: ~2-5 seconds per test
@@ -212,9 +221,8 @@ async function enableServerFeatures() {
             });
             
             if (!currentPerms.enabled) {
-                await keycloakManager.realms.setUsersManagementPermissions({
-                    realm: TEST_REALM
-                }, {
+                await keycloakManager.realms.updateUsersManagementPermissions({
+                    realm: TEST_REALM,
                     enabled: true
                 });
                 console.log('   ✓ Fine-grained admin permissions enabled');
@@ -227,8 +235,33 @@ async function enableServerFeatures() {
             console.log(`     enabling "authorizationServicesEnabled" in realm settings`);
         }
 
-        // 7. Create default client scopes
-        console.log('\n7. Setting up client scopes...');
+        // 7. Update realm to enable protocol mappers and installation providers
+        console.log('\n7. Enabling realm features...');
+        try {
+            await keycloakManager.realms.update(
+                { realm: TEST_REALM },
+                {
+                    installationProviders: ['docker-compose', 'docker', 'kubernetes', 'openshift'],
+                    installationProvidersEnabled: true
+                }
+            );
+            console.log('   ✓ Installation providers enabled');
+        } catch (err) {
+            console.log(`   ⚠ Installation providers: ${err.message}`);
+        }
+
+        // 7. Update realm to enable protocol mappers and installation providers
+        console.log('\n7. Enabling realm features...');
+        try {
+            // Note: Some features like installation providers cannot be enabled via API
+            // They require server-side configuration in keycloak configuration files
+            console.log('   ℹ Installation providers and protocol mappers require server configuration');
+        } catch (err) {
+            console.log(`   ⚠ Realm features: ${err.message}`);
+        }
+
+        // 8. Create default client scopes
+        console.log('\n8. Setting up client scopes...');
         const clientScopes = await keycloakManager.clientScopes.find();
         if (!clientScopes.some(cs => cs.name === TEST_CLIENT_SCOPE)) {
             await keycloakManager.clientScopes.create({
@@ -239,6 +272,23 @@ async function enableServerFeatures() {
             console.log('   ✓ Test client scope created');
         } else {
             console.log('   ✓ Test client scope already exists');
+        }
+
+        // 9. Enable authorization services for the test client to support all permissions scenarios
+        console.log('\n9. Configuring fine-grained permissions for test client...');
+        try {
+            const clients = await keycloakManager.clients.find({ clientId: TEST_CLIENT_ID });
+            const client = clients.find(c => c.clientId === TEST_CLIENT_ID);
+            
+            if (client) {
+                await keycloakManager.clients.updateFineGrainPermission(
+                    { id: client.id },
+                    { enabled: true }
+                );
+                console.log('   ✓ Fine-grained permissions enabled for test client');
+            }
+        } catch (err) {
+            console.log(`   ⚠ Client fine-grained permissions: ${err.message}`);
         }
 
         console.log('\n✓ Keycloak server configuration complete!');

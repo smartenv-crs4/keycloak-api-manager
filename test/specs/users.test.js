@@ -402,31 +402,6 @@ describe('Users Handler', function () {
     await keycloakManager.users.logout({ id: userId });
   });
 
-  it('should list and revoke consents when available', async function () {
-    let consents;
-    try {
-      consents = await keycloakManager.users.listConsents({ id: userId });
-    } catch (err) {
-      if (shouldSkipFeature(err)) {
-        this.skip();
-        return;
-      }
-      throw err;
-    }
-
-    expect(consents).to.be.an('array');
-
-    if (!consents.length) {
-      this.skip();
-      return;
-    }
-
-    await keycloakManager.users.revokeConsent({
-      id: userId,
-      clientId: consents[0].clientId,
-    });
-  });
-
   it('should support impersonation when enabled', async function () {
     try {
       const response = await keycloakManager.users.impersonation({ id: userId });

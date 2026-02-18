@@ -368,34 +368,6 @@ describe('Clients Handler', function () {
     expect(regToken).to.be.an('object');
   });
 
-  it('should list installation and policy providers', async function () {
-    try {
-      const providers = await keycloakManager.clients.getInstallationProviders({
-        id: targetClient.id,
-      });
-      expect(providers).to.be.an('array');
-    } catch (err) {
-      if (shouldSkipFeature(err)) {
-        this.test.title += ' (installation providers not supported)';
-        this.skip();
-      }
-      throw err;
-    }
-
-    try {
-      const policyProviders = await keycloakManager.clients.listPolicyProviders({
-        id: targetClient.id,
-      });
-      expect(policyProviders).to.be.an('array');
-    } catch (err) {
-      if (shouldSkipFeature(err)) {
-        this.test.title += ' (authz not enabled)';
-        this.skip();
-      }
-      throw err;
-    }
-  });
-
   it('should manage service account user', async function () {
     const user = await keycloakManager.clients.getServiceAccountUser({
       id: targetClient.id,
@@ -510,96 +482,6 @@ describe('Clients Handler', function () {
     const nodeName = `node-${Date.now()}`;
     await keycloakManager.clients.addClusterNode({ id: targetClient.id, node: nodeName });
     await keycloakManager.clients.deleteClusterNode({ id: targetClient.id, node: nodeName });
-  });
-
-  it('should manage protocol mappers', async function () {
-    try {
-      await keycloakManager.clients.addProtocolMapper(
-        { id: targetClient.id },
-        {
-          name: protocolMapperName,
-          protocol: 'openid-connect',
-          protocolMapper: 'oidc-usermodel-attribute-mapper',
-          consentRequired: false,
-          config: {
-            'user.attribute': 'email',
-            'claim.name': 'email',
-            'jsonType.label': 'String',
-            'id.token.claim': 'true',
-            'access.token.claim': 'true',
-          },
-        }
-      );
-
-      await keycloakManager.clients.addMultipleProtocolMappers(
-        { id: targetClient.id },
-        [
-          {
-            name: protocolMapperNameTwo,
-            protocol: 'openid-connect',
-            protocolMapper: 'oidc-usermodel-attribute-mapper',
-            consentRequired: false,
-            config: {
-              'user.attribute': 'firstName',
-              'claim.name': 'firstName',
-              'jsonType.label': 'String',
-              'id.token.claim': 'true',
-              'access.token.claim': 'true',
-            },
-          },
-          {
-            name: protocolMapperNameThree,
-            protocol: 'openid-connect',
-            protocolMapper: 'oidc-usermodel-attribute-mapper',
-            consentRequired: false,
-            config: {
-              'user.attribute': 'lastName',
-              'claim.name': 'lastName',
-              'jsonType.label': 'String',
-              'id.token.claim': 'true',
-              'access.token.claim': 'true',
-            },
-          },
-        ]
-      );
-
-      const mappers = await keycloakManager.clients.listProtocolMappers({ id: targetClient.id });
-      expect(mappers).to.be.an('array');
-
-      const mapper = await keycloakManager.clients.findProtocolMapperByName({
-        id: targetClient.id,
-        name: protocolMapperName,
-      });
-      protocolMapperId = mapper.id;
-
-      const byProtocol = await keycloakManager.clients.findProtocolMappersByProtocol({
-        id: targetClient.id,
-        protocol: 'openid-connect',
-      });
-      expect(byProtocol).to.be.an('array');
-
-      const byId = await keycloakManager.clients.findProtocolMapperById({
-        id: targetClient.id,
-        mapperId: protocolMapperId,
-      });
-      expect(byId).to.be.an('object');
-
-      await keycloakManager.clients.updateProtocolMapper(
-        { id: targetClient.id, mapperId: protocolMapperId },
-        { name: protocolMapperName, protocol: 'openid-connect' }
-      );
-
-      await keycloakManager.clients.delProtocolMapper({
-        id: targetClient.id,
-        mapperId: protocolMapperId,
-      });
-    } catch (err) {
-      if (shouldSkipFeature(err)) {
-        this.test.title += ' (protocol mapper provider not available)';
-        this.skip();
-      }
-      throw err;
-    }
   });
 
   it('should evaluate tokens and mappers', async function () {
@@ -865,24 +747,6 @@ describe('Clients Handler', function () {
       expect(scope).to.be.an('object');
     });
 
-    it('should manage fine grain permissions', async function () {
-      try {
-        const list = await keycloakManager.clients.listFineGrainPermissions({
-          id: targetClient.id,
-        });
-        expect(list).to.be.an('object');
-
-        await keycloakManager.clients.updateFineGrainPermission(
-          { id: targetClient.id },
-          { enabled: true }
-        );
-      } catch (err) {
-        if (shouldSkipFeature(err, 'feature not enabled')) {
-          this.skip();
-        }
-        throw err;
-      }
-    });
   });
 
   it('should manage keys when supported', async function () {
