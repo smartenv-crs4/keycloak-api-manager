@@ -32,18 +32,44 @@ const colors = {
   red: '\x1b[31m',
 };
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+// Detect docker compose command (docker-compose or docker compose)
+function getDockerComposeCmdSync() {
+  try {
+    require('child_process').execSync('docker-compose --version', { stdio: 'ignore' });
+    return 'docker-compose';
+  } catch (err) {
+    try {
+      require('child_process').execSync('docker compose version', { stdio: 'ignore' });
+      return 'docker compose';
+    } catch (err2) {
+      return null; // Docker not available
+    }
+  }
+}
+
+let DOCKER_COMPOSE_CMD = getDockerComposeCmdSync();
+
+let rl;
+
+function initReadline() {
+  if (!rl) {
+    rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      terminal: process.stdin.isTTY
+    });
+  }
+  return rl;
+}
 
 function log(message, color = 'reset') {
   console.log(`${colors[color]}${message}${colors.reset}`);
 }
 
-function prompt(question) {
+async function prompt(question) {
   return new Promise((resolve) => {
-    rl.question(question, (answer) => {
+    const interface = initReadline();
+    interface.question(question, (answer) => {
       resolve(answer.trim());
     });
   });
@@ -52,8 +78,17 @@ function prompt(question) {
 async function askDeploymentLocation() {
   log('\n=== Keycloak Container Deployment Setup ===\n', 'bright');
   log('Choose deployment location:', 'blue');
-  log('  1) Local machine (localhost:8080)', 'yellow');
-  log('  2) Remote machine via SSH', 'yellow');
+  
+  const dockerAvailable = DOCKER_COMPOSE_CMD !== null;
+  
+  if (dockerAvailable) {
+    log('  1) Local machine (localhost:8080)', 'yellow');
+    log('  2) Remote machine via SSH', 'yellow');
+  } else {
+    log('  ⚠ Docker not available locally', 'yellow');
+    log('  → Deploying to remote machine via SSH', 'yellow');
+    return 'remote';
+  }
   
   let choice;
   while (!['1', '2'].includes(choice)) {
@@ -138,7 +173,11 @@ function executeCommand(command, cwd) {
 
 function execSync(command, cwd) {
   return new Promise((resolve, reject) => {
-    exec(command, { cwd: cwd || process.cwd() }, (error, stdout, stderr) => {
+    const options = {};
+    if (cwd) {
+      options.cwd = cwd;
+    }
+    exec(command, options, (error, stdout, stderr) => {
       if (error) {
         reject(error);
       } else {
@@ -279,7 +318,7 @@ async function deployRemote(host, deployPath, useHttps, certPath) {
     
     // Determine which compose file to use
     const composeFile = useHttps ? 'docker-compose-https.yml' : 'docker-compose.yml';
-    const composeCmd = `docker-compose -f ${composeFile}`;
+    const composeCmd = DOCKER_COMPOSE_CMD ? `${DOCKER_COMPOSE_CMD} -f ${composeFile}` : `docker compose -f ${composeFile}`;
     
     // Create .env file on remote
     log('Creating configuration on remote...', 'blue');
@@ -303,7 +342,7 @@ KEYCLOAK_HOSTNAME=${hostname}
     // Stop any existing containers at the remote path
     log('Stopping existing containers...', 'blue');
     try {
-      await execSync(`ssh ${host} 'cd "${deployPath}" && docker-compose -f docker-compose.yml down 2>/dev/null || docker-compose -f docker-compose-https.yml down 2>/dev/null || true'`);
+      await execSync(`ssh ${host} 'cd "${deployPath}" && ${DOCKER_COMPOSE_CMD} -f docker-compose.yml down 2>/dev/null || ${DOCKER_COMPOSE_CMD} -f docker-compose-https.yml down 2>/dev/null || true'`);
     } catch (err) {
       // Ignore errors if containers don't exist
     }
@@ -383,7 +422,9 @@ async function main() {
     log(`\nSetup failed: ${err.message}\n`, 'red');
     process.exit(1);
   } finally {
-    rl.close();
+    if (rl) {
+      rl.close();
+    }
   }
 }
 
