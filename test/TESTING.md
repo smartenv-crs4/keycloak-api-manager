@@ -41,7 +41,7 @@ test/
 │   ├── secrets.json          # Passwords (gitignored, required)
 │   ├── local.json            # Developer overrides (gitignored, optional)
 │   ├── local.json.example    # Template for local.json
-│   └── README.md             # Configuration documentation
+│   └── CONFIGURATION.md      # Configuration documentation
 ├── specs/                     # Test suites
 │   ├── authenticationManagement.test.js
 │   ├── clients.test.js
@@ -195,7 +195,7 @@ Configuration uses [propertiesmanager](https://www.npmjs.com/package/propertiesm
    }
    ```
 
-See [config/README.md](config/README.md) for detailed configuration documentation.
+See [config/CONFIGURATION.md](config/CONFIGURATION.md) for detailed configuration documentation.
 
 ## Test Writing Guidelines
 

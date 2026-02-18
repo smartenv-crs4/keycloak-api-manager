@@ -214,7 +214,7 @@ This project maintains comprehensive documentation across multiple files. Here's
   - Troubleshooting guide
 
 ### 🧪 Testing & Development
-- **[test/README.md](./test/README.md)** - Complete test suite documentation
+- **[test/TESTING.md](./test/TESTING.md)** - Complete test suite documentation
   - Test architecture (shared realm strategy)
   - How to run tests
   - Test file structure and components
@@ -222,7 +222,7 @@ This project maintains comprehensive documentation across multiple files. Here's
   - Performance metrics
   - Troubleshooting test issues
 
-- **[test/config/README.md](./test/config/README.md)** - Test configuration details
+- **[test/config/CONFIGURATION.md](./test/config/CONFIGURATION.md)** - Test configuration details
   - Configuration file hierarchy (default.json → secrets.json → local.json)
   - How to set up test environment
   - Configuration schema
@@ -234,10 +234,10 @@ This project maintains comprehensive documentation across multiple files. Here's
 |------|----------|
 | Install and basic usage | [README.md](./README.md#-installation) (this file) |
 | Deploy Keycloak | [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md#quick-start) |
-| Run tests locally | [test/README.md](./test/README.md#running-tests) |
-| Configure tests | [test/config/README.md](./test/config/README.md) |
+| Run tests locally | [test/TESTING.md](./test/TESTING.md#running-tests) |
+| Configure tests | [test/config/CONFIGURATION.md](./test/config/CONFIGURATION.md) |
 | API reference | [README.md](./README.md#-available-helper-functions) (below) |
-| Test architecture | [test/README.md](./test/README.md#architecture) |
+| Test architecture | [test/TESTING.md](./test/TESTING.md#architecture) |
 
 ---
 
@@ -251,14 +251,14 @@ When running the test suite, two fields must always be resolvable from configura
 Notes:
 - For **pre-deployed Keycloak** (`USE_REMOTE_KEYCLOAK=true`), these values must be set explicitly in test config.
 - For **remote Docker via SSH**, `baseUrl` may be auto-overridden at runtime (for example via SSH tunnel), but defaults are still required as fallback.
-- Keep this reminder in sync with `test/README.md`.
+- Keep this reminder in sync with `test/TESTING.md`.
 
 Configuration file roles for tests:
 - `test/config/default.json`: committed safe defaults
 - `test/config/local.json`: git-ignored machine/environment overrides
 - `test/config/secrets.json`: git-ignored sensitive values only
 
-For full test configuration guidance see `test/README.md`.
+For full test configuration guidance see `test/config/CONFIGURATION.md`.
 
 ---
 
@@ -321,18 +321,19 @@ docker-compose down        # Cleanup
 ### Directory Structure
 
 - `test/specs/` - All test suites (e.g., users.test.js, roles.test.js)
-- `test/config/config/` - Configuration files managed by propertiesmanager
-  - See [test/config/README.md](./test/config/README.md) for details
+- `test/config/` - Configuration files managed by propertiesmanager
+  - See [test/config/CONFIGURATION.md](./test/config/CONFIGURATION.md) for details
 - `test/node_modules/` - Test dependencies (isolated from package root)
 - `test/setup.js` - Global Mocha hooks (runs before all tests)
 - `test/enableServerFeatures.js` - Creates shared test realm infrastructure
 - `test/testConfig.js` - Centralized configuration loader
 - `docker-compose.yml` - HTTP configuration
 - `docker-compose-https.yml` - HTTPS configuration
+- `docker-compose-https.yml` - HTTPS configuration
 
 For complete test architecture and structure details:
 
-👉 See **[test/README.md](./test/README.md)**
+👉 See **[test/TESTING.md](./test/TESTING.md)**
 
 
 Configuration files are merged in order: `default.json` → `secrets.json` → `local.json`
@@ -354,13 +355,13 @@ npm --prefix test test -- --grep "Users"   # Run specific test suite
 
 **For detailed test information:**
 
-👉 See **[test/README.md](./test/README.md)** for:
+👉 See **[test/TESTING.md](./test/TESTING.md)** for:
 - Test architecture and shared realm strategy
 - Running tests with various configurations
 - Writing new tests
 - Troubleshooting and performance metrics
 
-👉 See **[test/config/README.md](./test/config/README.md)** for:
+👉 See **[test/config/CONFIGURATION.md](./test/config/CONFIGURATION.md)** for:
 - Configuration file setup and management
 - Setting up credentials (`secrets.json`)
 - Configuration schema and options
