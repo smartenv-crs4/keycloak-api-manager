@@ -31,6 +31,7 @@ const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const keycloakManager = require('../index');
 
 let sshTunnelProcess = null;
 
@@ -134,15 +135,60 @@ before(async function() {
     console.log('\n=== Global setup complete ===\n');
 });
 
-// Global after hook - cleanup SSH tunnel if created
+// Global after hook - cleanup test realm and SSH tunnel
 after(async function() {
-    if (sshTunnelProcess) {
-        console.log('\n=== Cleaning up SSH tunnel ===\n');
+    this.timeout(60000);
+    
+    console.log('\n=== Running global test teardown ===\n');
+    
+    try {
+        // Load test config to get realm name
+        const { TEST_REALM } = require('./testConfig');
+        
+        // Delete test realm to restore server to initial state
         try {
-            // The tunnel should close automatically when process exits
-            console.log('✓ SSH tunnel cleanup complete\n');
+            console.log(`Deleting test realm: ${TEST_REALM}`);
+            await keycloakManager.realms.del({ realm: TEST_REALM });
+            console.log(`✓ Test realm deleted: ${TEST_REALM}`);
         } catch (err) {
-            console.error('⚠ Error during SSH tunnel cleanup:', err.message);
+            if (err.message && err.message.includes('404')) {
+                console.log(`⚠ Test realm already deleted or not found: ${TEST_REALM}`);
+            } else {
+                console.error(`⚠ Error deleting test realm: ${err.message}`);
+            }
         }
+        
+        // Stop Keycloak admin client to close connections
+        try {
+            keycloakManager.stop();
+            console.log('✓ Closed Keycloak admin client connection');
+        } catch (err) {
+            // Connection already closed or other state
+            console.log('✓ Keycloak admin client stopped');
+        }
+        
+        // Clean up SSH tunnel config file if it was created
+        try {
+            const configPath = path.join(__dirname, 'config/local.json');
+            if (fs.existsSync(configPath)) {
+                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                // Only delete local.json if it contains SSH tunnel config
+                if (config.test?.keycloak?.baseUrl?.includes('127.0.0.1:9998')) {
+                    fs.unlinkSync(configPath);
+                    console.log('✓ Cleaned up SSH tunnel config (test/config/local.json)');
+                }
+            }
+        } catch (err) {
+            console.log('⚠ Could not cleanup config file:', err.message);
+        }
+        
+    } catch (err) {
+        console.error('⚠ Error during test teardown:', err.message);
     }
+    
+    if (sshTunnelProcess) {
+        console.log('✓ SSH tunnel will close automatically');
+    }
+    
+    console.log('\n=== Global test teardown complete ===\n');
 });
