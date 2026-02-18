@@ -131,7 +131,7 @@ async function askRemoteDetails() {
   return { host, deployPath };
 }
 
-async function askCertificatePath() {
+async function askCertificatePath(isRemote = false) {
   log('\nHTTPS requires certificate files.', 'blue');
   const certPath = await prompt('Certificate directory path (e.g., /home/smart/certs): ');
   
@@ -139,12 +139,14 @@ async function askCertificatePath() {
     throw new Error('Certificate path is required for HTTPS');
   }
   
-  // Verify certificate files exist
-  const certFile = path.join(certPath, 'keycloak.crt');
-  const keyFile = path.join(certPath, 'keycloak.key');
-  
-  if (!fs.existsSync(certFile) || !fs.existsSync(keyFile)) {
-    throw new Error(`Certificate files not found in ${certPath}\nExpected: keycloak.crt and keycloak.key`);
+  // Only verify local certificate files if deploying locally
+  if (!isRemote) {
+    const certFile = path.join(certPath, 'keycloak.crt');
+    const keyFile = path.join(certPath, 'keycloak.key');
+    
+    if (!fs.existsSync(certFile) || !fs.existsSync(keyFile)) {
+      throw new Error(`Certificate files not found in ${certPath}\nExpected: keycloak.crt and keycloak.key`);
+    }
   }
   
   return certPath;
@@ -406,7 +408,9 @@ async function main() {
     
     let certPath = null;
     if (useHttps) {
-      certPath = await askCertificatePath();
+      // For remote deployments, certificate path doesn't need to exist locally yet
+      const isRemote = deployLocation === 'remote';
+      certPath = await askCertificatePath(isRemote);
     }
     
     if (deployLocation === 'local') {
