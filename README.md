@@ -301,8 +301,11 @@ npm run setup-keycloak
 This script handles everything:
 - ✅ Choose local or remote deployment
 - ✅ Configure HTTP or HTTPS
+- ✅ Auto-detect certificates in `test/docker-keycloak/certs/` (or prompt for custom path)
 - ✅ Automatic certificate mounting (if HTTPS)
 - ✅ Auto health checks and startup verification
+
+**Note**: For HTTPS, place your certificates in `test/docker-keycloak/certs/` (named `keycloak.crt` and `keycloak.key`) to use them automatically without prompting.
 
 **2. Manual Docker Compose**
 
@@ -330,6 +333,7 @@ docker-compose down        # Cleanup
 - `test/docker-keycloak/docker-compose.yml` - HTTP configuration
 - `test/docker-keycloak/docker-compose-https.yml` - HTTPS configuration
 - `test/docker-keycloak/setup-keycloak.js` - Interactive deployment script
+- `test/docker-keycloak/certs/` - Default certificate location (keycloak.crt, keycloak.key)
 
 For complete test architecture and structure details:
 

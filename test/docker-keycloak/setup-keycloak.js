@@ -128,23 +128,49 @@ async function askRemoteDetails() {
 
 async function askCertificatePath(isRemote = false) {
   log('\nHTTPS requires certificate files.', 'blue');
-  const certPath = await prompt('Certificate directory path (e.g., /home/smart/certs): ');
   
-  if (!certPath) {
+  // Check for default certificate files in test/docker-keycloak/certs
+  const defaultCertPath = path.join(__dirname, 'certs');
+  const defaultCertFile = path.join(defaultCertPath, 'keycloak.crt');
+  const defaultKeyFile = path.join(defaultCertPath, 'keycloak.key');
+  
+  // If default certificates exist and we're deploying locally, use them automatically
+  if (!isRemote && fs.existsSync(defaultCertFile) && fs.existsSync(defaultKeyFile)) {
+    log(`✓ Found default certificates in ${defaultCertPath}`, 'green');
+    return defaultCertPath;
+  }
+  
+  // If not found and deploying locally, ask user
+  if (!isRemote) {
+    log(`  Default location: ${defaultCertPath}`, 'yellow');
+    log('  Certificate files needed: keycloak.crt and keycloak.key', 'yellow');
+  }
+  
+  const certPath = await prompt('Certificate directory path (or press Enter for default): ');
+  
+  // Use default if user just pressed Enter and it's a local deployment
+  if (!certPath && !isRemote) {
+    if (fs.existsSync(defaultCertFile) && fs.existsSync(defaultKeyFile)) {
+      log(`✓ Using default certificates from ${defaultCertPath}`, 'green');
+      return defaultCertPath;
+    }
     throw new Error('Certificate path is required for HTTPS');
   }
   
+  // Use user-provided path or default for remote
+  const finalPath = certPath || defaultCertPath;
+  
   // Only verify local certificate files if deploying locally
   if (!isRemote) {
-    const certFile = path.join(certPath, 'keycloak.crt');
-    const keyFile = path.join(certPath, 'keycloak.key');
+    const certFile = path.join(finalPath, 'keycloak.crt');
+    const keyFile = path.join(finalPath, 'keycloak.key');
     
     if (!fs.existsSync(certFile) || !fs.existsSync(keyFile)) {
-      throw new Error(`Certificate files not found in ${certPath}\nExpected: keycloak.crt and keycloak.key`);
+      throw new Error(`Certificate files not found in ${finalPath}\nExpected: keycloak.crt and keycloak.key`);
     }
   }
   
-  return certPath;
+  return finalPath;
 }
 
 function executeCommand(command, cwd) {

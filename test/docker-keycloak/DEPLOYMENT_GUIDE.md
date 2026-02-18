@@ -15,7 +15,14 @@ npm run setup-keycloak
 npm run setup-keycloak
 # Select: 1 (Local)
 # Select: 2 (HTTPS)
-# Enter certificate path: /path/to/certs
+# 
+# If certificates exist in test/docker-keycloak/certs:
+#   ✓ Script automatically uses them
+# 
+# Otherwise, enter certificate path when prompted:
+#   Certificate directory path: /path/to/certs
+#   (or press Enter to use default location)
+# 
 # ✓ Keycloak accessible at https://localhost:8443
 ```
 
@@ -72,8 +79,33 @@ keycloak-api-manager/
     └── setup-keycloak.js            # Interactive setup script
 ```
 
-## Certificate Files
+## Certificate Configuration
 
+### Default Location
+For local HTTPS deployments, the script automatically searches for certificates in:
+```
+test/docker-keycloak/certs/
+├── keycloak.crt  (X.509 certificate)
+└── keycloak.key  (Private key)
+```
+
+**If found**: Script uses them automatically ✅  
+**If not found**: Script prompts you to enter a custom path
+
+The default location allows you to:
+- Generate certificates once and commit them to the repo
+- Run the script without entering certificate path every time
+- Keep certificates organized with the deployment infrastructure
+
+### Custom Location
+You can specify a different certificate directory when prompted:
+```bash
+Certificate directory path (or press Enter for default): /home/user/my-certs
+```
+
+Press Enter without input to accept the default location (only works if running locally and certificates exist there).
+
+### Certificate Files Required
 For HTTPS deployments, ensure the certificate directory contains:
 - `keycloak.crt` - X.509 certificate file
 - `keycloak.key` - Unencrypted private key file
@@ -84,6 +116,10 @@ Example self-signed certificate generation:
 openssl req -x509 -newkey rsa:2048 -keyout keycloak.key \
   -out keycloak.crt -days 365 -nodes \
   -subj "/CN=keycloak.test/O=Test/C=US"
+
+# Place in the default location
+mkdir -p test/docker-keycloak/certs
+cp keycloak.crt keycloak.key test/docker-keycloak/certs/
 ```
 
 ## Configuration Details
