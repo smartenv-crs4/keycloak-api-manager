@@ -223,6 +223,8 @@ async function enableServerFeatures() {
             }
         } catch (err) {
             console.log(`   ⚠ Fine-grained permissions: ${err.message}`);
+            console.log(`   ℹ This is typically a server configuration setting that requires`);
+            console.log(`     enabling "authorizationServicesEnabled" in realm settings`);
         }
 
         // 7. Create default client scopes
