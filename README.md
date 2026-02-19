@@ -68,6 +68,8 @@ In Keycloak 26.x, management-permissions APIs used by group/user fine-grained te
 - `auth(credentials)`
 - `stop()`
 
+`auth(credentials)` is an OIDC token endpoint helper for login/token grant flows (user/client). It does not replace the internal admin session configured by `configure()`.
+
 Configured handler namespaces:
 
 - `realms`

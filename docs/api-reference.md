@@ -76,7 +76,7 @@ KeycloakManager.stop();
 | `configure()` | Authentication and setup | Core |
 | `setConfig()` | Runtime configuration | Core |
 | `getToken()` | Get current access token | Core |
-| `auth()` | Re-authenticate | Core |
+| `auth()` | OIDC token grant/login endpoint wrapper | Core |
 | `stop()` | Stop token refresh timer | Core |
 | `realms` | Realm management | realmsHandler |
 | `users` | User management | usersHandler |

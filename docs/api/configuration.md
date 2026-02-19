@@ -180,7 +180,7 @@ KeycloakManager.setConfig({
 
 ### Notes
 
-- `setConfig()` does NOT re-authenticate. It only updates the context.
+- `setConfig()` does NOT perform token/login calls. It only updates the runtime context.
 - Changing `realmName` affects all subsequent API calls until changed again.
 - The access token remains valid across realm switches (as long as the authenticated user/service account has permissions).
 
@@ -236,7 +236,11 @@ const response = await axios.get('https://keycloak.example.com/admin/realms/mast
 
 ## auth()
 
-Re-authenticate with new or updated credentials. Use this to switch users or refresh authentication manually.
+Request tokens from Keycloak via the OIDC token endpoint.
+
+This method is intended for application-level login/token flows (for users, service clients, or third-party integrations) using this package as a wrapper.
+
+It does **not** reconfigure or replace the internal admin session created by `configure()`.
 
 **Syntax:**
 ```javascript
@@ -247,18 +251,32 @@ await KeycloakManager.auth(credentials)
 
 #### credentials (Object) ⚠️ Required
 
-Same structure as `configure()` credentials parameter.
+Form parameters sent to `/protocol/openid-connect/token`.
+
+Common fields:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `grant_type` | string | ⚠️ Yes | OAuth2 grant type (`password`, `client_credentials`, `refresh_token`, `authorization_code`) |
+| `username` | string | 📋 Conditional | Required for `password` grant |
+| `password` | string | 📋 Conditional | Required for `password` grant |
+| `client_id` | string | 📋 Optional | If omitted, runtime `clientId` from `configure()` is used |
+| `client_secret` | string | 📋 Optional | If omitted, runtime `clientSecret` from `configure()` is used |
+| `refresh_token` | string | 📋 Conditional | Required for `refresh_token` grant |
+| `scope` | string | 📋 Optional | OAuth scopes (e.g. `openid profile email offline_access`) |
+| `code` | string | 📋 Conditional | Required for `authorization_code` grant |
+| `redirect_uri` | string | 📋 Conditional | Required for `authorization_code` grant |
 
 ### Returns
 
-**Promise\<void\>** - Resolves when re-authentication succeeds
+**Promise\<Object\>** - Token payload returned by Keycloak (e.g. `access_token`, `refresh_token`, `expires_in`, `token_type`)
 
 ### Examples
 
-#### Switch User
+#### Resource Owner Password Login
 
 ```javascript
-// Initial authentication as admin
+// Admin setup for wrapper/handlers
 await KeycloakManager.configure({
   baseUrl: 'https://keycloak.example.com',
   realmName: 'master',
@@ -268,45 +286,46 @@ await KeycloakManager.configure({
   clientId: 'admin-cli'
 });
 
-// Later, re-authenticate as different user
-await KeycloakManager.auth({
-  baseUrl: 'https://keycloak.example.com',
-  realmName: 'master',
-  username: 'realm-admin',
-  password: 'realm-admin-password',
-  grantType: 'password',
-  clientId: 'admin-cli'
+// Application login/token request for an end-user
+const tokenResponse = await KeycloakManager.auth({
+  grant_type: 'password',
+  username: 'end-user',
+  password: 'user-password',
+  scope: 'openid profile email'
 });
+
+console.log(tokenResponse.access_token);
 ```
 
-#### Refresh Expired Session
+#### Client Credentials Login
 
 ```javascript
-// If session expired or token invalidated
-try {
-  await KeycloakManager.users.find();
-} catch (error) {
-  if (error.response && error.response.status === 401) {
-    // Re-authenticate
-    await KeycloakManager.auth({
-      baseUrl: 'https://keycloak.example.com',
-      realmName: 'master',
-      username: 'admin',
-      password: 'admin',
-      grantType: 'password',
-      clientId: 'admin-cli'
-    });
-    
-    // Retry operation
-    const users = await KeycloakManager.users.find();
-  }
-}
+const tokenResponse = await KeycloakManager.auth({
+  grant_type: 'client_credentials',
+  client_id: 'my-public-api',
+  client_secret: process.env.API_CLIENT_SECRET
+});
+
+console.log(tokenResponse.access_token);
+```
+
+#### Refresh Token Flow
+
+```javascript
+const refreshed = await KeycloakManager.auth({
+  grant_type: 'refresh_token',
+  refresh_token: oldRefreshToken
+});
+
+console.log(refreshed.access_token);
 ```
 
 ### Notes
 
-- `auth()` stops the existing token refresh timer and starts a new one (if `tokenLifeSpan` is configured).
-- Use `auth()` instead of `configure()` when you need to change credentials without reinitializing handlers.
+- `auth()` posts to `${baseUrl}/realms/${realmName}/protocol/openid-connect/token`.
+- `auth()` returns raw token endpoint payload and throws on non-2xx responses.
+- `auth()` does not change handler wiring, runtime config, or the internal admin refresh timer.
+- Runtime `clientId`/`clientSecret` are appended automatically if configured and not overridden in request payload.
 
 ---
 

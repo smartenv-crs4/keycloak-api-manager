@@ -15,7 +15,9 @@ This package exposes a single runtime (`index.js`) that initializes one Keycloak
    - Keeps active session/token management in place.
 
 3. `auth(credentials)`
-   - Direct token endpoint call for explicit auth flows.
+   - Direct token endpoint call for explicit OIDC login/token flows.
+   - Intended for application-level third-party authentication use-cases.
+   - Does not mutate the internal admin client session established by `configure()`.
 
 4. `stop()`
    - Stops refresh timer for clean process termination.
