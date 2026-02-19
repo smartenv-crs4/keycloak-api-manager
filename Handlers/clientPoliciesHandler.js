@@ -47,7 +47,7 @@ exports.updatePolicies = async function(filter, policiesRepresentation) {
     const baseUrl = kcAdminClientHandler.baseUrl;
     const token = kcAdminClientHandler.accessToken;
     
-    const url = `${baseUrl}admin/realms/${realm}/client-policies/policies`;
+    const url = `${baseUrl}/admin/realms/${realm}/client-policies/policies`;
     
     const response = await fetch(url, {
         method: 'PUT',
@@ -100,7 +100,7 @@ exports.updateProfiles = async function(filter, profilesRepresentation) {
     const baseUrl = kcAdminClientHandler.baseUrl;
     const token = kcAdminClientHandler.accessToken;
     
-    const url = `${baseUrl}admin/realms/${realm}/client-policies/profiles`;
+    const url = `${baseUrl}/admin/realms/${realm}/client-policies/profiles`;
     
     const response = await fetch(url, {
         method: 'PUT',

@@ -28,7 +28,7 @@ exports.getConfiguration = async function(filter) {
     const baseUrl = kcAdminClientHandler.baseUrl;
     const token = kcAdminClientHandler.accessToken;
     
-    const url = `${baseUrl}admin/realms/${realm}/users/profile`;
+    const url = `${baseUrl}/admin/realms/${realm}/users/profile`;
     
     const response = await fetch(url, {
         method: 'GET',
@@ -68,7 +68,7 @@ exports.updateConfiguration = async function(filter, userProfileConfig) {
     const baseUrl = kcAdminClientHandler.baseUrl;
     const token = kcAdminClientHandler.accessToken;
     
-    const url = `${baseUrl}admin/realms/${realm}/users/profile`;
+    const url = `${baseUrl}/admin/realms/${realm}/users/profile`;
     
     const response = await fetch(url, {
         method: 'PUT',
@@ -103,7 +103,7 @@ exports.getMetadata = async function(filter) {
     const baseUrl = kcAdminClientHandler.baseUrl;
     const token = kcAdminClientHandler.accessToken;
     
-    const url = `${baseUrl}admin/realms/${realm}/users/profile/metadata`;
+    const url = `${baseUrl}/admin/realms/${realm}/users/profile/metadata`;
     
     const response = await fetch(url, {
         method: 'GET',
