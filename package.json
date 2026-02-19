@@ -1,6 +1,6 @@
 {
   "name": "keycloak-api-manager",
-  "version": "5.0.3",
+  "version": "5.0.4",
   "description": "Enhanced Node.js wrapper for Keycloak Admin REST API. Professional alternative to @keycloak/keycloak-admin-client with advanced features, bug fixes, automatic token refresh, Organizations API support, fine-grained permissions, and comprehensive resource management. Battle-tested with 113+ integration tests.",
   "main": "index.js",
   "scripts": {
