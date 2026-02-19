@@ -148,10 +148,10 @@ async function requestOidcToken(credentials = {}) {
         }
     });
 
-    if (runtimeConfig.clientId) {
+    if (runtimeConfig.clientId && !body.has('client_id')) {
         body.append('client_id', runtimeConfig.clientId);
     }
-    if (runtimeConfig.clientSecret) {
+    if (runtimeConfig.clientSecret && !body.has('client_secret')) {
         body.append('client_secret', runtimeConfig.clientSecret);
     }
 
@@ -183,4 +183,45 @@ exports.auth = async function auth(credentials = {}) {
 
 exports.login = async function login(credentials = {}) {
     return requestOidcToken(credentials);
+};
+
+exports.loginPKCE = async function loginPKCE(credentials = {}) {
+    const {
+        code,
+        redirect_uri,
+        redirectUri,
+        code_verifier,
+        codeVerifier,
+        client_id,
+        clientId,
+        client_secret,
+        clientSecret,
+        ...rest
+    } = credentials;
+
+    const resolvedCode = code;
+    const resolvedRedirectUri = redirect_uri || redirectUri;
+    const resolvedCodeVerifier = code_verifier || codeVerifier;
+    const resolvedClientId = client_id || clientId;
+    const resolvedClientSecret = client_secret || clientSecret;
+
+    if (!resolvedCode) {
+        throw new Error('loginPKCE requires "code".');
+    }
+    if (!resolvedRedirectUri) {
+        throw new Error('loginPKCE requires "redirect_uri" (or "redirectUri").');
+    }
+    if (!resolvedCodeVerifier) {
+        throw new Error('loginPKCE requires "code_verifier" (or "codeVerifier").');
+    }
+
+    return requestOidcToken({
+        grant_type: 'authorization_code',
+        code: resolvedCode,
+        redirect_uri: resolvedRedirectUri,
+        code_verifier: resolvedCodeVerifier,
+        ...(resolvedClientId ? { client_id: resolvedClientId } : {}),
+        ...(resolvedClientSecret ? { client_secret: resolvedClientSecret } : {}),
+        ...rest
+    });
 };

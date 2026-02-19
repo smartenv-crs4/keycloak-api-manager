@@ -8,6 +8,7 @@ Core API methods for initializing and managing the Keycloak Admin Client connect
 - [setConfig()](#setconfig)
 - [getToken()](#gettoken)
 - [login()](#login)
+- [loginPKCE()](#loginpkce)
 - [auth()](#auth)
 - [stop()](#stop)
 
@@ -344,6 +345,60 @@ console.log(refreshed.access_token);
 - `login()` returns raw token endpoint payload and throws on non-2xx responses.
 - `login()`/`auth()` do not change handler wiring, runtime config, or the internal admin refresh timer.
 - Runtime `clientId`/`clientSecret` are appended automatically if configured and not overridden in request payload.
+
+---
+
+## loginPKCE()
+
+Perform Authorization Code + PKCE token exchange.
+
+This helper is intended for the callback step after user login on Keycloak, where your backend receives an authorization `code` and exchanges it with `code_verifier`.
+
+**Syntax:**
+```javascript
+await KeycloakManager.loginPKCE(credentials)
+```
+
+### Parameters
+
+#### credentials (Object) ⚠️ Required
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `code` | string | ⚠️ Yes | Authorization code returned by Keycloak |
+| `redirect_uri` | string | ⚠️ Yes* | Redirect URI used in authorize request |
+| `redirectUri` | string | ⚠️ Yes* | CamelCase alias of `redirect_uri` |
+| `code_verifier` | string | ⚠️ Yes* | PKCE code verifier |
+| `codeVerifier` | string | ⚠️ Yes* | CamelCase alias of `code_verifier` |
+| `client_id` | string | 📋 Optional | Overrides runtime `clientId` |
+| `clientId` | string | 📋 Optional | CamelCase alias of `client_id` |
+| `client_secret` | string | 📋 Optional | Overrides runtime `clientSecret` |
+| `clientSecret` | string | 📋 Optional | CamelCase alias of `client_secret` |
+| `scope` | string | 📋 Optional | Additional scope string |
+
+`*` required with either snake_case or camelCase form.
+
+### Returns
+
+**Promise\<Object\>** - Token payload returned by Keycloak (`access_token`, `refresh_token`, `id_token`, `expires_in`, ...)
+
+### Example
+
+```javascript
+const tokenResponse = await KeycloakManager.loginPKCE({
+  code: authorizationCode,
+  redirectUri: 'https://my-app.example.com/auth/callback',
+  codeVerifier: pkceCodeVerifier
+});
+
+console.log(tokenResponse.access_token);
+```
+
+### Notes
+
+- `loginPKCE()` forces `grant_type=authorization_code`.
+- If `client_id/client_secret` are omitted, runtime values from `configure()` are used.
+- `loginPKCE()` does not generate authorize URLs, `state`, or PKCE challenge; it only performs token exchange.
 
 ---
 
