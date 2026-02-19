@@ -71,8 +71,10 @@ describe('Organizations Handler Tests', function () {
                 expect(result).to.have.property('id');
                 createdOrgId = result.id;
             } catch (error) {
-                // Organizations API only available in Keycloak 25+
-                if (error.response?.status === 404 || error.message?.includes('organizations')) {
+                // Organizations require manual enablement via Admin Console  
+                // Even with 'organization' feature flag, each realm must enable organizations
+                // through the Admin UI before the API will work
+                if (error.message?.includes('not enabled')) {
                     this.skip();
                 }
                 throw error;
@@ -99,13 +101,15 @@ describe('Organizations Handler Tests', function () {
             if (!createdOrgId) this.skip();
             
             const updatedData = {
-                url: 'https://updated-org.example.com'
+                attributes: {
+                    customAttr: ['updatedValue']
+                }
             };
             
             await KeycloakManager.organizations.update({ id: createdOrgId }, updatedData);
             
             const org = await KeycloakManager.organizations.findOne({ id: createdOrgId });
-            expect(org.url).to.equal('https://updated-org.example.com');
+            expect(org.attributes.customAttr).to.deep.equal(['updatedValue']);
         });
     });
 

@@ -104,10 +104,20 @@ async function enableServerFeatures() {
                 resetPasswordAllowed: true,
                 editUsernameAllowed: false,
                 bruteForceProtected: false
+                // Note: organizationsEnabled is not configurable via API in Keycloak 26
+                // Organizations must be enabled manually via Admin Console for each realm
             });
             console.log(`   ✓ Test realm created: ${TEST_REALM}`);
         } else {
             console.log(`   ✓ Test realm already exists: ${TEST_REALM}`);
+            // Update existing realm to ensure all required settings are enabled
+            await keycloakManager.realms.update(
+                { realm: TEST_REALM },
+                {
+                    enabled: true,
+                    bruteForceProtected: false
+                }
+            );
         }
 
         // Switch to test realm for all subsequent operations
@@ -201,38 +211,60 @@ async function enableServerFeatures() {
         // 5. Create test group
         console.log('\n5. Setting up test groups...');
         const groups = await keycloakManager.groups.find();
+        let testGroupId;
         if (!groups.some(g => g.name === TEST_GROUP_NAME)) {
-            await keycloakManager.groups.create({
+            const groupResult = await keycloakManager.groups.create({
                 name: TEST_GROUP_NAME,
                 attributes: {
                     description: ['Test group for API testing']
                 }
             });
+            testGroupId = groupResult.id;
             console.log('   ✓ Test group created');
         } else {
+            testGroupId = groups.find(g => g.name === TEST_GROUP_NAME).id;
             console.log('   ✓ Test group already exists');
         }
 
         // 6. Enable fine-grained admin permissions
         console.log('\n6. Enabling fine-grained admin permissions...');
         try {
-            const currentPerms = await keycloakManager.realms.getUsersManagementPermissions({
+            // Enable users management permissions
+            const currentUserPerms = await keycloakManager.realms.getUsersManagementPermissions({
                 realm: TEST_REALM
             });
             
-            if (!currentPerms.enabled) {
+            if (!currentUserPerms.enabled) {
                 await keycloakManager.realms.updateUsersManagementPermissions({
                     realm: TEST_REALM,
                     enabled: true
                 });
-                console.log('   ✓ Fine-grained admin permissions enabled');
+                console.log('   ✓ Users fine-grained admin permissions enabled');
             } else {
-                console.log('   ✓ Fine-grained admin permissions already enabled');
+                console.log('   ✓ Users fine-grained admin permissions already enabled');
+            }
+            
+            // Enable groups management permissions for the test group
+            if (testGroupId) {
+                try {
+                    const groupPerms = await keycloakManager.groups.listPermissions({ id: testGroupId });
+                    if (!groupPerms.enabled) {
+                        await keycloakManager.groups.setPermissions(
+                            { id: testGroupId },
+                            { enabled: true }
+                        );
+                        console.log('   ✓ Groups fine-grained permissions enabled');
+                    } else {
+                        console.log('   ✓ Groups fine-grained permissions already enabled');
+                    }
+                } catch (groupPermErr) {
+                    console.log(`   ⚠ Groups permissions: ${groupPermErr.message}`);
+                }
             }
         } catch (err) {
             console.log(`   ⚠ Fine-grained permissions: ${err.message}`);
-            console.log(`   ℹ This is typically a server configuration setting that requires`);
-            console.log(`     enabling "authorizationServicesEnabled" in realm settings`);
+            console.log(`   ℹ This feature requires 'admin-fine-grained-authz' to be enabled`);
+            console.log(`     in KC_FEATURES environment variable`);
         }
 
         // 7. Update realm to enable protocol mappers and installation providers
