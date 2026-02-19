@@ -74,7 +74,7 @@ yarn add keycloak-api-manager
 To use all features of keycloak-api-manager (Organizations, User Profile, Client Policies, Group Permissions), your Keycloak server must be started with the following feature flags:
 
 ```bash
---features=admin-fine-grained-authz,organizations,declarative-user-profile,client-policies
+--features=admin-fine-grained-authz,organization,client-policies
 ```
 
 ### Docker Compose Configuration
@@ -83,7 +83,7 @@ If using the test environment, ensure your `docker-compose.yml` includes:
 
 ```yaml
 environment:
-  KC_FEATURES: 'admin-fine-grained-authz,organizations,declarative-user-profile,client-policies'
+  KC_FEATURES: 'admin-fine-grained-authz,organization,client-policies'
 ```
 
 The included test configuration (`test/docker-keycloak/docker-compose.yml`) already has these features enabled.
@@ -92,13 +92,13 @@ The included test configuration (`test/docker-keycloak/docker-compose.yml`) alre
 
 **Docker:**
 ```bash
-docker run -e KC_FEATURES=admin-fine-grained-authz,organizations,declarative-user-profile,client-policies \
+docker run -e KC_FEATURES=admin-fine-grained-authz,organization,client-policies \
   keycloak/keycloak:latest start-dev
 ```
 
 **Standalone:**
 ```bash
-kc.sh start-dev --features=admin-fine-grained-authz,organizations,declarative-user-profile,client-policies
+kc.sh start-dev --features=admin-fine-grained-authz,organization,client-policies
 ```
 
 ### Feature Compatibility

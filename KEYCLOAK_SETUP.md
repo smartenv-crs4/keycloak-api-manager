@@ -17,7 +17,7 @@ The `keycloak-api-manager` package now includes support for advanced Keycloak fe
 To use these new features, Keycloak must be started with the following feature flags enabled:
 
 ```bash
---features=admin-fine-grained-authz,organizations,declarative-user-profile,client-policies
+--features=admin-fine-grained-authz,organization,client-policies
 ```
 
 ### Docker Compose Update

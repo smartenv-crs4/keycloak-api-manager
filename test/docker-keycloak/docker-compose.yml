@@ -36,16 +36,14 @@ services:
       KC_HTTP_ENABLED: 'true'            # Admin console accessible via HTTP too
       KC_PROXY: reencrypt                # Trust reverse proxy headers
       # Feature flags for advanced functionality
-      KC_FEATURES: 'admin-fine-grained-authz,organizations,declarative-user-profile,client-policies'
+      KC_FEATURES: 'admin-fine-grained-authz,organization,client-policies'
     volumes:
       # Mount certificates if HTTPS is enabled and path is provided
       - "${KEYCLOAK_CERT_PATH:-./certs}:/etc/keycloak/certs:ro"
     command:
       - start-dev
-      # Note: To add HTTPS flags dynamically, use environment variable substitution
-      # For HTTPS mode, add these flags before start-dev:
-      #   - --https-certificate-file=/etc/keycloak/certs/keycloak.crt
-      #   - --https-certificate-key-file=/etc/keycloak/certs/keycloak.key
+      - --https-certificate-file=/etc/keycloak/certs/keycloak.crt
+      - --https-certificate-key-file=/etc/keycloak/certs/keycloak.key
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
       interval: 5s

@@ -28,7 +28,6 @@ describe('Organizations Handler Tests', function () {
 
     const testOrgData = {
         name: `test-org-${Date.now()}`,
-        url: 'https://test-org.example.com',
         domains: [],
         attributes: {
             customAttr: ['value1']
