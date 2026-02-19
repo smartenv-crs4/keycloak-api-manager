@@ -67,6 +67,55 @@ yarn add keycloak-api-manager
 
 ---
 
+## ⚙️ Keycloak Server Configuration
+
+### Required Features for Advanced Functionality
+
+To use all features of keycloak-api-manager (Organizations, User Profile, Client Policies, Group Permissions), your Keycloak server must be started with the following feature flags:
+
+```bash
+--features=admin-fine-grained-authz,organizations,declarative-user-profile,client-policies
+```
+
+### Docker Compose Configuration
+
+If using the test environment, ensure your `docker-compose.yml` includes:
+
+```yaml
+environment:
+  KC_FEATURES: 'admin-fine-grained-authz,organizations,declarative-user-profile,client-policies'
+```
+
+The included test configuration (`test/docker-keycloak/docker-compose.yml`) already has these features enabled.
+
+### Starting Keycloak with Features
+
+**Docker:**
+```bash
+docker run -e KC_FEATURES=admin-fine-grained-authz,organizations,declarative-user-profile,client-policies \
+  keycloak/keycloak:latest start-dev
+```
+
+**Standalone:**
+```bash
+kc.sh start-dev --features=admin-fine-grained-authz,organizations,declarative-user-profile,client-policies
+```
+
+### Feature Compatibility
+
+| Feature | Keycloak Version | Handler |
+|---------|-----------------|---------|
+| Client Policies | 12+ | `clientPolicies` |
+| Fine-Grained Authz | 12+ | `groups.setPermissions()` |
+| User Profile | 15+ | `userProfile` |
+| Organizations | 25+ | `organizations` |
+| Attack Detection | All | `attackDetection` |
+| Server Info | All | `serverInfo` |
+
+See [KEYCLOAK_SETUP.md](KEYCLOAK_SETUP.md) for detailed configuration instructions.
+
+---
+
 ## 🛠️ Get Keycloak Configuration
 Copy or Download from keycloak admin page your client configuration `keycloak.json` by visiting 
 the Keycloak Admin Console → clients (left sidebar) → choose your client → Installation → Format Option → Keycloak OIDC JSON → Download
@@ -7100,6 +7149,145 @@ console.log("Configuration description:", configDescription);
 ---
 
 ## 🔄 Recent Updates & Compatibility Notes
+
+### Version 4.1.0 - Enhanced API Coverage
+
+#### New Handlers and Features
+
+**Attack Detection Handler** (`KeycloakManager.attackDetection`)
+- **Brute force protection management**: Monitor and manage brute force attack detection
+- **`getBruteForceStatus(filter)`**: Get brute force detection status for all users in a realm
+- **`getUserBruteForceStatus(filter)`**: Get brute force status for a specific user
+- **`clearUserLoginFailures(filter)`**: Clear all login failures for a specific user
+- **`clearAllLoginFailures(filter)`**: Clear all login failures for all users in a realm
+
+**Organizations Handler** (`KeycloakManager.organizations`) - Keycloak 25+
+- **Multi-tenancy support**: Manage organizations for better isolation and organizational unit management
+- **`create(organizationRepresentation)`**: Create a new organization
+- **`find(filter)`**: Get all organizations in a realm
+- **`findOne(filter)`**: Get a specific organization by ID
+- **`update(filter, organizationRepresentation)`**: Update an organization
+- **`del(filter)`**: Delete an organization
+- **`addMember(filter)`**: Add a user as member to an organization
+- **`listMembers(filter)`**: List all members of an organization
+- **`delMember(filter)`**: Remove a member from an organization
+- **`addIdentityProvider(filter)`**: Link an identity provider to an organization
+- **`listIdentityProviders(filter)`**: List identity providers linked to an organization
+- **`delIdentityProvider(filter)`**: Unlink an identity provider from an organization
+
+**User Profile Handler** (`KeycloakManager.userProfile`) - Keycloak 15+
+- **Declarative user profile configuration**: Modern structured approach to user profile management
+- **`getConfiguration(filter)`**: Get the user profile configuration for a realm
+- **`updateConfiguration(filter, userProfileConfig)`**: Update the user profile configuration with attributes, groups, validations, and permissions
+- **`getMetadata(filter)`**: Get metadata about the user profile including validators and attribute types
+
+**Client Policies Handler** (`KeycloakManager.clientPolicies`) - Keycloak 12+
+- **Client governance and security**: Enforce security requirements and configure client behavior
+- **`getPolicies(filter)`**: Get all client policies for a realm
+- **`updatePolicies(filter, policiesRepresentation)`**: Update client policies configuration
+- **`getProfiles(filter)`**: Get all client profiles for a realm
+- **`updateProfiles(filter, profilesRepresentation)`**: Update client profiles configuration with executors
+
+**Server Info Handler** (`KeycloakManager.serverInfo`)
+- **Server monitoring and diagnostics**: Access server metadata, providers, and system information
+- **`getInfo()`**: Get comprehensive server information including:
+  - System information (version, uptime)
+  - Memory usage statistics
+  - Profile information
+  - Available themes
+  - Available SPI providers
+  - Protocol mapper types
+  - Component types
+  - Password policies
+  - Cryptographic information
+
+**Groups Handler Enhancements**
+- **Permission management**: New methods for fine-grained group permission control
+- **`setPermissions(filter, permissionRepresentation)`**: Enable or update permission settings for a group
+- **`listPermissions(filter)`**: Get the current permission settings for a group
+
+#### Usage Examples
+
+**Attack Detection**
+```js
+// Get brute force status for a user
+const status = await KeycloakManager.attackDetection.getUserBruteForceStatus({
+  id: userId
+});
+
+// Clear login failures for a user
+await KeycloakManager.attackDetection.clearUserLoginFailures({ id: userId });
+
+// Clear all login failures in realm
+await KeycloakManager.attackDetection.clearAllLoginFailures({});
+```
+
+**Organizations (Keycloak 25+)**
+```js
+// Create an organization
+const org = await KeycloakManager.organizations.create({
+  name: 'my-organization',
+  displayName: 'My Organization',
+  domains: ['example.com']
+});
+
+// Add a member to organization
+await KeycloakManager.organizations.addMember({
+  id: org.id,
+  userId: userId
+});
+
+// List organization members
+const members = await KeycloakManager.organizations.listMembers({ id: org.id });
+```
+
+**User Profile (Keycloak 15+)**
+```js
+// Get user profile configuration
+const profileConfig = await KeycloakManager.userProfile.getConfiguration({});
+
+// Add custom attribute to user profile
+profileConfig.attributes.push({
+  name: 'department',
+  displayName: 'Department',
+  validations: { length: { min: 1, max: 50 } },
+  permissions: { view: ['admin', 'user'], edit: ['admin'] }
+});
+
+await KeycloakManager.userProfile.updateConfiguration({}, profileConfig);
+```
+
+**Client Policies (Keycloak 12+)**
+```js
+// Get client policies
+const policies = await KeycloakManager.clientPolicies.getPolicies({});
+
+// Get client profiles
+const profiles = await KeycloakManager.clientPolicies.getProfiles({});
+```
+
+**Server Info**
+```js
+// Get comprehensive server information
+const serverInfo = await KeycloakManager.serverInfo.getInfo();
+console.log(`Keycloak version: ${serverInfo.systemInfo.version}`);
+console.log(`Available themes: ${Object.keys(serverInfo.themes)}`);
+console.log(`Memory usage: ${JSON.stringify(serverInfo.memoryInfo)}`);
+```
+
+**Group Permissions**
+```js
+// Enable permissions for a group
+await KeycloakManager.groups.setPermissions(
+  { id: groupId },
+  { enabled: true }
+);
+
+// Get group permissions
+const permissions = await KeycloakManager.groups.listPermissions({ id: groupId });
+```
+
+---
 
 ### Version 3.2.0+ - Improvements and Bug Fixes
 

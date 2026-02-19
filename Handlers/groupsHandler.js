@@ -306,3 +306,35 @@ exports.delClientRoleMappings=function(filters){
  return (kcAdminClientHandler.groups.delClientRoleMappings(filters));
 }
 
+
+/**
+ * ***************************** - setPermissions - *******************************
+ * Enable or update permission settings for a group.
+ * This allows fine-grained control over who can manage group membership and permissions.
+ * @parameters:
+ * - filters: parameter provided as a JSON object that accepts the following parameters:
+ *     - id: [required] The ID of the group
+ * - permissionRepresentation: Object with permission settings
+ *     - enabled: [required] (boolean) Whether permissions are enabled
+ */
+exports.setPermissions=function(filters, permissionRepresentation){
+ return (kcAdminClientHandler.groups.updatePermission(filters, permissionRepresentation));
+}
+
+
+/**
+ * ***************************** - listPermissions - *******************************
+ * Get the current permission settings for a group.
+ * Returns information about who can manage the group, view members, etc.
+ * @parameters:
+ * - filters: parameter provided as a JSON object that accepts the following parameters:
+ *     - id: [required] The ID of the group
+ * @returns: Object with permission configuration including:
+ *     - enabled: (boolean) Whether permissions are enabled
+ *     - resource: (string) Associated authorization resource ID
+ *     - scopePermissions: (object) Map of scope permissions
+ */
+exports.listPermissions=function(filters){
+ return (kcAdminClientHandler.groups.listPermissions(filters));
+}
+

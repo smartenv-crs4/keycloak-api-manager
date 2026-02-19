@@ -35,6 +35,8 @@ services:
       # HTTPS configuration (only applied if KC_SCHEME=https)
       KC_HTTP_ENABLED: 'true'            # Admin console accessible via HTTP too
       KC_PROXY: reencrypt                # Trust reverse proxy headers
+      # Feature flags for advanced functionality
+      KC_FEATURES: 'admin-fine-grained-authz,organizations,declarative-user-profile,client-policies'
     volumes:
       # Mount certificates if HTTPS is enabled and path is provided
       - "${KEYCLOAK_CERT_PATH:-./certs}:/etc/keycloak/certs:ro"

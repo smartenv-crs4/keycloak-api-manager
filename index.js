@@ -10,6 +10,11 @@ var groupsHandler=require('./Handlers/groupsHandler');
 var rolesHandler=require('./Handlers/rolesHandler');
 var componentsHandler=require('./Handlers/componentsHandler');
 var authenticationManagementHandler=require('./Handlers/authenticationManagementHandler');
+var attackDetectionHandler=require('./Handlers/attackDetectionHandler');
+var organizationsHandler=require('./Handlers/organizationsHandler');
+var userProfileHandler=require('./Handlers/userProfileHandler');
+var clientPoliciesHandler=require('./Handlers/clientPoliciesHandler');
+var serverInfoHandler=require('./Handlers/serverInfoHandler');
 var request=require('request');
 
 let configAdminclient=null;
@@ -73,6 +78,11 @@ let tokenRefreshInterval=null;
  * - KeycloakManager.roles - Role management
  * - KeycloakManager.components - Component management
  * - KeycloakManager.authenticationManagement - Authentication flow management
+ * - KeycloakManager.attackDetection - Attack detection and brute force protection
+ * - KeycloakManager.organizations - Organization management (Keycloak 25+)
+ * - KeycloakManager.userProfile - User profile configuration (Keycloak 15+)
+ * - KeycloakManager.clientPolicies - Client policies and profiles (Keycloak 12+)
+ * - KeycloakManager.serverInfo - Server information and metadata
  * 
  * @note Token Refresh: The client automatically refreshes the access token at intervals
  * calculated as (tokenLifeSpan * 1000) / 2 milliseconds. Call KeycloakManager.stop()
@@ -145,6 +155,21 @@ exports.configure=async function(adminClientCredentials){
 
         authenticationManagementHandler.setKcAdminClient(kcAdminClient);
         exports.authenticationManagement=authenticationManagementHandler;
+
+        attackDetectionHandler.setKcAdminClient(kcAdminClient);
+        exports.attackDetection=attackDetectionHandler;
+
+        organizationsHandler.setKcAdminClient(kcAdminClient);
+        exports.organizations=organizationsHandler;
+
+        userProfileHandler.setKcAdminClient(kcAdminClient);
+        exports.userProfile=userProfileHandler;
+
+        clientPoliciesHandler.setKcAdminClient(kcAdminClient);
+        exports.clientPolicies=clientPoliciesHandler;
+
+        serverInfoHandler.setKcAdminClient(kcAdminClient);
+        exports.serverInfo=serverInfoHandler;
 
 
         //exports = kcAdminClient;
