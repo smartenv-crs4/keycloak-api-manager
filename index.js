@@ -225,3 +225,63 @@ exports.loginPKCE = async function loginPKCE(credentials = {}) {
         ...rest
     });
 };
+
+exports.generateAuthorizationUrl = function generateAuthorizationUrl(options = {}) {
+    assertConfigured();
+    
+    const { 
+        redirect_uri,
+        redirectUri,
+        scope,
+        state: customState
+    } = options;
+
+    const resolvedRedirectUri = redirect_uri || redirectUri;
+    if (!resolvedRedirectUri) {
+        throw new Error('generateAuthorizationUrl requires "redirect_uri" (or "redirectUri").');
+    }
+
+    const crypto = require('crypto');
+
+    // Helper to encode bytes to base64url
+    function base64url(buffer) {
+        return buffer
+            .toString('base64')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=/g, '');
+    }
+
+    // Generate PKCE pair
+    const codeVerifier = base64url(crypto.randomBytes(96));
+    const codeChallenge = base64url(
+        crypto.createHash('sha256').update(codeVerifier).digest()
+    );
+
+    // Generate or use provided state
+    const state = customState || base64url(crypto.randomBytes(32));
+
+    // Build authorization URL
+    const authUrl = new URL(
+        `${runtimeConfig.baseUrl}/realms/${runtimeConfig.realmName}/protocol/openid-connect/auth`
+    );
+    
+    authUrl.searchParams.append('client_id', runtimeConfig.clientId);
+    authUrl.searchParams.append('response_type', 'code');
+    authUrl.searchParams.append('redirect_uri', resolvedRedirectUri);
+    authUrl.searchParams.append('code_challenge', codeChallenge);
+    authUrl.searchParams.append('code_challenge_method', 'S256');
+    authUrl.searchParams.append('state', state);
+    
+    if (scope) {
+        authUrl.searchParams.append('scope', scope);
+    } else {
+        authUrl.searchParams.append('scope', 'openid profile email');
+    }
+
+    return {
+        authUrl: authUrl.toString(),
+        state,
+        codeVerifier
+    };
+};

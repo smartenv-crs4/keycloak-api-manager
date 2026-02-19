@@ -66,13 +66,16 @@ In Keycloak 26.x, management-permissions APIs used by group/user fine-grained te
 - `setConfig(overrides)`
 - `getToken()`
 - `login(credentials)`
+- `generateAuthorizationUrl(options)`
 - `loginPKCE(credentials)`
 - `auth(credentials)`
 - `stop()`
 
 `login(credentials)` is the preferred OIDC token endpoint helper for login/token grant flows (user/client).
 
-`loginPKCE(credentials)` is a specialized helper for Authorization Code + PKCE token exchange.
+`generateAuthorizationUrl(options)` initiates PKCE flow by generating authorization URL, state, and code verifier for server-side session storage.
+
+`loginPKCE(credentials)` is a specialized helper for Authorization Code + PKCE token exchange in the callback route.
 
 `auth(credentials)` is kept as backward-compatible alias and does not replace the internal admin session configured by `configure()`.
 

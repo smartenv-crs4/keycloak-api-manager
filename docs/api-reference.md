@@ -80,6 +80,7 @@ KeycloakManager.stop();
 | `setConfig()` | Runtime configuration | Core |
 | `getToken()` | Get current access token | Core |
 | `login()` | Preferred OIDC token grant/login endpoint wrapper | Core |
+| `generateAuthorizationUrl()` | Generate PKCE authorization URL and verifier pair | Core |
 | `loginPKCE()` | Authorization Code + PKCE token exchange helper | Core |
 | `auth()` | Backward-compatible alias of `login()` | Core |
 | `stop()` | Stop token refresh timer | Core |

@@ -8,6 +8,7 @@ Core API methods for initializing and managing the Keycloak Admin Client connect
 - [setConfig()](#setconfig)
 - [getToken()](#gettoken)
 - [login()](#login)
+- [generateAuthorizationUrl()](#generateauthorizationurl)
 - [loginPKCE()](#loginpkce)
 - [auth()](#auth)
 - [stop()](#stop)
@@ -345,6 +346,95 @@ console.log(refreshed.access_token);
 - `login()` returns raw token endpoint payload and throws on non-2xx responses.
 - `login()`/`auth()` do not change handler wiring, runtime config, or the internal admin refresh timer.
 - Runtime `clientId`/`clientSecret` are appended automatically if configured and not overridden in request payload.
+
+---
+
+## generateAuthorizationUrl()
+
+Generate OAuth2 Authorization Code + PKCE flow initialization. Returns a ready-to-use authorization URL and PKCE pair for server-side session storage.
+
+This helper simplifies the first step of PKCE login: generating the authorization URL with PKCE challenge and state parameter.
+
+**Syntax:**
+```javascript
+const pkceFlow = KeycloakManager.generateAuthorizationUrl(options)
+```
+
+### Parameters
+
+#### options (Object) ⚠️ Required
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `redirect_uri` | string | ⚠️ Yes* | Redirect URI where user returns after login |
+| `redirectUri` | string | ⚠️ Yes* | CamelCase alias of `redirect_uri` |
+| `scope` | string | 📋 Optional | Space-separated scopes (default: `'openid profile email'`) |
+| `state` | string | 📋 Optional | Custom state value (auto-generated if not provided) |
+
+`*` required with either snake_case or camelCase form.
+
+### Returns
+
+**Object** - PKCE flow initialization data:
+
+```javascript
+{
+  authUrl: 'https://keycloak.example.com/realms/my-realm/protocol/openid-connect/auth?...',
+  state: 'random_state_string',
+  codeVerifier: 'random_code_verifier_string'
+}
+```
+
+- `authUrl`: Ready-to-use authorization URL to redirect user to
+- `state`: CSRF token to validate in callback (store in session)
+- `codeVerifier`: PKCE proof to exchange for code in callback (store in session, **never expose to client**)
+
+### Example
+
+```javascript
+// Step 1: Generate authorization URL
+app.get('/auth/login', (req, res) => {
+  const pkceFlow = KeycloakManager.generateAuthorizationUrl({
+    redirect_uri: `${process.env.APP_URL}/auth/callback`,
+    scope: 'openid profile email'
+  });
+  
+  // Store in session server-side
+  req.session.pkce_state = pkceFlow.state;
+  req.session.pkce_verifier = pkceFlow.codeVerifier;
+  
+  // Redirect user to Keycloak
+  res.redirect(pkceFlow.authUrl);
+});
+
+// Step 2: In callback, recover verifier and exchange code
+app.get('/auth/callback', async (req, res) => {
+  const { code, state } = req.query;
+  
+  // Validate state
+  if (state !== req.session.pkce_state) {
+    return res.status(400).send('CSRF attack detected');
+  }
+  
+  // Exchange code for token
+  const tokens = await KeycloakManager.loginPKCE({
+    code,
+    redirect_uri: `${process.env.APP_URL}/auth/callback`,
+    code_verifier: req.session.pkce_verifier
+  });
+  
+  // Use tokens...
+});
+```
+
+### Notes
+
+- `generateAuthorizationUrl()` does **not** call Keycloak; it generates URLs and PKCE values locally.
+- `state` and `codeVerifier` must be stored **server-side only** in session storage, never in cookies or local storage.
+- `codeVerifier` must be kept secret and never exposed to the browser.
+- `state` provides CSRF protection and must be validated in the callback.
+- Uses cryptographically secure random generation for `codeVerifier` and `state`.
+- Code challenge is SHA256-hashed (S256 method), not plain text.
 
 ---
 

@@ -72,98 +72,51 @@ PKCE (Proof Key for Code Exchange) is the modern, secure way for browser-based a
 
 ## Step-by-Step Implementation
 
-### Step 1: Generate PKCE Pair
+### Step 1: Generate Authorization URL
 
-When the user clicks "Login", your backend generates a PKCE pair and stores it securely:
+When the user clicks "Login", use `generateAuthorizationUrl()` from keycloak-api-manager to generate the PKCE pair and authorization URL:
 
 ```javascript
-const crypto = require('crypto');
+const pkceFlow = KeycloakManager.generateAuthorizationUrl({
+  redirect_uri: `${process.env.APP_URL}/auth/callback`,
+  scope: 'openid profile email' // optional, defaults to 'openid profile email'
+});
 
-function base64url(buf) {
-  return buf
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-}
-
-function createPkcePair() {
-  // Generate code_verifier (random 128-char string)
-  const code_verifier = base64url(crypto.randomBytes(96));
-  
-  // Generate code_challenge (SHA256 hash of verifier)
-  const code_challenge = base64url(
-    crypto.createHash('sha256').update(code_verifier).digest()
-  );
-  
-  // Generate state (CSRF protection)
-  const state = base64url(crypto.randomBytes(32));
-  
-  return { code_verifier, code_challenge, state };
-}
+// Result contains:
+// {
+//   authUrl: 'https://keycloak.example.com/realms/my-realm/protocol/openid-connect/auth?...',
+//   state: 'random_state_value',
+//   codeVerifier: 'random_verifier_value'
+// }
 ```
 
-**Why this works:**
-- `code_verifier`: A random, unguessable string
-- `code_challenge`: The SHA256 hash of the verifier, sent to Keycloak during login
-- `state`: A random token to prevent CSRF attacks; Keycloak will return it unchanged
-
-### Step 2: Redirect to Keycloak Authorization Endpoint
-
-Store the PKCE pair in the session, then redirect the user to Keycloak:
+Store the `state` and `codeVerifier` in your session, then redirect the user to the authorization URL:
 
 ```javascript
-const express = require('express');
-const session = require('express-session');
-const KeycloakManager = require('keycloak-api-manager');
-
-const app = express();
-
-// Session configuration (store verifier securely server-side)
-app.use(session({
-  secret: 'your-secret-key',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { httpOnly: true, secure: true } // secure: true in production (HTTPS only)
-}));
-
-// 1. User clicks "Login" button
 app.get('/auth/login', (req, res) => {
-  const { code_verifier, code_challenge, state } = createPkcePair();
+  const pkceFlow = KeycloakManager.generateAuthorizationUrl({
+    redirect_uri: `${process.env.APP_URL}/auth/callback`
+  });
   
-  // Store verifier and state in session (server-side only!)
-  req.session.pkce_verifier = code_verifier;
-  req.session.pkce_state = state;
+  // Store state and verifier in session for callback validation
+  req.session.pkce_state = pkceFlow.state;
+  req.session.pkce_verifier = pkceFlow.codeVerifier;
   
-  // Build Keycloak authorization URL
-  const keycloakAuthUrl = `${process.env.KEYCLOAK_URL}/auth/realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/auth`;
-  const authUrl = new URL(keycloakAuthUrl);
-  
-  authUrl.searchParams.append('client_id', process.env.KEYCLOAK_CLIENT_ID);
-  authUrl.searchParams.append('redirect_uri', `${process.env.APP_URL}/auth/callback`);
-  authUrl.searchParams.append('response_type', 'code');
-  authUrl.searchParams.append('scope', 'openid profile email');
-  authUrl.searchParams.append('code_challenge', code_challenge);
-  authUrl.searchParams.append('code_challenge_method', 'S256'); // S256 = SHA256
-  authUrl.searchParams.append('state', state);
-  
-  // Redirect user to Keycloak login page
-  res.redirect(authUrl.toString());
+  // Redirect user to Keycloak login
+  res.redirect(pkceFlow.authUrl);
 });
 ```
 
-**What happens:**
-- User is redirected to Keycloak
-- They see the login page
-- They enter their username/password
-- On successful auth, Keycloak redirects back to your `/auth/callback` endpoint with `code` and `state`
+**Why this works:**
+- `generateAuthorizationUrl()` handles all PKCE complexity internally
+- Returns a ready-to-use authorization URL
+- State parameter provides CSRF protection
+- Code verifier is stored server-side (never exposed to client)
 
-### Step 3: Exchange Authorization Code for Token
-
-When Keycloak redirects back with the authorization code, you exchange it for an access token:
+When Keycloak redirects back with the authorization code, you exchange it for an access token using `loginPKCE()`:
 
 ```javascript
-// 2. Keycloak redirects back with authorization code
+// User callback after Keycloak login
 app.get('/auth/callback', async (req, res) => {
   try {
     const { code, state, error } = req.query;
@@ -180,18 +133,15 @@ app.get('/auth/callback', async (req, res) => {
     
     // 3. Retrieve stored verifier from session
     const code_verifier = req.session.pkce_verifier;
-    
     if (!code_verifier) {
       return res.status(400).send('PKCE verifier not found in session');
     }
     
-    // 4. Exchange code for token using loginPKCE()
+    // 4. Exchange code for token using keycloak-api-manager
     const tokenResponse = await KeycloakManager.loginPKCE({
       code,
       redirect_uri: `${process.env.APP_URL}/auth/callback`,
-      code_verifier,
-      client_id: process.env.KEYCLOAK_CLIENT_ID,
-      client_secret: process.env.KEYCLOAK_CLIENT_SECRET
+      code_verifier
     });
     
     // 5. Set secure HTTPOnly cookie with access token
@@ -232,35 +182,6 @@ app.get('/auth/callback', async (req, res) => {
 - ✅ Store token in HttpOnly cookie (prevents XSS theft)
 - ✅ Clear sensitive session data
 
-### Step 4: Use the Access Token
-
-Now the user has an access token in a secure cookie. Use it to access protected resources:
-
-```javascript
-// Middleware to verify access token
-app.use((req, res, next) => {
-  const token = req.cookies.access_token;
-  
-  if (!token) {
-    return res.status(401).send('Not authenticated');
-  }
-  
-  // Verify and decode the token
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_PUBLIC_KEY);
-    req.user = decoded; // User data available in request
-    next();
-  } catch (error) {
-    return res.status(401).send('Invalid token');
-  }
-});
-
-// Protected route
-app.get('/dashboard', (req, res) => {
-  res.send(`Welcome, ${req.user.preferred_username}!`);
-});
-```
-
 ## Complete Working Example
 
 Here's a complete Express.js application with PKCE flow:
@@ -268,7 +189,6 @@ Here's a complete Express.js application with PKCE flow:
 ```javascript
 const express = require('express');
 const session = require('express-session');
-const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const KeycloakManager = require('keycloak-api-manager');
@@ -287,55 +207,34 @@ app.use(session({
 
 // Initialize Keycloak Manager
 KeycloakManager.configure({
+  baseUrl: process.env.KEYCLOAK_URL,
   realmName: process.env.KEYCLOAK_REALM,
   clientId: process.env.KEYCLOAK_CLIENT_ID,
   clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
-  keycloakUrl: process.env.KEYCLOAK_URL
+  grantType: 'client_credentials'
 });
-
-// Helper functions
-function base64url(buf) {
-  return buf
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-}
-
-function createPkcePair() {
-  const code_verifier = base64url(crypto.randomBytes(96));
-  const code_challenge = base64url(
-    crypto.createHash('sha256').update(code_verifier).digest()
-  );
-  const state = base64url(crypto.randomBytes(32));
-  return { code_verifier, code_challenge, state };
-}
 
 // Routes
 app.get('/auth/login', (req, res) => {
-  const { code_verifier, code_challenge, state } = createPkcePair();
+  // Generate PKCE pair and authorization URL
+  const pkceFlow = KeycloakManager.generateAuthorizationUrl({
+    redirect_uri: `${process.env.APP_URL}/auth/callback`,
+    scope: 'openid profile email'
+  });
   
-  req.session.pkce_verifier = code_verifier;
-  req.session.pkce_state = state;
+  // Store state and verifier in session (server-side only!)
+  req.session.pkce_state = pkceFlow.state;
+  req.session.pkce_verifier = pkceFlow.codeVerifier;
   
-  const keycloakAuthUrl = `${process.env.KEYCLOAK_URL}/auth/realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/auth`;
-  const authUrl = new URL(keycloakAuthUrl);
-  
-  authUrl.searchParams.append('client_id', process.env.KEYCLOAK_CLIENT_ID);
-  authUrl.searchParams.append('redirect_uri', `${process.env.APP_URL}/auth/callback`);
-  authUrl.searchParams.append('response_type', 'code');
-  authUrl.searchParams.append('scope', 'openid profile email');
-  authUrl.searchParams.append('code_challenge', code_challenge);
-  authUrl.searchParams.append('code_challenge_method', 'S256');
-  authUrl.searchParams.append('state', state);
-  
-  res.redirect(authUrl.toString());
+  // Redirect user to Keycloak login
+  res.redirect(pkceFlow.authUrl);
 });
 
 app.get('/auth/callback', async (req, res) => {
   try {
     const { code, state, error } = req.query;
     
+    // Validate state (CSRF protection)
     if (state !== req.session.pkce_state) {
       return res.status(400).send('Invalid state parameter');
     }
@@ -349,13 +248,11 @@ app.get('/auth/callback', async (req, res) => {
       return res.status(400).send('PKCE verifier not found');
     }
     
-    // Exchange code for token
+    // Exchange code for token (client_id + client_secret from configure())
     const tokenResponse = await KeycloakManager.loginPKCE({
       code,
       redirect_uri: `${process.env.APP_URL}/auth/callback`,
-      code_verifier,
-      client_id: process.env.KEYCLOAK_CLIENT_ID,
-      client_secret: process.env.KEYCLOAK_CLIENT_SECRET
+      code_verifier
     });
     
     // Set secure cookies
@@ -373,6 +270,7 @@ app.get('/auth/callback', async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
     
+    // Clear sensitive data
     delete req.session.pkce_verifier;
     delete req.session.pkce_state;
     
