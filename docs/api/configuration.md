@@ -382,16 +382,104 @@ await KeycloakManager.loginPKCE(credentials)
 
 **Promise\<Object\>** - Token payload returned by Keycloak (`access_token`, `refresh_token`, `id_token`, `expires_in`, ...)
 
-### Example
+### Complete End-to-End Example (Express)
 
 ```javascript
-const tokenResponse = await KeycloakManager.loginPKCE({
-  code: authorizationCode,
-  redirectUri: 'https://my-app.example.com/auth/callback',
-  codeVerifier: pkceCodeVerifier
+const crypto = require('crypto');
+const express = require('express');
+const KeycloakManager = require('keycloak-api-manager');
+
+const app = express();
+
+const KEYCLOAK_BASE_URL = 'https://keycloak.example.com';
+const REALM = 'my-realm';
+const CLIENT_ID = 'my-confidential-client';
+const CLIENT_SECRET = process.env.KC_CLIENT_SECRET;
+const REDIRECT_URI = 'https://my-app.example.com/auth/callback';
+
+// Demo in-memory store. In production, use Redis/session storage.
+const pkceStore = new Map();
+
+function base64url(buffer) {
+  return buffer
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+function createPkcePair() {
+  const codeVerifier = base64url(crypto.randomBytes(32));
+  const codeChallenge = base64url(
+    crypto.createHash('sha256').update(codeVerifier).digest()
+  );
+  const state = base64url(crypto.randomBytes(16));
+  return { codeVerifier, codeChallenge, state };
+}
+
+async function bootstrap() {
+  // Configure runtime context so loginPKCE can reuse baseUrl/realm/client credentials
+  await KeycloakManager.configure({
+    baseUrl: KEYCLOAK_BASE_URL,
+    realmName: REALM,
+    grantType: 'client_credentials',
+    clientId: CLIENT_ID,
+    clientSecret: CLIENT_SECRET
+  });
+}
+
+// 1) Start login flow: generate PKCE and redirect to Keycloak /auth endpoint
+app.get('/auth/login', (req, res) => {
+  const { codeVerifier, codeChallenge, state } = createPkcePair();
+  pkceStore.set(state, codeVerifier);
+
+  const authorizeUrl =
+    `${KEYCLOAK_BASE_URL}/realms/${REALM}/protocol/openid-connect/auth` +
+    `?client_id=${encodeURIComponent(CLIENT_ID)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent('openid profile email')}` +
+    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+    `&code_challenge=${encodeURIComponent(codeChallenge)}` +
+    `&code_challenge_method=S256` +
+    `&state=${encodeURIComponent(state)}`;
+
+  res.redirect(authorizeUrl);
 });
 
-console.log(tokenResponse.access_token);
+// 2) Callback: receive code+state, recover verifier, exchange code for tokens
+app.get('/auth/callback', async (req, res) => {
+  const { code, state } = req.query;
+  const codeVerifier = pkceStore.get(state);
+  pkceStore.delete(state);
+
+  if (!code || !state || !codeVerifier) {
+    return res.status(400).json({ error: 'Invalid PKCE callback parameters' });
+  }
+
+  try {
+    const tokenResponse = await KeycloakManager.loginPKCE({
+      code,
+      redirectUri: REDIRECT_URI,
+      codeVerifier
+    });
+
+    // Usually you create your own app session/JWT here, instead of returning raw tokens
+    return res.json({
+      access_token: tokenResponse.access_token,
+      refresh_token: tokenResponse.refresh_token,
+      expires_in: tokenResponse.expires_in
+    });
+  } catch (error) {
+    return res.status(401).json({ error: error.message });
+  }
+});
+
+bootstrap()
+  .then(() => app.listen(3000, () => console.log('Listening on :3000')))
+  .catch((error) => {
+    console.error('Startup error:', error.message);
+    process.exit(1);
+  });
 ```
 
 ### Notes
