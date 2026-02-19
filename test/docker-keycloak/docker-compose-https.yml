@@ -29,6 +29,8 @@ services:
       # HTTPS configuration
       KC_HTTP_ENABLED: 'true'            # Admin console accessible via HTTP too
       KC_PROXY: reencrypt                # Trust reverse proxy headers
+      # Feature flags for testing (match docker-compose.yml)
+      KC_FEATURES: 'admin-fine-grained-authz:v1,organization,client-policies'
     volumes:
       # Mount certificates for HTTPS
       - "${KEYCLOAK_CERT_PATH}/keycloak.crt:/etc/keycloak/certs/keycloak.crt:ro"
