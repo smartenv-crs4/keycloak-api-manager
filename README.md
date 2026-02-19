@@ -89,6 +89,22 @@ Configured handler namespaces:
 
 All documentation is centralized under `docs/`.
 
+- [API Reference (Index)](docs/api-reference.md)
+- [API - Configuration](docs/api/configuration.md)
+- [API - Realms](docs/api/realms.md)
+- [API - Users](docs/api/users.md)
+- [API - Clients](docs/api/clients.md)
+- [API - Client Scopes](docs/api/client-scopes.md)
+- [API - Groups](docs/api/groups.md)
+- [API - Roles](docs/api/roles.md)
+- [API - Identity Providers](docs/api/identity-providers.md)
+- [API - Components](docs/api/components.md)
+- [API - Authentication Management](docs/api/authentication-management.md)
+- [API - Attack Detection](docs/api/attack-detection.md)
+- [API - Organizations](docs/api/organizations.md)
+- [API - User Profile](docs/api/user-profile.md)
+- [API - Client Policies](docs/api/client-policies.md)
+- [API - Server Info](docs/api/server-info.md)
 - [Architecture and Runtime](docs/architecture.md)
 - [Keycloak Setup and Feature Flags](docs/keycloak-setup.md)
 - [Testing Guide](docs/testing.md)
@@ -125,7 +141,7 @@ docs/               # Centralized documentation
 
 ## Versioning and Compatibility
 
-- Package version: `4.1.0`
+- Package version: `5.0.1`
 - Keycloak Admin client dependency: `@keycloak/keycloak-admin-client`
 - Main compatibility target: Keycloak 25/26
 
