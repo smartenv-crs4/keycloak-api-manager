@@ -1,0 +1,45 @@
+{
+  "name": "clients",
+  "cases": [
+    {
+      "name": "confidential-service-account",
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "consentRequired": false
+    },
+    {
+      "name": "public-browser",
+      "publicClient": true,
+      "serviceAccountsEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "consentRequired": false
+    },
+    {
+      "name": "confidential-no-service",
+      "publicClient": false,
+      "serviceAccountsEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "standardFlowEnabled": true,
+      "consentRequired": false
+    },
+    {
+      "name": "confidential-client-credentials",
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "standardFlowEnabled": false,
+      "consentRequired": false
+    },
+    {
+      "name": "confidential-consent-required",
+      "publicClient": false,
+      "serviceAccountsEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "consentRequired": true
+    }
+  ]
+}

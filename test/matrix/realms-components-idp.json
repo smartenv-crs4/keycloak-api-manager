@@ -1,0 +1,37 @@
+{
+  "name": "realms-components-idp",
+  "realms": [
+    {
+      "name": "realm-basic",
+      "realmConfig": {
+        "enabled": true,
+        "registrationAllowed": false,
+        "rememberMe": true,
+        "loginWithEmailAllowed": true
+      }
+    },
+    {
+      "name": "realm-registration",
+      "realmConfig": {
+        "enabled": true,
+        "registrationAllowed": true,
+        "rememberMe": false,
+        "loginWithEmailAllowed": true
+      }
+    }
+  ],
+  "identityProviders": [
+    {
+      "name": "oidc-basic",
+      "providerId": "oidc",
+      "config": {
+        "authorizationUrl": "https://example.com/auth",
+        "tokenUrl": "https://example.com/token",
+        "userInfoUrl": "https://example.com/userinfo",
+        "clientId": "dummy-client-id",
+        "clientSecret": "dummy-client-secret",
+        "defaultScope": "openid profile email"
+      }
+    }
+  ]
+}

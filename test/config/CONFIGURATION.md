@@ -110,6 +110,15 @@ These files are excluded from git (see `.gitignore`):
 }
 ```
 
+### Matrix Test Definitions
+The exhaustive matrix tests are driven by JSON files under:
+
+```
+test/matrix/
+```
+
+You can add or adjust combinations in those files to expand coverage.
+
 ## Diagnostic Script Configuration
 
 The manual diagnostic script [test/diagnostic-protocol-mappers.js](../diagnostic-protocol-mappers.js)

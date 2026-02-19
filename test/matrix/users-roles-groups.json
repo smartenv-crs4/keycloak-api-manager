@@ -1,0 +1,26 @@
+{
+  "name": "users-roles-groups",
+  "cases": [
+    {
+      "name": "user-enabled-verified",
+      "user": {
+        "enabled": true,
+        "emailVerified": true
+      }
+    },
+    {
+      "name": "user-enabled-unverified",
+      "user": {
+        "enabled": true,
+        "emailVerified": false
+      }
+    },
+    {
+      "name": "user-disabled",
+      "user": {
+        "enabled": false,
+        "emailVerified": false
+      }
+    }
+  ]
+}

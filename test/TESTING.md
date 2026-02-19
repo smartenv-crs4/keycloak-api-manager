@@ -127,6 +127,25 @@ npm --prefix test test -- --grep "Users Handler"
 npm --prefix test test -- --grep "should create, find, update, and delete clients"
 ```
 
+### Matrix Test Suite (Config-Driven)
+
+The matrix test suite runs exhaustive combinations of configurations using JSON definitions.
+It covers authentication, clients, users/roles/groups, and realms/components/identity providers.
+
+Run only matrix tests:
+
+```bash
+npm --prefix test test -- --grep "Matrix -"
+```
+
+Matrix definitions live in:
+
+```
+test/matrix/
+```
+
+You can extend or add new cases by editing the JSON files in that folder.
+
 ## Diagnostics
 
 ### Protocol Mapper Diagnostic Script

@@ -21,6 +21,9 @@ describe('Authentication - client_credentials grant', function () {
   let testClientSecret = null;
 
   before(async function () {
+    // Ensure we're using the test realm
+    keycloakManager.setConfig({ realmName: TEST_REALM });
+    
     const clients = await keycloakManager.clients.find({ clientId: TEST_CLIENT_ID });
     const testClient = clients.find((client) => client.clientId === TEST_CLIENT_ID);
 
