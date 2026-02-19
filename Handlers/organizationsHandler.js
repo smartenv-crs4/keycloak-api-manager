@@ -120,9 +120,14 @@ exports.findOne = function(filter) {
  */
 exports.update = async function(filter, organizationRepresentation) {
     const { id } = filter;
-    // Keycloak requires full object for PUT, so we fetch current and merge
-    const current = await exports.findOne(filter);
-    const merged = { ...current, ...organizationRepresentation };
+    const current = await exports.findOne({ id });
+    const merged = {
+        ...current,
+        ...organizationRepresentation,
+        id,
+        name: organizationRepresentation?.name || current?.name
+    };
+
     return await makeDirectApiCall('PUT', `/organizations/${id}`, merged);
 }
 
@@ -135,8 +140,7 @@ exports.update = async function(filter, organizationRepresentation) {
  *   - id: (string, required) - Organization ID
  */
 exports.del = async function(filter) {
-    const { id } = filter;
-    return await makeDirectApiCall('DELETE', `/organizations/${id}`);
+    return kcAdminClientHandler.organizations.delById(filter);
 }
 
 /**
@@ -150,7 +154,10 @@ exports.del = async function(filter) {
  */
 exports.addMember = async function(filter) {
     const { id, userId } = filter;
-    return await makeDirectApiCall('POST', `/organizations/${id}/members`, { userId });
+    return kcAdminClientHandler.organizations.addMember({
+        orgId: id,
+        userId
+    });
 }
 
 /**
@@ -164,13 +171,11 @@ exports.addMember = async function(filter) {
  *   - max: (number, optional) - Max results
  */
 exports.listMembers = async function(filter) {
-    const { id, first, max } = filter;
-    let endpoint = `/organizations/${id}/members`;
-    const params = [];
-    if (first !== undefined) params.push(`first=${first}`);
-    if (max !== undefined) params.push(`max=${max}`);
-    if (params.length > 0) endpoint += `?${params.join('&')}`;
-    return await makeDirectApiCall('GET', endpoint);
+    const { id, ...rest } = filter;
+    return kcAdminClientHandler.organizations.listMembers({
+        orgId: id,
+        ...rest
+    });
 }
 
 /**
@@ -184,7 +189,10 @@ exports.listMembers = async function(filter) {
  */
 exports.delMember = async function(filter) {
     const { id, userId } = filter;
-    return await makeDirectApiCall('DELETE', `/organizations/${id}/members/${userId}`);
+    return kcAdminClientHandler.organizations.delMember({
+        orgId: id,
+        userId
+    });
 }
 
 /**
@@ -198,7 +206,10 @@ exports.delMember = async function(filter) {
  */
 exports.addIdentityProvider = async function(filter) {
     const { id, alias } = filter;
-    return await makeDirectApiCall('POST', `/organizations/${id}/identity-providers`, { alias });
+    return kcAdminClientHandler.organizations.linkIdp({
+        orgId: id,
+        alias
+    });
 }
 
 /**
@@ -211,7 +222,7 @@ exports.addIdentityProvider = async function(filter) {
  */
 exports.listIdentityProviders = async function(filter) {
     const { id } = filter;
-    return await makeDirectApiCall('GET', `/organizations/${id}/identity-providers`);
+    return kcAdminClientHandler.organizations.listIdentityProviders({ orgId: id });
 }
 
 /**
@@ -225,5 +236,8 @@ exports.listIdentityProviders = async function(filter) {
  */
 exports.delIdentityProvider = async function(filter) {
     const { id, alias } = filter;
-    return await makeDirectApiCall('DELETE', `/organizations/${id}/identity-providers/${alias}`);
+    return kcAdminClientHandler.organizations.unLinkIdp({
+        orgId: id,
+        alias
+    });
 }
