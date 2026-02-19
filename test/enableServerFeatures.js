@@ -267,22 +267,7 @@ async function enableServerFeatures() {
             console.log(`     in KC_FEATURES environment variable`);
         }
 
-        // 7. Update realm to enable protocol mappers and installation providers
-        console.log('\n7. Enabling realm features...');
-        try {
-            await keycloakManager.realms.update(
-                { realm: TEST_REALM },
-                {
-                    installationProviders: ['docker-compose', 'docker', 'kubernetes', 'openshift'],
-                    installationProvidersEnabled: true
-                }
-            );
-            console.log('   ✓ Installation providers enabled');
-        } catch (err) {
-            console.log(`   ⚠ Installation providers: ${err.message}`);
-        }
-
-        // 7. Update realm to enable protocol mappers and installation providers
+        // 7. Realm features requiring server-side configuration
         console.log('\n7. Enabling realm features...');
         try {
             // Note: Some features like installation providers cannot be enabled via API
