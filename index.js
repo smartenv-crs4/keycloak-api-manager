@@ -138,7 +138,7 @@ exports.stop = function stop() {
     clearRefreshTimer();
 };
 
-exports.auth = async function auth(credentials = {}) {
+async function requestOidcToken(credentials = {}) {
     assertConfigured();
 
     const body = new URLSearchParams();
@@ -175,4 +175,12 @@ exports.auth = async function auth(credentials = {}) {
     }
 
     return payload;
+}
+
+exports.auth = async function auth(credentials = {}) {
+    return requestOidcToken(credentials);
+};
+
+exports.login = async function login(credentials = {}) {
+    return requestOidcToken(credentials);
 };

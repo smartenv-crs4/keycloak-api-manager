@@ -14,10 +14,11 @@ This package exposes a single runtime (`index.js`) that initializes one Keycloak
    - Updates realm/baseUrl/request options at runtime.
    - Keeps active session/token management in place.
 
-3. `auth(credentials)`
+3. `login(credentials)`
    - Direct token endpoint call for explicit OIDC login/token flows.
    - Intended for application-level third-party authentication use-cases.
    - Does not mutate the internal admin client session established by `configure()`.
+   - `auth(credentials)` remains available as backward-compatible alias.
 
 4. `stop()`
    - Stops refresh timer for clean process termination.

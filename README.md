@@ -65,10 +65,13 @@ In Keycloak 26.x, management-permissions APIs used by group/user fine-grained te
 - `configure(credentials)`
 - `setConfig(overrides)`
 - `getToken()`
+- `login(credentials)`
 - `auth(credentials)`
 - `stop()`
 
-`auth(credentials)` is an OIDC token endpoint helper for login/token grant flows (user/client). It does not replace the internal admin session configured by `configure()`.
+`login(credentials)` is the preferred OIDC token endpoint helper for login/token grant flows (user/client).
+
+`auth(credentials)` is kept as backward-compatible alias and does not replace the internal admin session configured by `configure()`.
 
 Configured handler namespaces:
 

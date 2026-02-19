@@ -7,6 +7,7 @@ Core API methods for initializing and managing the Keycloak Admin Client connect
 - [configure()](#configure)
 - [setConfig()](#setconfig)
 - [getToken()](#gettoken)
+- [login()](#login)
 - [auth()](#auth)
 - [stop()](#stop)
 
@@ -236,6 +237,23 @@ const response = await axios.get('https://keycloak.example.com/admin/realms/mast
 
 ## auth()
 
+Backward-compatible alias of `login()`.
+
+Use `login()` in new code for clearer intent.
+
+**Syntax:**
+```javascript
+await KeycloakManager.auth(credentials)
+```
+
+### Returns
+
+**Promise\<Object\>** - Same response as `login()`
+
+---
+
+## login()
+
 Request tokens from Keycloak via the OIDC token endpoint.
 
 This method is intended for application-level login/token flows (for users, service clients, or third-party integrations) using this package as a wrapper.
@@ -244,7 +262,7 @@ It does **not** reconfigure or replace the internal admin session created by `co
 
 **Syntax:**
 ```javascript
-await KeycloakManager.auth(credentials)
+await KeycloakManager.login(credentials)
 ```
 
 ### Parameters
@@ -287,7 +305,7 @@ await KeycloakManager.configure({
 });
 
 // Application login/token request for an end-user
-const tokenResponse = await KeycloakManager.auth({
+const tokenResponse = await KeycloakManager.login({
   grant_type: 'password',
   username: 'end-user',
   password: 'user-password',
@@ -300,7 +318,7 @@ console.log(tokenResponse.access_token);
 #### Client Credentials Login
 
 ```javascript
-const tokenResponse = await KeycloakManager.auth({
+const tokenResponse = await KeycloakManager.login({
   grant_type: 'client_credentials',
   client_id: 'my-public-api',
   client_secret: process.env.API_CLIENT_SECRET
@@ -312,7 +330,7 @@ console.log(tokenResponse.access_token);
 #### Refresh Token Flow
 
 ```javascript
-const refreshed = await KeycloakManager.auth({
+const refreshed = await KeycloakManager.login({
   grant_type: 'refresh_token',
   refresh_token: oldRefreshToken
 });
@@ -322,9 +340,9 @@ console.log(refreshed.access_token);
 
 ### Notes
 
-- `auth()` posts to `${baseUrl}/realms/${realmName}/protocol/openid-connect/token`.
-- `auth()` returns raw token endpoint payload and throws on non-2xx responses.
-- `auth()` does not change handler wiring, runtime config, or the internal admin refresh timer.
+- `login()` posts to `${baseUrl}/realms/${realmName}/protocol/openid-connect/token`.
+- `login()` returns raw token endpoint payload and throws on non-2xx responses.
+- `login()`/`auth()` do not change handler wiring, runtime config, or the internal admin refresh timer.
 - Runtime `clientId`/`clientSecret` are appended automatically if configured and not overridden in request payload.
 
 ---
