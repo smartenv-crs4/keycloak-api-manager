@@ -177,14 +177,50 @@ async function requestOidcToken(credentials = {}) {
     return payload;
 }
 
+/**
+ * @deprecated v6.0.0 - This method has been moved to keycloak-express-middleware.
+ * Use the middleware package for user authentication instead. See:
+ * https://github.com/smartenv-crs4/keycloak-express-middleware#oidc-authentication
+ * 
+ * This API manager is intended for Keycloak admin resource management only.
+ * For user authentication flows, import from keycloak-express-middleware.
+ * 
+ * @see {@link https://github.com/smartenv-crs4/keycloak-express-middleware|keycloak-express-middleware}
+ * @param {object} credentials - OIDC token request credentials
+ * @returns {Promise<object>} Token response containing access_token, refresh_token, etc.
+ */
 exports.auth = async function auth(credentials = {}) {
     return requestOidcToken(credentials);
 };
 
+/**
+ * @deprecated v6.0.0 - This method has been moved to keycloak-express-middleware.
+ * Use the middleware package for user authentication instead. See:
+ * https://github.com/smartenv-crs4/keycloak-express-middleware#oidc-authentication
+ * 
+ * This API manager is intended for Keycloak admin resource management only.
+ * For user authentication flows, import from keycloak-express-middleware.
+ * 
+ * @see {@link https://github.com/smartenv-crs4/keycloak-express-middleware|keycloak-express-middleware}
+ * @param {object} credentials - OIDC token request credentials (supports any OAuth2 grant type)
+ * @returns {Promise<object>} Token response containing access_token, refresh_token, etc.
+ */
 exports.login = async function login(credentials = {}) {
     return requestOidcToken(credentials);
 };
 
+/**
+ * @deprecated v6.0.0 - This method has been moved to keycloak-express-middleware.
+ * Use the middleware package for user authentication instead. See:
+ * https://github.com/smartenv-crs4/keycloak-express-middleware#oidc-pkce-flow
+ * 
+ * This API manager is intended for Keycloak admin resource management only.
+ * For user authentication flows, import from keycloak-express-middleware.
+ * 
+ * @see {@link https://github.com/smartenv-crs4/keycloak-express-middleware|keycloak-express-middleware}
+ * @param {object} credentials - PKCE authorization code exchange parameters
+ * @returns {Promise<object>} Token response containing access_token, refresh_token, etc.
+ */
 exports.loginPKCE = async function loginPKCE(credentials = {}) {
     const {
         code,
@@ -226,6 +262,18 @@ exports.loginPKCE = async function loginPKCE(credentials = {}) {
     });
 };
 
+/**
+ * @deprecated v6.0.0 - This method has been moved to keycloak-express-middleware.
+ * Use the middleware package for user authentication instead. See:
+ * https://github.com/smartenv-crs4/keycloak-express-middleware#generating-authorization-urls
+ * 
+ * This API manager is intended for Keycloak admin resource management only.
+ * For user authentication flows, import from keycloak-express-middleware.
+ * 
+ * @see {@link https://github.com/smartenv-crs4/keycloak-express-middleware|keycloak-express-middleware}
+ * @param {object} options - Authorization URL generation options
+ * @returns {object} Object with { authUrl, state, codeVerifier } for PKCE flow
+ */
 exports.generateAuthorizationUrl = function generateAuthorizationUrl(options = {}) {
     assertConfigured();
     

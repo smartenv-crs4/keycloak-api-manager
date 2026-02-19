@@ -25,6 +25,12 @@ It provides a stable, function-oriented interface for managing Keycloak resource
 npm install keycloak-api-manager
 ```
 
+> **⚠️ DEPRECATION NOTICE (v6.0.0):** The OIDC authentication methods (`login()`, `loginPKCE()`, `generateAuthorizationUrl()`, `auth()`) have been **deprecated** and moved to [`keycloak-express-middleware`](https://github.com/smartenv-crs4/keycloak-express-middleware).
+> 
+> **This package is now exclusively for Keycloak admin resource management.** For user authentication flows, use `keycloak-express-middleware` instead.
+> 
+> See [OIDC_MIGRATION_PLAN.md](OIDC_MIGRATION_PLAN.md) for migration details.
+
 ## Quick Start
 
 ```js
@@ -65,19 +71,13 @@ In Keycloak 26.x, management-permissions APIs used by group/user fine-grained te
 - `configure(credentials)`
 - `setConfig(overrides)`
 - `getToken()`
-- `login(credentials)`
-- `generateAuthorizationUrl(options)`
-- `loginPKCE(credentials)`
-- `auth(credentials)`
 - `stop()`
+- ~~`login(credentials)`~~ **DEPRECATED** - moved to keycloak-express-middleware
+- ~~`generateAuthorizationUrl(options)`~~ **DEPRECATED** - moved to keycloak-express-middleware
+- ~~`loginPKCE(credentials)`~~ **DEPRECATED** - moved to keycloak-express-middleware
+- ~~`auth(credentials)`~~ **DEPRECATED** - moved to keycloak-express-middleware
 
-`login(credentials)` is the preferred OIDC token endpoint helper for login/token grant flows (user/client).
-
-`generateAuthorizationUrl(options)` initiates PKCE flow by generating authorization URL, state, and code verifier for server-side session storage.
-
-`loginPKCE(credentials)` is a specialized helper for Authorization Code + PKCE token exchange in the callback route.
-
-`auth(credentials)` is kept as backward-compatible alias and does not replace the internal admin session configured by `configure()`.
+**Note:** OIDC authentication methods have been deprecated in v6.0.0. Use [`keycloak-express-middleware`](https://github.com/smartenv-crs4/keycloak-express-middleware) for user authentication flows.
 
 Configured handler namespaces:
 
@@ -161,9 +161,14 @@ docs/               # Centralized documentation
 
 ## Versioning and Compatibility
 
-- Package version: `5.0.1`
+- Package version: `6.0.0`
 - Keycloak Admin client dependency: `@keycloak/keycloak-admin-client`
 - Main compatibility target: Keycloak 25/26
+
+### Breaking Changes in v6.0.0
+
+OIDC authentication methods (`login()`, `loginPKCE()`, `generateAuthorizationUrl()`, `auth()`) are now deprecated.
+These methods will be removed in v7.0.0. Migrate to `keycloak-express-middleware` for user authentication.
 
 ## License
 
