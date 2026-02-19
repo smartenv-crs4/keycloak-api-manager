@@ -4,6 +4,9 @@
  * The Organizations entity (Keycloak 25+) allows managing organizations for multi-tenancy.
  * Organizations provide a way to group users, identity providers, and domains together,
  * enabling better isolation and management of different organizational units.
+ * 
+ * NOTE: Some Organizations APIs are not fully supported by @keycloak/keycloak-admin-client
+ * so this handler uses direct REST API calls for those endpoints.
  * **************************************************************************************************
  * **************************************************************************************************
  */
@@ -11,6 +14,55 @@ let kcAdminClientHandler = null;
 
 exports.setKcAdminClient = function(kcAdminClient) {
     kcAdminClientHandler = kcAdminClient;
+}
+
+/**
+ * Helper function to make direct API calls to Keycloak
+ */
+async function makeDirectApiCall(method, endpoint, body = null) {
+    const baseUrl = kcAdminClientHandler.baseUrl;
+    const realmName = kcAdminClientHandler.realmName;
+    const accessToken = kcAdminClientHandler.accessToken;
+    
+    const url = `${baseUrl}/admin/realms/${realmName}${endpoint}`;
+    
+    const options = {
+        method,
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+        }
+    };
+    
+    if (body) {
+        options.body = JSON.stringify(body);
+    }
+    
+    const response = await fetch(url, options);
+    
+    if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage;
+        try {
+            const errorJson = JSON.parse(errorText);
+            errorMessage = errorJson.errorMessage || errorJson.error || errorText;
+        } catch (e) {
+            errorMessage = errorText;
+        }
+        throw new Error(errorMessage || `HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    // Handle empty responses (DELETE, PUT requests may return 204 No Content)
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+        return null;
+    }
+    
+    const responseText = await response.text();
+    if (!responseText) {
+        return null;
+    }
+    
+    return JSON.parse(responseText);
 }
 
 /**
@@ -66,8 +118,12 @@ exports.findOne = function(filter) {
  *   - id: (string, required) - Organization ID
  * - organizationRepresentation: Updated organization data
  */
-exports.update = function(filter, organizationRepresentation) {
-    return kcAdminClientHandler.organizations.update(filter, organizationRepresentation);
+exports.update = async function(filter, organizationRepresentation) {
+    const { id } = filter;
+    // Keycloak requires full object for PUT, so we fetch current and merge
+    const current = await exports.findOne(filter);
+    const merged = { ...current, ...organizationRepresentation };
+    return await makeDirectApiCall('PUT', `/organizations/${id}`, merged);
 }
 
 /**
@@ -78,8 +134,9 @@ exports.update = function(filter, organizationRepresentation) {
  * - filter: parameter with organization ID
  *   - id: (string, required) - Organization ID
  */
-exports.del = function(filter) {
-    return kcAdminClientHandler.organizations.del(filter);
+exports.del = async function(filter) {
+    const { id } = filter;
+    return await makeDirectApiCall('DELETE', `/organizations/${id}`);
 }
 
 /**
@@ -91,8 +148,9 @@ exports.del = function(filter) {
  *   - id: (string, required) - Organization ID
  *   - userId: (string, required) - User ID
  */
-exports.addMember = function(filter) {
-    return kcAdminClientHandler.organizations.addMember(filter);
+exports.addMember = async function(filter) {
+    const { id, userId } = filter;
+    return await makeDirectApiCall('POST', `/organizations/${id}/members`, { userId });
 }
 
 /**
@@ -105,8 +163,14 @@ exports.addMember = function(filter) {
  *   - first: (number, optional) - First result
  *   - max: (number, optional) - Max results
  */
-exports.listMembers = function(filter) {
-    return kcAdminClientHandler.organizations.listMembers(filter);
+exports.listMembers = async function(filter) {
+    const { id, first, max } = filter;
+    let endpoint = `/organizations/${id}/members`;
+    const params = [];
+    if (first !== undefined) params.push(`first=${first}`);
+    if (max !== undefined) params.push(`max=${max}`);
+    if (params.length > 0) endpoint += `?${params.join('&')}`;
+    return await makeDirectApiCall('GET', endpoint);
 }
 
 /**
@@ -118,8 +182,9 @@ exports.listMembers = function(filter) {
  *   - id: (string, required) - Organization ID
  *   - userId: (string, required) - User ID
  */
-exports.delMember = function(filter) {
-    return kcAdminClientHandler.organizations.delMember(filter);
+exports.delMember = async function(filter) {
+    const { id, userId } = filter;
+    return await makeDirectApiCall('DELETE', `/organizations/${id}/members/${userId}`);
 }
 
 /**
@@ -131,8 +196,9 @@ exports.delMember = function(filter) {
  *   - id: (string, required) - Organization ID
  *   - alias: (string, required) - Identity provider alias
  */
-exports.addIdentityProvider = function(filter) {
-    return kcAdminClientHandler.organizations.addIdentityProvider(filter);
+exports.addIdentityProvider = async function(filter) {
+    const { id, alias } = filter;
+    return await makeDirectApiCall('POST', `/organizations/${id}/identity-providers`, { alias });
 }
 
 /**
@@ -143,8 +209,9 @@ exports.addIdentityProvider = function(filter) {
  * - filter: parameter with organization ID
  *   - id: (string, required) - Organization ID
  */
-exports.listIdentityProviders = function(filter) {
-    return kcAdminClientHandler.organizations.listIdentityProviders(filter);
+exports.listIdentityProviders = async function(filter) {
+    const { id } = filter;
+    return await makeDirectApiCall('GET', `/organizations/${id}/identity-providers`);
 }
 
 /**
@@ -156,6 +223,7 @@ exports.listIdentityProviders = function(filter) {
  *   - id: (string, required) - Organization ID
  *   - alias: (string, required) - Identity provider alias
  */
-exports.delIdentityProvider = function(filter) {
-    return kcAdminClientHandler.organizations.delIdentityProvider(filter);
+exports.delIdentityProvider = async function(filter) {
+    const { id, alias } = filter;
+    return await makeDirectApiCall('DELETE', `/organizations/${id}/identity-providers/${alias}`);
 }

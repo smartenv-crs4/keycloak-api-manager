@@ -103,9 +103,8 @@ async function enableServerFeatures() {
                 duplicateEmailsAllowed: false,
                 resetPasswordAllowed: true,
                 editUsernameAllowed: false,
-                bruteForceProtected: false
-                // Note: organizationsEnabled is not configurable via API in Keycloak 26
-                // Organizations must be enabled manually via Admin Console for each realm
+                bruteForceProtected: false,
+                organizationsEnabled: true  // Enable Organizations (requires 'organization' feature flag)
             });
             console.log(`   ✓ Test realm created: ${TEST_REALM}`);
         } else {
@@ -115,7 +114,8 @@ async function enableServerFeatures() {
                 { realm: TEST_REALM },
                 {
                     enabled: true,
-                    bruteForceProtected: false
+                    bruteForceProtected: false,
+                    organizationsEnabled: true
                 }
             );
         }

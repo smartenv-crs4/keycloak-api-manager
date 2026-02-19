@@ -40,7 +40,10 @@ describe('Organizations Handler Tests', function () {
     before(async function () {
         await KeycloakManager.configure(config);
         
-        // Create a test user for member operations
+        // Switch to test realm for operations
+        KeycloakManager.setConfig({ realmName: TEST_REALM });
+        
+        // Create a test user for member operations in test realm
         const userResult = await KeycloakManager.users.create({
             username: `org-test-user-${Date.now()}`,
             email: 'orguser@test.com',
@@ -59,26 +62,20 @@ describe('Organizations Handler Tests', function () {
             }
         }
         if (testUserId) {
-            await KeycloakManager.users.del({ id: testUserId });
+            try {
+                await KeycloakManager.users.del({ id: testUserId });
+            } catch (e) {
+                // User might already be deleted
+            }
         }
         KeycloakManager.stop();
     });
 
     describe('Organization CRUD Operations', function () {
         it('should create an organization', async function () {
-            try {
-                const result = await KeycloakManager.organizations.create(testOrgData);
-                expect(result).to.have.property('id');
-                createdOrgId = result.id;
-            } catch (error) {
-                // Organizations require manual enablement via Admin Console  
-                // Even with 'organization' feature flag, each realm must enable organizations
-                // through the Admin UI before the API will work
-                if (error.message?.includes('not enabled')) {
-                    this.skip();
-                }
-                throw error;
-            }
+            const result = await KeycloakManager.organizations.create(testOrgData);
+            expect(result).to.have.property('id');
+            createdOrgId = result.id;
         });
 
         it('should find all organizations', async function () {
