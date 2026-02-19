@@ -76,27 +76,8 @@ exports.updateConfiguration = async function(filter, userProfileConfig) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         },
-        body: JSON.strasync function(filter) {
-    // Direct API call for better compatibility
-    const realm = filter?.realm || kcAdminClientHandler.realmName;
-    const baseUrl = kcAdminClientHandler.baseUrl;
-    const token = kcAdminClientHandler.accessToken;
-    
-    const url = `${baseUrl}admin/realms/${realm}/users/profile/metadata`;
-    
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
+        body: JSON.stringify(userProfileConfig)
     });
-    
-    if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Failed to get user profile metadata: ${error}`);
-    }
-    
-    return response.json(
     
     if (!response.ok) {
         const error = await response.text();
@@ -116,6 +97,25 @@ exports.updateConfiguration = async function(filter, userProfileConfig) {
  *   - realm: (string, optional) - The realm name
  * @returns: Metadata object with validators, attribute config, etc.
  */
-exports.getMetadata = function(filter) {
-    return kcAdminClientHandler.users.getProfileMetadata(filter);
+exports.getMetadata = async function(filter) {
+    // Direct API call for better compatibility
+    const realm = filter?.realm || kcAdminClientHandler.realmName;
+    const baseUrl = kcAdminClientHandler.baseUrl;
+    const token = kcAdminClientHandler.accessToken;
+    
+    const url = `${baseUrl}admin/realms/${realm}/users/profile/metadata`;
+    
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to get user profile metadata: ${error}`);
+    }
+    
+    return response.json();
 }
