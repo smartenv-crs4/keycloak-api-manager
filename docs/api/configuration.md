@@ -354,6 +354,8 @@ Perform Authorization Code + PKCE token exchange.
 
 This helper is intended for the callback step after user login on Keycloak, where your backend receives an authorization `code` and exchanges it with `code_verifier`.
 
+> **📖 For a complete step-by-step guide on implementing PKCE flow in your application, see [PKCE Login Flow Guide](../guides/PKCE-Login-Flow.md)**
+
 **Syntax:**
 ```javascript
 await KeycloakManager.loginPKCE(credentials)

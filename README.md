@@ -97,6 +97,12 @@ Configured handler namespaces:
 
 All documentation is centralized under `docs/`.
 
+### Guides (Practical Implementation)
+
+- [PKCE Login Flow Guide](docs/guides/PKCE-Login-Flow.md) - Step-by-step guide for implementing OAuth2 Authorization Code + PKCE authentication
+
+### API Reference
+
 - [API Reference (Index)](docs/api-reference.md)
 - [API - Configuration](docs/api/configuration.md)
 - [API - Realms](docs/api/realms.md)
@@ -113,6 +119,9 @@ All documentation is centralized under `docs/`.
 - [API - User Profile](docs/api/user-profile.md)
 - [API - Client Policies](docs/api/client-policies.md)
 - [API - Server Info](docs/api/server-info.md)
+
+### General Documentation
+
 - [Architecture and Runtime](docs/architecture.md)
 - [Keycloak Setup and Feature Flags](docs/keycloak-setup.md)
 - [Testing Guide](docs/testing.md)

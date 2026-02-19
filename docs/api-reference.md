@@ -4,6 +4,9 @@ Complete API documentation for keycloak-api-manager.
 
 ## Table of Contents
 
+### Guides (Practical Implementation)
+- [PKCE Login Flow Guide](guides/PKCE-Login-Flow.md) - Step-by-step OAuth2 Authorization Code + PKCE implementation guide
+
 ### Core API
 - [Configuration & Authentication](api/configuration.md) - Setup, authentication, and lifecycle management
 
