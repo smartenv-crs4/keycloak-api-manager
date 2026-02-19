@@ -2,11 +2,11 @@ const path = require('path');
 const { expect } = require('chai');
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
-process.env.PROPERTIES_PATH = path.join(__dirname, '..', 'config');
+process.env.PROPERTIES_PATH = path.join(__dirname, '..', '..', 'config');
 
 const keycloakManager = require('keycloak-api-manager');
-const { KEYCLOAK_CONFIG, TEST_REALM, TEST_CLIENT_ID, TEST_USER_USERNAME, TEST_USER_PASSWORD } = require('../testConfig');
-const { loadMatrix } = require('../helpers/matrix');
+const { KEYCLOAK_CONFIG, TEST_REALM, TEST_CLIENT_ID, TEST_USER_USERNAME, TEST_USER_PASSWORD } = require('../../testConfig');
+const { loadMatrix } = require('../../helpers/matrix');
 
 function buildConfig(overrides = {}) {
   return {

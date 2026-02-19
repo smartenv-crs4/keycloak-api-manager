@@ -31,7 +31,7 @@ const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const keycloakManager = require('../index');
+const keycloakManager = require('../../index');
 
 let sshTunnelProcess = null;
 
@@ -92,7 +92,7 @@ before(async function() {
                     console.log(`✓ SSH tunnel created: http://${sshTunnelUrl}\n`);
                     
                     // Update config to use tunnel
-                    const configPath = path.join(__dirname, 'config/local.json');
+                    const configPath = path.join(__dirname, '../config/local.json');
                     let config = {};
                     
                     if (fs.existsSync(configPath)) {
@@ -169,7 +169,7 @@ after(async function() {
         
         // Clean up SSH tunnel config file if it was created
         try {
-            const configPath = path.join(__dirname, 'config/local.json');
+            const configPath = path.join(__dirname, '../config/local.json');
             if (fs.existsSync(configPath)) {
                 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
                 // Only delete local.json if it contains SSH tunnel config

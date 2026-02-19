@@ -42,9 +42,9 @@ const path = require('path');
 
 // Ensure NODE_ENV and config path are set before requiring testConfig
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
-process.env.PROPERTIES_PATH = path.join(__dirname, 'config');
+process.env.PROPERTIES_PATH = path.join(__dirname, '../config');
 
-const keycloakManager = require('../index');
+const keycloakManager = require('../../index');
 const {
     TEST_REALM,
     TEST_CLIENT_ID,

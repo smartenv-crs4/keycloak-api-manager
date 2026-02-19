@@ -4,11 +4,11 @@ const https = require('https');
 const { expect } = require('chai');
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
-process.env.PROPERTIES_PATH = path.join(__dirname, '..', 'config');
+process.env.PROPERTIES_PATH = path.join(__dirname, '..', '..', 'config');
 
 const { conf } = require('propertiesmanager');
 const keycloakManager = require('keycloak-api-manager');
-const { TEST_REALM } = require('../testConfig');
+const { TEST_REALM } = require('../../testConfig');
 
 describe('Protocol Mappers - Debug Client Library', function () {
   this.timeout(10000);

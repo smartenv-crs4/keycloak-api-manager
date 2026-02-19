@@ -1,4 +1,4 @@
 {
-  "file": ["setup.js"],
-  "spec": ["specs/*.test.js"]
+  "file": ["support/setup.js"],
+  "spec": ["specs/**/*.test.js"]
 }

@@ -2,11 +2,11 @@ const path = require('path');
 const { expect } = require('chai');
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
-process.env.PROPERTIES_PATH = path.join(__dirname, '..', 'config');
+process.env.PROPERTIES_PATH = path.join(__dirname, '..', '..', 'config');
 
 const keycloakManager = require('keycloak-api-manager');
-const { KEYCLOAK_CONFIG } = require('../testConfig');
-const { loadMatrix, uniqueName } = require('../helpers/matrix');
+const { KEYCLOAK_CONFIG } = require('../../testConfig');
+const { loadMatrix, uniqueName } = require('../../helpers/matrix');
 
 function shouldSkipFeature(err) {
   if (!err || !err.message) {
