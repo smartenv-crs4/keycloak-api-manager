@@ -1,5 +1,17 @@
 # OIDC Methods Migration Plan - keycloak-api-manager
 
+## 🚀 Current Status: v6.0.0 - MIGRATION RELEASED
+
+✅ **OIDC Methods Deprecated:** All OIDC authentication methods are now marked `@deprecated` in v6.0.0.
+
+✅ **keycloak-express-middleware v6.1.0 Released:** OIDC methods now available in middleware package with full test coverage.
+
+📅 **Removal Timeline:**
+- **v6.0.0** (NOW) - Methods work but marked @deprecated
+- **v7.0.0** (FUTURE) - Methods will be permanently removed
+
+---
+
 ## Overview
 
 L'architettura prevede una **migrazione pianificata** dei metodi OIDC (`auth()`, `login()`, `loginPKCE()`) da `keycloak-api-manager` a `keycloak-express-middleware`.
@@ -11,6 +23,22 @@ L'architettura prevede una **migrazione pianificata** dei metodi OIDC (`auth()`,
 - ✅ `login(credentials)` - Generic token grant helper
 - ✅ `generateAuthorizationUrl(options)` - PKCE URL generator
 - ✅ `loginPKCE(credentials)` - PKCE token exchange
+
+## Current State (v6.0.0) - NOW
+
+**Status Changes in keycloak-api-manager:**
+- ⚠️ `auth(credentials)` - Marked @deprecated
+- ⚠️ `login(credentials)` - Marked @deprecated
+- ⚠️ `generateAuthorizationUrl(options)` - Marked @deprecated
+- ⚠️ `loginPKCE(credentials)` - Marked @deprecated
+
+✅ Methods **still work** but show deprecation warnings in JSDoc and IDE.
+
+**Status in keycloak-express-middleware v6.1.0:**
+- ✅ `generateAuthorizationUrl(options)` - Fully implemented & tested
+- ✅ `login(credentials)` - Fully implemented & tested
+- ✅ `loginPKCE(credentials)` - Fully implemented & tested
+- ✅ All 21 tests passing
 
 ## Why This Migration?
 
@@ -45,49 +73,80 @@ keycloak-express-middleware (User Authentication)
 - [x] Write comprehensive tests (21 tests, all passing)
 - [x] Document integration guide
 - [x] Commit to middleware repo
+- [x] Integrate OIDC methods into keycloak-express-middleware v6.1.0
+- [x] Release keycloak-express-middleware v6.1.0 to npm
 
-**Status:** Ready for integration into `keycloak-express-middleware`
+**Status:** ✅ COMPLETE & RELEASED
 
-### Phase 2: Manual Integration (When You're Ready)
-- [ ] Integrate `oidc-methods.js` into middleware `index.js`
-- [ ] Run tests to verify
-- [ ] Release `keycloak-express-middleware v6.1.0`
+### Phase 2: ✅ DONE (Done)
+- [x] Mark methods as @deprecated in keycloak-api-manager index.js
+- [x] Update README with deprecation notices
+- [x] Update API documentation with deprecation notices
+- [x] Add migration guide in PKCE-Login-Flow docs
+- [x] Release keycloak-api-manager v6.0.0
 
-**Your Action:** Follow `keycloak-express-middleware/OIDC_INTEGRATION_GUIDE.md`
+**Status:** ✅ COMPLETE - v6.0.0 released with @deprecated warnings
 
-### Phase 3: Deprecation in keycloak-api-manager (v6.0.0)
+### Phase 3: TODO (Future - v7.0.0)
+- [ ] Remove OIDC methods from keycloak-api-manager
+- [ ] Release keycloak-api-manager v7.0.0 (breaking change)
+- [ ] Update all documentation to reference keycloak-express-middleware only
 
-Once middleware integration is confirmed:
+**Timeline:** TBD based on user feedback and adoption
 
-1. **Mark methods as deprecated** in index.js:
-   ```javascript
-   exports.auth = async function auth(credentials = {}) {
-       console.warn('⚠️ DEPRECATED: auth() is deprecated in v6.0. ' +
-           'Use keycloak-express-middleware.login() instead. ' +
-           'See: https://...');
-       return requestOidcToken(credentials);
-   };
-   ```
+---
 
-2. **Update documentation:**
-   - Add migration guide in README
-   - Mark OIDC methods as deprecated in API docs
-   - Link to middleware documentation
+## What You Need to Know
 
-3. **Release v6.0.0:**
-   - Update package.json version
-   - Add breaking change notice
-   - Include migration guide in release notes
+### For Current Users (v5.0.8 or earlier)
 
-4. **Future (v7.0.0):**
-   - Optionally remove these methods entirely
-   - Keep at least 1 major version for migration
+**Action Required:** Migrate to keycloak-express-middleware before v7.0.0.
 
-## Current keycloak-api-manager Methods
+**Timeline:** v6.0.0 is deprecated (warnings only), v7.0.0 will remove methods entirely.
 
-### `auth(credentials)` - Generic OIDC Token Grant
+**Steps:**
+1. Install keycloak-express-middleware v6.1.0+
+2. Replace method calls (see examples below)
+3. Test thoroughly
+4. Deploy before v7.0.0 is released
+
+### For New Projects
+
+**Action Required:** Do NOT use OIDC methods from keycloak-api-manager.
+
+**Recommendation:** Use keycloak-express-middleware v6.1.0+ for all user authentication.
+
+---
+
+## NPM Packages
+
+### keycloak-api-manager
+
+| Version | OIDC Methods | Status |
+|---------|------------|--------|
+| v5.0.8 | Supported | Legacy (should migrate) |
+| v6.0.0 | Deprecated | Current (shows warnings) |
+| v7.0.0 | Removed | Future (no OIDC methods) |
+
+**NPM:** https://www.npmjs.com/package/keycloak-api-manager
+
+### keycloak-express-middleware
+
+| Version | OIDC Methods | Status |
+|---------|------------|--------|
+| < 6.1.0 | Not available | Legacy |
+| v6.1.0+ | Available | Current - RECOMMENDED |
+
+**NPM:** https://www.npmjs.com/package/keycloak-express-middleware
+
+**GitHub:** https://github.com/smartenv-crs4/keycloak-express-middleware
+
+---
+
+### `auth(credentials)` - Generic OIDC Token Grant (DEPRECATED)
+
 ```javascript
-// Still works, but should use middleware
+// ⚠️ DEPRECATED - Don't use in new code
 const token = await KeycloakManager.auth({
   grant_type: 'password',
   username: 'user',
@@ -97,7 +156,7 @@ const token = await KeycloakManager.auth({
 
 **Migration Path:**
 ```javascript
-// Instead use middleware
+// ✅ NEW - Use keycloak-express-middleware instead
 const token = await keycloakMiddleware.login({
   grant_type: 'password',
   username: 'user',
@@ -105,9 +164,12 @@ const token = await keycloakMiddleware.login({
 });
 ```
 
-### `login(credentials)` - Preferred Alias
+---
+
+### `login(credentials)` - Preferred Alias (DEPRECATED)
+
 ```javascript
-// Currently the preferred way in API manager
+// ⚠️ DEPRECATED - Don't use in new code
 const token = await KeycloakManager.login({
   grant_type: 'client_credentials'
 });
@@ -115,15 +177,18 @@ const token = await KeycloakManager.login({
 
 **Migration Path:**
 ```javascript
-// Move to middleware
+// ✅ NEW - Use keycloak-express-middleware instead
 const token = await keycloakMiddleware.login({
   grant_type: 'client_credentials'
 });
 ```
 
-### `generateAuthorizationUrl(options)` - PKCE URL Generator
+---
+
+### `generateAuthorizationUrl(options)` - PKCE URL Generator (DEPRECATED)
+
 ```javascript
-// Generates OAuth2 authorization URL + PKCE pair
+// ⚠️ DEPRECATED - Don't use in new code
 const pkceFlow = KeycloakManager.generateAuthorizationUrl({
   redirect_uri: 'https://app/callback'
 });
@@ -131,16 +196,29 @@ const pkceFlow = KeycloakManager.generateAuthorizationUrl({
 
 **Migration Path:**
 ```javascript
-// Move to middleware
+// ✅ NEW - Use keycloak-express-middleware instead
 const pkceFlow = keycloakMiddleware.generateAuthorizationUrl({
   redirect_uri: 'https://app/callback'
 });
 ```
 
-### `loginPKCE(credentials)` - PKCE Token Exchange
+---
+
+### `loginPKCE(credentials)` - PKCE Token Exchange (DEPRECATED)
+
 ```javascript
-// Exchange auth code for tokens in callback
+// ⚠️ DEPRECATED - Don't use in new code
 const token = await KeycloakManager.loginPKCE({
+  code: req.query.code,
+  redirect_uri: 'https://app/callback',
+  code_verifier: req.session.verifier
+});
+```
+
+**Migration Path:**
+```javascript
+// ✅ NEW - Use keycloak-express-middleware instead
+const token = await keycloakMiddleware.loginPKCE({
   code: req.query.code,
   redirect_uri: 'https://app/callback',
   code_verifier: req.session.verifier
@@ -156,6 +234,8 @@ const token = await keycloakMiddleware.loginPKCE({
   code_verifier: req.session.verifier
 });
 ```
+
+---
 
 ## What Stays in keycloak-api-manager
 

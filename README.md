@@ -54,6 +54,8 @@ console.log(users.length);
 KeycloakManager.stop();
 ```
 
+> **💡 Tip:** For user authentication (login with credentials, PKCE flow, token exchange), use [`keycloak-express-middleware`](https://github.com/smartenv-crs4/keycloak-express-middleware) instead. See [PKCE Login Flow Guide](docs/guides/PKCE-Login-Flow.md#-migration-to-keycloak-express-middleware-recommended) for migration examples.
+
 ## Keycloak Feature Flags
 
 For full API coverage in this package (especially Organizations, Client Policies, User Profile, Group permissions), run Keycloak with:

@@ -239,9 +239,15 @@ const response = await axios.get('https://keycloak.example.com/admin/realms/mast
 
 ## auth()
 
-Backward-compatible alias of `login()`.
+⚠️ **DEPRECATED (v6.0.0)** - Use [`keycloak-express-middleware.login()`](https://github.com/smartenv-crs4/keycloak-express-middleware) instead.
 
-Use `login()` in new code for clearer intent.
+This method will be removed in v7.0.0. For user authentication flows, use `keycloak-express-middleware` v6.1.0+.
+
+See: [Migration Guide](../guides/PKCE-Login-Flow.md#-migration-to-keycloak-express-middleware-recommended)
+
+---
+
+**Legacy Note:** Backward-compatible alias of `login()`. Use `login()` instead (also deprecated).
 
 **Syntax:**
 ```javascript
@@ -255,6 +261,14 @@ await KeycloakManager.auth(credentials)
 ---
 
 ## login()
+
+⚠️ **DEPRECATED (v6.0.0)** - Use [`keycloak-express-middleware.login()`](https://github.com/smartenv-crs4/keycloak-express-middleware) instead.
+
+This method will be removed in v7.0.0. For user authentication flows, use `keycloak-express-middleware` v6.1.0+.
+
+See: [Migration Guide](../guides/PKCE-Login-Flow.md#-migration-to-keycloak-express-middleware-recommended)
+
+---
 
 Request tokens from Keycloak via the OIDC token endpoint.
 
@@ -351,6 +365,14 @@ console.log(refreshed.access_token);
 
 ## generateAuthorizationUrl()
 
+⚠️ **DEPRECATED (v6.0.0)** - Use [`keycloak-express-middleware.generateAuthorizationUrl()`](https://github.com/smartenv-crs4/keycloak-express-middleware) instead.
+
+This method will be removed in v7.0.0. For PKCE authentication flows, use `keycloak-express-middleware` v6.1.0+.
+
+See: [Migration Guide](../guides/PKCE-Login-Flow.md#-migration-to-keycloak-express-middleware-recommended)
+
+---
+
 Generate OAuth2 Authorization Code + PKCE flow initialization. Returns a ready-to-use authorization URL and PKCE pair for server-side session storage.
 
 This helper simplifies the first step of PKCE login: generating the authorization URL with PKCE challenge and state parameter.
@@ -440,11 +462,19 @@ app.get('/auth/callback', async (req, res) => {
 
 ## loginPKCE()
 
+⚠️ **DEPRECATED (v6.0.0)** - Use [`keycloak-express-middleware.loginPKCE()`](https://github.com/smartenv-crs4/keycloak-express-middleware) instead.
+
+This method will be removed in v7.0.0. For PKCE authentication flows, use `keycloak-express-middleware` v6.1.0+.
+
+See: [Migration Guide](../guides/PKCE-Login-Flow.md#-migration-to-keycloak-express-middleware-recommended)
+
+---
+
 Perform Authorization Code + PKCE token exchange.
 
 This helper is intended for the callback step after user login on Keycloak, where your backend receives an authorization `code` and exchanges it with `code_verifier`.
 
-> **📖 For a complete step-by-step guide on implementing PKCE flow in your application, see [PKCE Login Flow Guide](../guides/PKCE-Login-Flow.md)**
+> **📖 For a complete step-by-step guide on implementing PKCE flow in your application, see [PKCE Login Flow Guide](../guides/PKCE-Login-Flow.md#-migration-to-keycloak-express-middleware-recommended)**
 
 **Syntax:**
 ```javascript

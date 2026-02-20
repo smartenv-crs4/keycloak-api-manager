@@ -1,5 +1,13 @@
 # PKCE Login Flow Guide
 
+⚠️ **DEPRECATION NOTICE (v6.0.0):** This guide describes PKCE implementation using **deprecated methods** in keycloak-api-manager. 
+
+**👉 NEW APPROACH (Recommended):** For user authentication flows, use [`keycloak-express-middleware v6.1.0+`](https://github.com/smartenv-crs4/keycloak-express-middleware) instead. The middleware package provides a more integrated and Express-native implementation of PKCE flows.
+
+**See:** Migration instructions at the end of this guide.
+
+---
+
 This guide walks you through implementing OAuth2 Authorization Code + PKCE flow in your application using Keycloak and the keycloak-api-manager library.
 
 ## Overview
@@ -499,6 +507,157 @@ function verifyToken(token) {
   });
 }
 ```
+
+## Related Documentation
+
+- [loginPKCE() API Reference](../api/configuration.md#loginpkce)
+- [login() API Reference](../api/configuration.md#login)
+- [OAuth2 PKCE Specification](https://tools.ietf.org/html/rfc7636)
+- [Keycloak Authorization Code Flow](https://www.keycloak.org/docs/latest/server_admin/#_oidc)
+
+---
+
+## 🚀 Migration to keycloak-express-middleware (Recommended)
+
+The methods described in this guide (`generateAuthorizationUrl()`, `loginPKCE()`, `login()`) are **deprecated in v6.0.0** and will be removed in v7.0.0.
+
+### Why Migrate?
+
+`keycloak-express-middleware` provides:
+- ✅ Native Express integration (sessions, cookies, redirects)
+- ✅ Cleaner PKCE implementation focused on user authentication
+- ✅ Better separation of concerns (admin API vs user auth)
+- ✅ Tighter integration with Express middleware patterns
+
+### Migration Example
+
+**Old Code (keycloak-api-manager, DEPRECATED):**
+```javascript
+const KeycloakManager = require('keycloak-api-manager');
+
+// Configure admin API
+await KeycloakManager.configure({
+  baseUrl: 'https://keycloak:8443',
+  realmName: 'master',
+  clientId: 'admin-cli',
+  username: 'admin',
+  password: 'admin'
+});
+
+// Use OIDC methods (deprecated)
+const pkceFlow = KeycloakManager.generateAuthorizationUrl({
+  redirect_uri: 'http://localhost:3000/callback'
+});
+
+const tokens = await KeycloakManager.loginPKCE({
+  code: req.query.code,
+  redirect_uri: 'http://localhost:3000/callback',
+  code_verifier: req.session.pkce_verifier
+});
+```
+
+**New Code (keycloak-express-middleware, RECOMMENDED):**
+```javascript
+const KeycloakMiddleware = require('keycloak-express-middleware');
+
+// Configure middleware for user authentication
+const keycloakMiddleware = new KeycloakMiddleware({
+  baseUrl: 'https://keycloak:8443',
+  realmName: 'my-realm',
+  clientId: 'my-app',
+  clientSecret: 'my-app-secret'
+});
+
+// Use OIDC methods from middleware
+const pkceFlow = keycloakMiddleware.generateAuthorizationUrl({
+  redirect_uri: 'http://localhost:3000/callback'
+});
+
+const tokens = await keycloakMiddleware.loginPKCE({
+  code: req.query.code,
+  redirect_uri: 'http://localhost:3000/callback',
+  code_verifier: req.session.pkce_verifier
+});
+```
+
+### Step-by-Step Migration
+
+**1. Install keycloak-express-middleware:**
+```bash
+npm install keycloak-express-middleware@6.1.0
+npm uninstall keycloak-api-manager  # if no longer needed for admin operations
+```
+
+**2. Initialize middleware instead of manager:**
+```javascript
+// Replace this:
+// const KeycloakManager = require('keycloak-api-manager');
+// await KeycloakManager.configure({...});
+
+// With this:
+const KeycloakMiddleware = require('keycloak-express-middleware');
+const keycloakMiddleware = new KeycloakMiddleware({
+  baseUrl: process.env.KEYCLOAK_URL,
+  realmName: process.env.KEYCLOAK_REALM,
+  clientId: process.env.KEYCLOAK_CLIENT_ID,
+  clientSecret: process.env.KEYCLOAK_CLIENT_SECRET
+});
+```
+
+**3. Replace method calls:**
+```javascript
+// Old (keycloak-api-manager)
+const pkceFlow = KeycloakManager.generateAuthorizationUrl({...});
+const tokens = await KeycloakManager.loginPKCE({...});
+const newTokens = await KeycloakManager.login({...});
+
+// New (keycloak-express-middleware)
+const pkceFlow = keycloakMiddleware.generateAuthorizationUrl({...});
+const tokens = await keycloakMiddleware.loginPKCE({...});
+const newTokens = await keycloakMiddleware.login({...});
+```
+
+**4. Keep using keycloak-api-manager for admin operations (unchanged):**
+```javascript
+const KeycloakManager = require('keycloak-api-manager');
+
+await KeycloakManager.configure({
+  baseUrl: 'https://keycloak:8443',
+  realmName: 'master',
+  clientId: 'admin-cli',
+  username: 'admin',
+  password: 'admin'
+});
+
+// Admin operations still work the same
+const users = await KeycloakManager.users.find();
+const realms = await KeycloakManager.realms.find();
+```
+
+### API Comparison
+
+| Operation | keycloak-api-manager (Deprecated) | keycloak-express-middleware (Recommended) |
+|-----------|-----------------------------------|------------------------------------------|
+| Generate PKCE URL | `KeycloakManager.generateAuthorizationUrl()` | `middleware.generateAuthorizationUrl()` |
+| Login PKCE | `KeycloakManager.loginPKCE()` | `middleware.loginPKCE()` |
+| Token Grant | `KeycloakManager.login()` | `middleware.login()` |
+| Deprecated Alias | `KeycloakManager.auth()` | *(Use login()*)  |
+
+### Additional Resources
+
+- **Middleware Documentation:** https://github.com/smartenv-crs4/keycloak-express-middleware
+- **Migration Guide:** https://github.com/smartenv-crs4/keycloak-api-manager/blob/main/OIDC_MIGRATION_PLAN.md
+- **Middleware Integration Report:** See keycloak-express-middleware/DETAILED_INTEGRATION_REPORT.md
+
+### Deprecation Timeline
+
+| Version | Status | Notes |
+|---------|--------|-------|
+| v5.0.8  | Supported | Last version with working OIDC methods |
+| v6.0.0  | Deprecated | Methods work but marked @deprecated |
+| v7.0.0  | Removed | OIDC methods will be permanently removed |
+
+**Action Required:** Migrate to keycloak-express-middleware before v7.0.0 is released.
 
 ## Related Documentation
 
