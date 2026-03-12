@@ -6,6 +6,14 @@
  * **************************************************************************************************
  * **************************************************************************************************
  */
+/**
+ * **************************************************************************************************
+ * **************************************************************************************************
+ * Clients entity provides a set of methods to manage clients (i.e., applications or services) within a realm.
+ * Clients represent entities that want to interact with Keycloak for authentication or authorization (e.g., web apps, APIs).
+ * **************************************************************************************************
+ * **************************************************************************************************
+ */
 let kcAdminClientHandler=null;
 exports.setKcAdminClient=function(kcAdminClient){
  kcAdminClientHandler=kcAdminClient;

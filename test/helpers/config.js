@@ -79,8 +79,8 @@ function loadConfig() {
 }
 
 /**
- * Inizializza il client Keycloak admin
- * Aspetta che Keycloak sia pronto prima di connettersi
+ * Initializes the Keycloak admin client.
+ * Waits until Keycloak is ready before connecting.
  */
 async function initializeAdminClient() {
   if (adminClient) {
@@ -130,17 +130,17 @@ async function initializeAdminClient() {
 }
 
 /**
- * Crea il realm di test
+ * Creates the test realm.
  */
 async function setupTestRealm() {
   const client = await initializeAdminClient();
   const config = loadConfig();
 
-  // Switcha a master realm per creare il test realm
+  // Switch to the master realm to create the test realm
   client.realmName = 'master';
 
   try {
-    // Controlla se il realm esiste già
+    // Check if the realm already exists
     const realms = await client.realms.find();
     const realmExists = realms.some((r) => r.realm === config.realmName);
 
@@ -166,12 +166,12 @@ async function setupTestRealm() {
     }
   }
 
-  // Switcha back al test realm
+  // Switch back to the test realm
   client.realmName = config.realmName;
 }
 
 /**
- * Pulisce il realm di test
+ * Cleans up the test realm.
  */
 async function cleanupTestRealm() {
   if (!adminClient) return;
@@ -190,7 +190,7 @@ async function cleanupTestRealm() {
 }
 
 /**
- * Ritorna il client admin configurato e autenticato
+ * Returns the configured and authenticated admin client.
  */
 function getAdminClient() {
   if (!adminClient) {
@@ -200,7 +200,7 @@ function getAdminClient() {
 }
 
 /**
- * Reset del client (principalmente per i test)
+ * Resets the admin client (mainly for tests).
  */
 function resetAdminClient() {
   adminClient = null;

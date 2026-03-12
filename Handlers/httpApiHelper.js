@@ -4,6 +4,12 @@
  * Provides direct HTTP calls to Keycloak Admin API
  * Used when @keycloak/keycloak-admin-client has limitations
  */
+/**
+ * HTTP API Helper Module
+ * 
+ * Provides direct HTTP calls to Keycloak Admin API
+ * Used when @keycloak/keycloak-admin-client has limitations
+ */
 
 const http = require('http');
 const https = require('https');

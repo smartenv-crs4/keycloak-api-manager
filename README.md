@@ -54,7 +54,7 @@ console.log(users.length);
 KeycloakManager.stop();
 ```
 
-> **💡 Tip:** For user authentication (login with credentials, PKCE flow, token exchange), use [`keycloak-express-middleware`](https://github.com/smartenv-crs4/keycloak-express-middleware) instead. See [PKCE Login Flow Guide](docs/guides/PKCE-Login-Flow.md#-migration-to-keycloak-express-middleware-recommended) for migration examples.
+> **💡 Tip:** For user authentication (including Authorization Code + PKCE), use [`keycloak-express-middleware`](https://github.com/smartenv-crs4/keycloak-express-middleware). OIDC methods in this package are deprecated and kept only for backward compatibility.
 
 ## Keycloak Feature Flags
 
@@ -102,9 +102,9 @@ Configured handler namespaces:
 
 All documentation is centralized under `docs/`.
 
-### Guides (Practical Implementation)
+### Guides
 
-- [PKCE Login Flow Guide](docs/guides/PKCE-Login-Flow.md) - Step-by-step guide for implementing OAuth2 Authorization Code + PKCE authentication
+- [OIDC Migration Plan](OIDC_MIGRATION_PLAN.md) - Deprecation status and migration notes to keycloak-express-middleware
 
 ### API Reference
 

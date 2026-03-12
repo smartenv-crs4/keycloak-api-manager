@@ -4,8 +4,8 @@ Complete API documentation for keycloak-api-manager.
 
 ## Table of Contents
 
-### Guides (Practical Implementation)
-- [PKCE Login Flow Guide](guides/PKCE-Login-Flow.md) - Step-by-step OAuth2 Authorization Code + PKCE implementation guide
+### Guides
+- [OIDC Migration Plan](../OIDC_MIGRATION_PLAN.md) - Deprecation status and migration notes to keycloak-express-middleware
 
 ### Core API
 - [Configuration & Authentication](api/configuration.md) - Setup, authentication, and lifecycle management
@@ -79,10 +79,10 @@ KeycloakManager.stop();
 | `configure()` | Authentication and setup | Core |
 | `setConfig()` | Runtime configuration | Core |
 | `getToken()` | Get current access token | Core |
-| `login()` | Preferred OIDC token grant/login endpoint wrapper | Core |
-| `generateAuthorizationUrl()` | Generate PKCE authorization URL and verifier pair | Core |
-| `loginPKCE()` | Authorization Code + PKCE token exchange helper | Core |
-| `auth()` | Backward-compatible alias of `login()` | Core |
+| `login()` | Deprecated OIDC token endpoint wrapper (moved to keycloak-express-middleware) | Core |
+| `generateAuthorizationUrl()` | Deprecated PKCE helper (moved to keycloak-express-middleware) | Core |
+| `loginPKCE()` | Deprecated PKCE token exchange helper (moved to keycloak-express-middleware) | Core |
+| `auth()` | Deprecated backward-compatible alias of `login()` | Core |
 | `stop()` | Stop token refresh timer | Core |
 | `realms` | Realm management | realmsHandler |
 | `users` | User management | usersHandler |

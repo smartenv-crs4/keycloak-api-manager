@@ -1,5 +1,22 @@
+
+/**
+ * **************************************************************************************************
+ * Keycloak API Manager - Main Entry Point
+ *
+ * This module provides a centralized interface for managing Keycloak administrative resources via the REST Admin API.
+ * It exposes methods for client configuration, token handling, and wiring all resource handlers.
+ *
+ * Each handler in Handlers/ encapsulates logic for a specific Keycloak resource (users, roles, groups, etc.).
+ *
+ * NOTE: OIDC authentication functions are deprecated and have been moved to keycloak-express-middleware.
+ * **************************************************************************************************
+ */
 const KeycloakAdminClient = require('@keycloak/keycloak-admin-client').default;
 
+
+/**
+ * Resource handler registry. Each key represents a Keycloak resource and maps to its handler module.
+ */
 const handlerRegistry = {
     realms: require('./Handlers/realmsHandler'),
     users: require('./Handlers/usersHandler'),
@@ -17,17 +34,33 @@ const handlerRegistry = {
     serverInfo: require('./Handlers/serverInfoHandler')
 };
 
+
+// Keycloak Admin client instance
 let kcAdminClient = null;
+// Interval ID per il refresh automatico del token
 let tokenRefreshInterval = null;
+// Current runtime configuration
 let runtimeConfig = null;
+// Authentication payload used for token refresh
 let authPayload = null;
 
+
+/**
+ * Ensures the client is configured before executing operations.
+ * Throws an error when configuration is missing.
+ */
 function assertConfigured() {
     if (!kcAdminClient || !runtimeConfig) {
         throw new Error('Keycloak Admin Client is not configured. Call configure() first.');
     }
 }
 
+
+/**
+ * Normalizes the baseUrl by removing a trailing slash, if present.
+ * @param {string} baseUrl
+ * @returns {string}
+ */
 function toBaseUrl(baseUrl) {
     if (!baseUrl || typeof baseUrl !== 'string') {
         throw new Error('Invalid baseUrl. It must be a non-empty string.');
@@ -35,6 +68,10 @@ function toBaseUrl(baseUrl) {
     return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 }
 
+
+/**
+ * Binds all resource handlers by injecting the configured Keycloak client and exporting the modules.
+ */
 function bindHandlers() {
     Object.entries(handlerRegistry).forEach(([name, handler]) => {
         handler.setKcAdminClient(kcAdminClient);
@@ -42,6 +79,10 @@ function bindHandlers() {
     });
 }
 
+
+/**
+ * Stops and resets the token refresh timer.
+ */
 function clearRefreshTimer() {
     if (tokenRefreshInterval) {
         clearInterval(tokenRefreshInterval);
@@ -49,6 +90,11 @@ function clearRefreshTimer() {
     }
 }
 
+
+/**
+ * Starts the automatic access token refresh timer.
+ * @param {number} intervalMs - interval in milliseconds
+ */
 function startRefreshTimer(intervalMs) {
     clearRefreshTimer();
 
@@ -65,6 +111,25 @@ function startRefreshTimer(intervalMs) {
     }
 }
 
+/**
+ * Initializes and authenticates the Keycloak Admin Client. Must be called before using any handler.
+ * Supports password and client_credentials grant types.
+ * Starts automatic token refresh and propagates the configured client to all handlers.
+ *
+ * @param {Object} adminClientCredentials - Credentials and configuration object:
+ *   - baseUrl {string} Keycloak server base URL
+ *   - realmName {string} Realm name
+ *   - clientId {string} Client ID
+ *   - clientSecret {string} (optional) Secret for client_credentials
+ *   - username {string} (optional) Admin username
+ *   - password {string} (optional) Admin password
+ *   - grantType {string} ("password" | "client_credentials")
+ *   - tokenLifeSpan {number} (optional) Token refresh interval (seconds)
+ *   - ... Other OAuth2 parameters
+ * @returns {Promise<void>} Promise resolved when configuration is complete
+ * @example
+ * await KeycloakManager.configure({ baseUrl, realmName, clientId, clientSecret, grantType: 'client_credentials' })
+ */
 exports.configure = async function configure(adminClientCredentials = {}) {
     const {
         baseUrl,
@@ -115,6 +180,35 @@ exports.configure = async function configure(adminClientCredentials = {}) {
     bindHandlers();
 };
 
+
+/**
+ * Updates Keycloak client runtime configuration without re-initializing the session or re-authenticating.
+ * Allows switching realm, baseUrl, or HTTP request options (requestConfig) at runtime.
+ *
+ * @param {Object} overrides - Configuration overrides object.
+ * @param {string} [overrides.realmName] - Changes the target realm for all subsequent calls.
+ * @param {string} [overrides.baseUrl] - Changes the Keycloak server base URL.
+ * @param {object} [overrides.requestConfig] - HTTP request option overrides (e.g., timeout, custom headers). These options are passed internally to the HTTP client used by keycloak-admin-client (typically Axios).
+ * @returns {void}
+ *
+ * @example
+ * // Change only the realm
+ * KeycloakManager.setConfig({ realmName: 'my-app' });
+ *
+ * // Change realm and add custom request headers
+ * KeycloakManager.setConfig({
+ *   realmName: 'my-realm',
+ *   requestConfig: {
+ *     timeout: 10000,
+ *     headers: { 'X-Custom-Header': 'value' }
+ *   }
+ * });
+ *
+ * // Change baseUrl (e.g., for different environments)
+ * KeycloakManager.setConfig({ baseUrl: 'https://keycloak-alt.example.com' });
+ *
+ * @note Does not perform login/token refresh. It only updates runtime context. The token remains valid if compatible with the new realm.
+ */
 exports.setConfig = function setConfig(configToOverride = {}) {
     assertConfigured();
     kcAdminClient.setConfig(configToOverride);
@@ -126,6 +220,16 @@ exports.setConfig = function setConfig(configToOverride = {}) {
     };
 };
 
+
+/**
+ * Returns the current access and refresh tokens.
+ * Useful for debugging or passing the token to other services.
+ * The token is automatically refreshed by the internal timer.
+ *
+ * @returns {{ accessToken: string, refreshToken: string }}
+ * @example
+ * const { accessToken } = KeycloakManager.getToken();
+ */
 exports.getToken = function getToken() {
     assertConfigured();
     return {
@@ -134,10 +238,28 @@ exports.getToken = function getToken() {
     };
 };
 
+
+/**
+ * Stops the automatic token refresh timer and releases resources.
+ * Call this before shutting down the application to avoid dangling processes.
+ *
+ * @returns {void}
+ * @example
+ * KeycloakManager.stop();
+ */
 exports.stop = function stop() {
     clearRefreshTimer();
 };
 
+
+/**
+ * Executes a direct request to the Keycloak OIDC token endpoint.
+ * Used internally for password, client_credentials, authorization_code (PKCE), and other grant types.
+ *
+ * @param {Object} credentials - OAuth2 parameters (grant_type, username, password, code, etc.)
+ * @returns {Promise<Object>} Token endpoint response (access_token, refresh_token, etc.)
+ * @throws {Error} If the request fails
+ */
 async function requestOidcToken(credentials = {}) {
     assertConfigured();
 
