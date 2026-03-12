@@ -7,15 +7,6 @@
  * **************************************************************************************************
  * **************************************************************************************************
  */
-/**
- * **************************************************************************************************
- * **************************************************************************************************
- * The groups entity allows you to manage groups in a Keycloak realm.
- * Groups are collections of users and can have roles and attributes assigned to them.
- * Groups help organize users and assign permissions in a scalable way
- * **************************************************************************************************
- * **************************************************************************************************
- */
 let kcAdminClientHandler=null;
 exports.setKcAdminClient=function(kcAdminClient){
  kcAdminClientHandler=kcAdminClient;

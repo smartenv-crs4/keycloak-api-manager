@@ -8,16 +8,6 @@
  * **************************************************************************************************
  * **************************************************************************************************
  */
-/**
- * **************************************************************************************************
- * **************************************************************************************************
- * The clientScopes resource allows you to manage client scopes in Keycloak.
- * Client scopes are reusable sets of protocol mappers and role scope mappings which
- * can be assigned to clients to define what information about the user is included in tokens and
- * what roles are available
- * **************************************************************************************************
- * **************************************************************************************************
- */
 let kcAdminClientHandler=null;
 exports.setKcAdminClient=function(kcAdminClient){
  kcAdminClientHandler=kcAdminClient;

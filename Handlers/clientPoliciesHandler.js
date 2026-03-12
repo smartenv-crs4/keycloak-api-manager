@@ -42,7 +42,8 @@ exports.getPolicies = function(filter) {
  *     - profiles: (array) - Profiles to apply when policy matches
  */
 exports.updatePolicies = async function(filter, policiesRepresentation) {
-    // Direct API call since @keycloak/keycloak-admin-client doesn't support this
+    // Direct API call: admin-client support for client-policies update endpoints
+    // is incomplete/inconsistent across versions.
     const realm = filter?.realm || kcAdminClientHandler.realmName;
     const baseUrl = kcAdminClientHandler.baseUrl;
     const token = kcAdminClientHandler.accessToken;
@@ -95,7 +96,8 @@ exports.getProfiles = function(filter) {
  *       - configuration: (object) - Executor-specific configuration
  */
 exports.updateProfiles = async function(filter, profilesRepresentation) {
-    // Direct API call since @keycloak/keycloak-admin-client doesn't support this
+    // Direct API call: admin-client support for client-policies update endpoints
+    // is incomplete/inconsistent across versions.
     const realm = filter?.realm || kcAdminClientHandler.realmName;
     const baseUrl = kcAdminClientHandler.baseUrl;
     const token = kcAdminClientHandler.accessToken;

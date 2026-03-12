@@ -37,7 +37,7 @@ const handlerRegistry = {
 
 // Keycloak Admin client instance
 let kcAdminClient = null;
-// Interval ID per il refresh automatico del token
+// Interval ID for automatic token refresh
 let tokenRefreshInterval = null;
 // Current runtime configuration
 let runtimeConfig = null;
@@ -154,6 +154,8 @@ exports.configure = async function configure(adminClientCredentials = {}) {
         realmName
     });
 
+    // Guard against null/empty refresh token updates from upstream client internals.
+    // Without this, some refresh paths can keep a stale token value in memory.
     const originalSetRefreshToken = kcAdminClient.setRefreshToken?.bind(kcAdminClient);
     if (originalSetRefreshToken) {
         kcAdminClient.setRefreshToken = (token) => {
@@ -165,6 +167,7 @@ exports.configure = async function configure(adminClientCredentials = {}) {
         };
     }
 
+    // Keep a canonical auth payload so the refresh timer can reuse the same grant context.
     authPayload = {
         clientId,
         ...(clientSecret ? { clientSecret } : {}),
@@ -172,6 +175,8 @@ exports.configure = async function configure(adminClientCredentials = {}) {
     };
     await kcAdminClient.auth(authPayload);
 
+    // Refresh midway through the configured lifespan to reduce expiration race conditions.
+    // Fallback to 30s when tokenLifeSpan is omitted/invalid.
     const intervalMs = Number.isFinite(Number(tokenLifeSpan)) && Number(tokenLifeSpan) > 0
         ? (Number(tokenLifeSpan) * 1000) / 2
         : 30000;
@@ -213,6 +218,7 @@ exports.setConfig = function setConfig(configToOverride = {}) {
     assertConfigured();
     kcAdminClient.setConfig(configToOverride);
 
+    // Keep local runtimeConfig aligned with client overrides used by helper methods.
     runtimeConfig = {
         ...runtimeConfig,
         ...(configToOverride.baseUrl ? { baseUrl: toBaseUrl(configToOverride.baseUrl) } : {}),
@@ -264,12 +270,14 @@ async function requestOidcToken(credentials = {}) {
     assertConfigured();
 
     const body = new URLSearchParams();
+    // Serialize only defined values to avoid sending "undefined"/"null" to Keycloak.
     Object.entries(credentials).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
             body.append(key, String(value));
         }
     });
 
+    // Apply runtime client credentials as defaults unless explicitly overridden.
     if (runtimeConfig.clientId && !body.has('client_id')) {
         body.append('client_id', runtimeConfig.clientId);
     }
@@ -289,6 +297,7 @@ async function requestOidcToken(credentials = {}) {
     );
 
     const responseText = await response.text();
+    // Keycloak usually returns JSON; keep empty-body responses safe.
     const payload = responseText ? JSON.parse(responseText) : {};
 
     if (!response.ok) {

@@ -163,7 +163,7 @@ docs/               # Centralized documentation
 
 ## Versioning and Compatibility
 
-- Package version: `6.0.0`
+- Package version: `6.0.1`
 - Keycloak Admin client dependency: `@keycloak/keycloak-admin-client`
 - Main compatibility target: Keycloak 25/26
 

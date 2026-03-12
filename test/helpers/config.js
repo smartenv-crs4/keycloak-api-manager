@@ -90,6 +90,7 @@ async function initializeAdminClient() {
   // Load configuration (after local.json has been created from Docker)
   const config = loadConfig();
 
+  // Retry loop is intentionally generous to tolerate container cold-start time.
   let retries = 30;
   let lastError;
 
@@ -113,9 +114,11 @@ async function initializeAdminClient() {
       lastError = err;
       retries--;
       if (retries > 0) {
+        // Keycloak may still be booting; wait and retry.
         console.log(`Waiting for Keycloak... (${retries} retries left)`);
         await delay(2000);
       } else {
+        // Last attempt: print as much OAuth2 context as possible for diagnostics.
         console.error('OAuth2 Error Details:', {
           message: err.message,
           response: err.response?.data,
@@ -145,6 +148,7 @@ async function setupTestRealm() {
     const realmExists = realms.some((r) => r.realm === config.realmName);
 
     if (!realmExists) {
+      // Keep realm defaults explicit so tests behave consistently across environments.
       await client.realms.create({
         realm: config.realmName,
         displayName: 'Test Realm',
@@ -159,6 +163,7 @@ async function setupTestRealm() {
       console.log(`✓ Test realm '${config.realmName}' already exists`);
     }
   } catch (err) {
+    // 409 means the realm already exists, which is acceptable for idempotent setup.
     if (err.response?.status === 409) {
       console.log(`✓ Test realm '${config.realmName}' already exists`);
     } else {
@@ -183,6 +188,7 @@ async function cleanupTestRealm() {
     await adminClient.realms.del({ realm: config.realmName });
     console.log(`✓ Test realm '${config.realmName}' deleted`);
   } catch (err) {
+    // Ignore not-found during cleanup to keep teardown idempotent.
     if (err.response?.status !== 404) {
       console.warn(`Warning: Failed to delete test realm: ${err.message}`);
     }

@@ -78,7 +78,7 @@ KeycloakManager.stop();
 |-----------|-------------|--------|
 | `configure()` | Authentication and setup | Core |
 | `setConfig()` | Runtime configuration | Core |
-| `getToken()` | Get current access token | Core |
+| `getToken()` | Get current access/refresh token pair | Core |
 | `login()` | Deprecated OIDC token endpoint wrapper (moved to keycloak-express-middleware) | Core |
 | `generateAuthorizationUrl()` | Deprecated PKCE helper (moved to keycloak-express-middleware) | Core |
 | `loginPKCE()` | Deprecated PKCE token exchange helper (moved to keycloak-express-middleware) | Core |

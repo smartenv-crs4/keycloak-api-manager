@@ -1,8 +1,8 @@
 # OIDC Methods Migration Plan - keycloak-api-manager
 
-## 🚀 Current Status: v6.0.0 - MIGRATION RELEASED
+## 🚀 Current Status: v6.0.1 - Migration Released
 
-✅ **OIDC Methods Deprecated:** All OIDC authentication methods are now marked `@deprecated` in v6.0.0.
+✅ **OIDC Methods Deprecated:** All OIDC authentication methods are marked `@deprecated` since v6.0.0.
 
 ✅ **keycloak-express-middleware v6.1.0 Released:** OIDC methods now available in middleware package with full test coverage.
 
@@ -14,7 +14,7 @@
 
 ## Overview
 
-L'architettura prevede una **migrazione pianificata** dei metodi OIDC (`auth()`, `login()`, `loginPKCE()`) da `keycloak-api-manager` a `keycloak-express-middleware`.
+This architecture follows a **planned migration** of OIDC methods (`auth()`, `login()`, `loginPKCE()`) from `keycloak-api-manager` to `keycloak-express-middleware`.
 
 ## Current State (v5.0.8)
 
@@ -24,7 +24,7 @@ L'architettura prevede una **migrazione pianificata** dei metodi OIDC (`auth()`,
 - ✅ `generateAuthorizationUrl(options)` - PKCE URL generator
 - ✅ `loginPKCE(credentials)` - PKCE token exchange
 
-## Current State (v6.0.0) - NOW
+## Current State (v6.0.1) - NOW
 
 **Status Changes in keycloak-api-manager:**
 - ⚠️ `auth(credentials)` - Marked @deprecated
@@ -125,7 +125,7 @@ keycloak-express-middleware (User Authentication)
 | Version | OIDC Methods | Status |
 |---------|------------|--------|
 | v5.0.8 | Supported | Legacy (should migrate) |
-| v6.0.0 | Deprecated | Current (shows warnings) |
+| v6.0.1 | Deprecated | Current (shows warnings) |
 | v7.0.0 | Removed | Future (no OIDC methods) |
 
 **NPM:** https://www.npmjs.com/package/keycloak-api-manager
@@ -218,16 +218,6 @@ const token = await KeycloakManager.loginPKCE({
 **Migration Path:**
 ```javascript
 // ✅ NEW - Use keycloak-express-middleware instead
-const token = await keycloakMiddleware.loginPKCE({
-  code: req.query.code,
-  redirect_uri: 'https://app/callback',
-  code_verifier: req.session.verifier
-});
-```
-
-**Migration Path:**
-```javascript
-// Move to middleware
 const token = await keycloakMiddleware.loginPKCE({
   code: req.query.code,
   redirect_uri: 'https://app/callback',

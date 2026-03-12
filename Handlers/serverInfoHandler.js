@@ -7,15 +7,6 @@
  * **************************************************************************************************
  * **************************************************************************************************
  */
-/**
- * **************************************************************************************************
- * **************************************************************************************************
- * The Server Info entity provides information about the Keycloak server instance,
- * including available providers, themes, system info, memory usage, and enabled features.
- * This is useful for monitoring, diagnostics, and understanding server capabilities.
- * **************************************************************************************************
- * **************************************************************************************************
- */
 let kcAdminClientHandler = null;
 
 exports.setKcAdminClient = function(kcAdminClient) {

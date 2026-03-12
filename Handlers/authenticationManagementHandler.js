@@ -17,25 +17,6 @@
  * **************************************************************************************************
  * **************************************************************************************************
  */
-/**
- * **************************************************************************************************
- * **************************************************************************************************
- * The authenticationManagement entity provides methods to manage authentication flows, executions,
- * and related settings within a Keycloak realm. These operations let you:
- *    - Create and manage authentication flows (e.g., browser flow, direct grant flow).
- *    - Add and configure executions (authenticators, forms, conditions).
- *    - Update execution requirements (e.g., REQUIRED, ALTERNATIVE, DISABLED).
- *    - Handle form providers and authenticator configuration.
- *    - Manage bindings (set a realm’s browser flow, direct grant flow, etc.).
- *
- * Common Use Cases:
- *    - Defining custom login flows.
- *    - Adding 2FA authenticators (e.g., OTP, WebAuthn) to flows.
- *    - Configuring conditional executions (e.g., "only if user has role X").
- *    - Assigning authentication flows to realm bindings (browser, reset credentials, etc.).
- * **************************************************************************************************
- * **************************************************************************************************
- */
 let kcAdminClientHandler=null;
 exports.setKcAdminClient=function(kcAdminClient){
  kcAdminClientHandler=kcAdminClient;

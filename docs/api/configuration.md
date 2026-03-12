@@ -36,7 +36,7 @@ Authentication configuration object.
 | `username` | string | 📋 Conditional | Required for `password` grant type |
 | `password` | string | 📋 Conditional | Required for `password` grant type |
 | `clientSecret` | string | 📋 Conditional | Required for `client_credentials` grant type |
-| `tokenLifeSpan` | number | 📋 Optional | Token refresh interval in seconds (default: 60) |
+| `tokenLifeSpan` | number | 📋 Optional | Token lifespan hint in seconds used to schedule refresh (`tokenLifeSpan / 2`) |
 | `scope` | string | 📋 Optional | OAuth2 scope (e.g., `'offline_access'` for refresh tokens) |
 
 ### Returns
@@ -50,6 +50,7 @@ Authentication configuration object.
 ```javascript
 const KeycloakManager = require('keycloak-api-manager');
 
+// Bootstrap admin session once at startup.
 await KeycloakManager.configure({
   baseUrl: 'https://keycloak.example.com:8443',
   realmName: 'master',
@@ -60,6 +61,7 @@ await KeycloakManager.configure({
   tokenLifeSpan: 60
 });
 
+// All handler calls below reuse the authenticated admin context.
 console.log('Authenticated successfully');
 ```
 
@@ -93,7 +95,10 @@ await KeycloakManager.configure({
 
 ### Automatic Token Refresh
 
-When `tokenLifeSpan` is set, the client automatically refreshes the access token before expiration using an internal timer. The refresh happens at `tokenLifeSpan` seconds interval.
+The client automatically refreshes the access token using an internal timer.
+
+- If `tokenLifeSpan` is provided and valid, refresh runs at half that interval (`tokenLifeSpan / 2`).
+- If `tokenLifeSpan` is omitted/invalid, a safe fallback interval of 30 seconds is used.
 
 ### Error Handling
 
@@ -136,7 +141,8 @@ Configuration overrides object.
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `realmName` | string | 📋 Optional | Switch to a different realm context |
-| `requestConfig` | object | 📋 Optional | Axios request configuration overrides |
+| `baseUrl` | string | 📋 Optional | Override Keycloak base URL for subsequent calls |
+| `requestConfig` | object | 📋 Optional | HTTP client request overrides forwarded to `@keycloak/keycloak-admin-client` internals (typically Axios). Supported keys depend on the installed admin client version |
 
 ### Returns
 
@@ -167,6 +173,7 @@ const users = await KeycloakManager.users.find({ max: 100 });
 #### Custom Request Configuration
 
 ```javascript
+// Runtime realm switch is immediate and affects subsequent API calls.
 KeycloakManager.setConfig({
   realmName: 'my-realm',
   requestConfig: {
@@ -182,6 +189,7 @@ KeycloakManager.setConfig({
 
 - `setConfig()` does NOT perform token/login calls. It only updates the runtime context.
 - Changing `realmName` affects all subsequent API calls until changed again.
+- Changing `baseUrl` updates the runtime target URL and is normalized (trailing slash removed).
 - The access token remains valid across realm switches (as long as the authenticated user/service account has permissions).
 
 ---
@@ -192,7 +200,7 @@ Retrieve the current access token. Useful for debugging or passing the token to 
 
 **Syntax:**
 ```javascript
-const token = await KeycloakManager.getToken()
+const { accessToken, refreshToken } = KeycloakManager.getToken()
 ```
 
 ### Parameters
@@ -201,7 +209,7 @@ None
 
 ### Returns
 
-**Promise\<string\>** - The current access token (JWT)
+**{ accessToken: string, refreshToken: string }** - Current token pair managed by the client
 
 ### Examples
 
@@ -215,14 +223,15 @@ await KeycloakManager.configure({
   clientId: 'admin-cli'
 });
 
-const token = await KeycloakManager.getToken();
-console.log('Access Token:', token);
+// Reads token currently managed by the internal refresh loop.
+const { accessToken } = KeycloakManager.getToken();
+console.log('Access Token:', accessToken);
 
 // Use token with custom HTTP client
 const axios = require('axios');
 const response = await axios.get('https://keycloak.example.com/admin/realms/master', {
   headers: {
-    'Authorization': `Bearer ${token}`
+    'Authorization': `Bearer ${accessToken}`
   }
 });
 ```
@@ -230,7 +239,7 @@ const response = await axios.get('https://keycloak.example.com/admin/realms/mast
 ### Notes
 
 - The returned token is automatically refreshed by the internal timer (if `tokenLifeSpan` was configured).
-- Token format is JWT (JSON Web Token).
+- `accessToken` is JWT (JSON Web Token). `refreshToken` may be undefined depending on grant/scope.
 
 ---
 
@@ -341,7 +350,7 @@ const KeycloakManager = require('keycloak-api-manager');
 
 async function keycloakWorkflow() {
   try {
-    // 1. Configure and authenticate
+    // 1) Configure and authenticate once.
     await KeycloakManager.configure({
       baseUrl: 'https://keycloak.example.com:8443',
       realmName: 'master',
@@ -353,27 +362,28 @@ async function keycloakWorkflow() {
     });
     console.log('✓ Authenticated');
     
-    // 2. Work in master realm
+    // 2) Run operations in the current realm context.
     const masterRealms = await KeycloakManager.realms.find();
     console.log(`✓ Found ${masterRealms.length} realms`);
     
-    // 3. Switch to application realm
+    // 3) Switch realm context for following API calls.
     KeycloakManager.setConfig({ realmName: 'my-app' });
     console.log('✓ Switched to my-app realm');
     
-    // 4. Perform operations
+    // 4) Execute admin operations in the target realm.
     const users = await KeycloakManager.users.find({ max: 100 });
     console.log(`✓ Found ${users.length} users in my-app`);
     
-    // 5. Get current token for debugging
-    const token = await KeycloakManager.getToken();
-    console.log('✓ Current token:', token.substring(0, 50) + '...');
+    // 5) Optionally inspect the token for debugging/integration checks.
+    const { accessToken } = KeycloakManager.getToken();
+    console.log('✓ Current token:', accessToken.substring(0, 50) + '...');
     
-    // 6. Cleanup
+    // 6) Always stop refresh timer before process exit.
     KeycloakManager.stop();
     console.log('✓ Stopped token refresh');
     
   } catch (error) {
+    // Ensure timer cleanup also happens on failures.
     console.error('✗ Error:', error.message);
     KeycloakManager.stop();
     process.exit(1);

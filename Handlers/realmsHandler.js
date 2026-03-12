@@ -7,16 +7,6 @@
  * **************************************************************************************************
  * **************************************************************************************************
  */
-
-/**
- * **************************************************************************************************
- * **************************************************************************************************
- * The realms property provides access to all administrative operations related to Keycloak realms.
- * A realm in Keycloak is a fundamental concept that acts as an isolated tenant:
- * each realm manages its own set of users, roles, groups, and clients independently.
- * **************************************************************************************************
- * **************************************************************************************************
- */
 let kcAdminClientHandler=null;
 exports.setKcAdminClient=function(kcAdminClient){
  kcAdminClientHandler=kcAdminClient;

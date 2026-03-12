@@ -6,14 +6,6 @@
  * **************************************************************************************************
  * **************************************************************************************************
  */
-/**
- * **************************************************************************************************
- * **************************************************************************************************
- * Clients entity provides a set of methods to manage clients (i.e., applications or services) within a realm.
- * Clients represent entities that want to interact with Keycloak for authentication or authorization (e.g., web apps, APIs).
- * **************************************************************************************************
- * **************************************************************************************************
- */
 let kcAdminClientHandler=null;
 exports.setKcAdminClient=function(kcAdminClient){
  kcAdminClientHandler=kcAdminClient;
@@ -22,6 +14,7 @@ exports.setKcAdminClient=function(kcAdminClient){
 /**
  * Helper function to make direct HTTP calls to Keycloak Admin API.
  * Used when @keycloak/keycloak-admin-client has bugs or inconsistencies.
+ * This keeps behavior aligned with server endpoints even when upstream wrappers lag behind.
  * 
  * @param {string} path - API path relative to baseUrl (e.g., '/admin/realms/...')
  * @param {string} method - HTTP method (GET, POST, PUT, DELETE)
@@ -553,19 +546,6 @@ exports.delClientScopeMappings=function(filter,roles){
  * @parameters:
  *  filter: JSON structure that defines the filter parameters:
  *      - id: [required] The ID of the client for which you want to list available realm-level role mappings.
- */
-exports.listAvailableRealmScopeMappings=function(filter){
- return (kcAdminClientHandler.clients.listAvailableRealmScopeMappings(filter));
-}
-
-
-/**
- * ***************************** - listAvailableRealmScopeMappings - *******************************
- * The method is used to retrieve all realm-level roles that are available to be assigned to a specific client.
- * These are roles defined at the realm level that the client does not yet have mapped, allowing you to see what can be added.
- * @parameters:
- * - filter: JSON structure that defines the filter parameters:
- *     - id: [required] The ID of the client for which you want to list available realm-level role mappings.
  */
 exports.listAvailableRealmScopeMappings=function(filter){
  return (kcAdminClientHandler.clients.listAvailableRealmScopeMappings(filter));

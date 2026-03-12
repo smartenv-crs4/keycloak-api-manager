@@ -7,15 +7,6 @@
  * **************************************************************************************************
  * **************************************************************************************************
  */
-/**
- * **************************************************************************************************
- * **************************************************************************************************
- * The User Profile entity (Keycloak 15+) allows managing declarative user profile configuration.
- * This modern approach replaces the legacy attribute-based user management with a more
- * structured and type-safe configuration model.
- * **************************************************************************************************
- * **************************************************************************************************
- */
 let kcAdminClientHandler = null;
 
 exports.setKcAdminClient = function(kcAdminClient) {
@@ -32,7 +23,7 @@ exports.setKcAdminClient = function(kcAdminClient) {
  * @returns: User profile configuration object with attributes, groups, etc.
  */
 exports.getConfiguration = async function(filter) {
-    // Direct API call for better compatibility
+    // Direct API call: this endpoint is not consistently exposed across admin-client versions.
     const realm = filter?.realm || kcAdminClientHandler.realmName;
     const baseUrl = kcAdminClientHandler.baseUrl;
     const token = kcAdminClientHandler.accessToken;
@@ -72,7 +63,7 @@ exports.getConfiguration = async function(filter) {
  *   - unmanagedAttributePolicy: (string) - Policy for unmanaged attributes
  */
 exports.updateConfiguration = async function(filter, userProfileConfig) {
-    // Direct API call for better compatibility
+    // Direct API call: this endpoint is not consistently exposed across admin-client versions.
     const realm = filter?.realm || kcAdminClientHandler.realmName;
     const baseUrl = kcAdminClientHandler.baseUrl;
     const token = kcAdminClientHandler.accessToken;

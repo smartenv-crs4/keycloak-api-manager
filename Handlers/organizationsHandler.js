@@ -10,18 +10,6 @@
  * **************************************************************************************************
  * **************************************************************************************************
  */
-/**
- * **************************************************************************************************
- * **************************************************************************************************
- * The Organizations entity (Keycloak 25+) allows managing organizations for multi-tenancy.
- * Organizations provide a way to group users, identity providers, and domains together,
- * enabling better isolation and management of different organizational units.
- * 
- * NOTE: Some Organizations APIs are not fully supported by @keycloak/keycloak-admin-client
- * so this handler uses direct REST API calls for those endpoints.
- * **************************************************************************************************
- * **************************************************************************************************
- */
 let kcAdminClientHandler = null;
 
 exports.setKcAdminClient = function(kcAdminClient) {
@@ -29,7 +17,8 @@ exports.setKcAdminClient = function(kcAdminClient) {
 }
 
 /**
- * Helper function to make direct API calls to Keycloak
+ * Helper to perform direct Admin REST calls for Organizations endpoints.
+ * This bypasses admin-client gaps for some Keycloak versions/features.
  */
 async function makeDirectApiCall(method, endpoint, body = null) {
     const baseUrl = kcAdminClientHandler.baseUrl;
