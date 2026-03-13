@@ -61,7 +61,8 @@ await KeycloakManager.configure({
   tokenLifeSpan: 60
 });
 
-// Switch to different realm
+// Alternative after configure(): switch runtime context without calling
+// configure() again (no new login/token flow is performed).
 KeycloakManager.setConfig({ realmName: 'my-realm' });
 
 // Use handlers

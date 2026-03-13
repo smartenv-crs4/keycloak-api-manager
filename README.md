@@ -48,6 +48,8 @@ await KeycloakManager.configure({
   tokenLifeSpan: 60
 });
 
+// Alternative after configure(): update runtime context (for example realm)
+// without re-authenticating or calling configure() again.
 KeycloakManager.setConfig({ realmName: 'my-realm' });
 
 const users = await KeycloakManager.users.find({ max: 20 });
