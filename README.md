@@ -149,8 +149,7 @@ All documentation is centralized under `docs/`.
 
 - [Architecture and Runtime](docs/architecture.md)
 - [Keycloak Setup and Feature Flags](docs/keycloak-setup.md)
-- [Testing Guide](docs/testing.md)
-- [Test Configuration](docs/test-configuration.md)
+- [Testing Guide](docs/testing.md) — setup, configuration, commands, and test architecture
 - [Deployment (Local/Remote, HTTP/HTTPS)](docs/deployment.md)
 
 ## Testing
