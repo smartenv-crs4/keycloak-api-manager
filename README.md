@@ -60,15 +60,39 @@ KeycloakManager.stop();
 
 ## Keycloak Feature Flags
 
-For full API coverage in this package (especially Organizations, Client Policies, User Profile, Group permissions), run Keycloak with:
+Some APIs exposed by this package depend on Keycloak server features that are disabled by default. Enable these flags when you want full endpoint coverage (local dev, CI, or production environments that use these modules):
 
 ```bash
 --features=admin-fine-grained-authz:v1,organization,client-policies
 ```
 
-### Why `admin-fine-grained-authz:v1`
+What each flag is for:
 
-In Keycloak 26.x, management-permissions APIs used by group/user fine-grained tests are compatible with `v1`.
+- `admin-fine-grained-authz:v1`: enables management-permissions endpoints used by group/user fine-grained permission flows.
+- `organization`: enables Organizations APIs.
+- `client-policies`: enables Client Policies and Client Profiles APIs.
+
+When you can skip them:
+
+- If you only use core admin operations (for example realms/users/clients CRUD), the package still works without these flags.
+- If you use `organizations`, `clientPolicies`, or management-permissions methods, these flags are required.
+
+### Why `admin-fine-grained-authz:v1` in Keycloak 26.x
+
+In Keycloak 26.x, the management-permissions APIs used by this package are compatible with the `v1` variant, so `admin-fine-grained-authz:v1` is the recommended setting.
+
+### Example (Docker)
+
+```bash
+docker run -d --name keycloak \
+  -p 8080:8080 \
+  -e KEYCLOAK_ADMIN=admin \
+  -e KEYCLOAK_ADMIN_PASSWORD=admin \
+  -e KC_FEATURES=admin-fine-grained-authz:v1,organization,client-policies \
+  quay.io/keycloak/keycloak:latest start-dev
+```
+
+See [Keycloak Setup and Feature Flags](docs/keycloak-setup.md) for full setup details.
 
 ## Public API Entry Points
 
