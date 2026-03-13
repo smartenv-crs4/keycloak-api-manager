@@ -55,7 +55,7 @@ exports.createComposite=function(filters,roles){
  *      - realm (string, optional: if set globally in the client): The realm from which to retrieve roles.
  *      - first (number, optional): Index of the first result to return (used for pagination).
  *      - max (number, optional): Maximum number of results to return.
- *      - name (string, optional): Search string to filter roles by name.
+ *      - search (string, optional): Search string to filter roles by name.
  */
 exports.find=function(filters){
  return (kcAdminClientHandler.roles.find(filters));
@@ -81,7 +81,7 @@ exports.findOneByName=function(filters){
  * Get a role by its Id
  * @parameters:
  * - filters: parameter provided as a JSON object that accepts the following parameters:
- *     - Id (string, required) — The Id of the role to retrieve.
+ *     - id (string, required) — The Id of the role to retrieve.
  *     - realm (string, optional if set globally) — The realm where the role is defined.
  */
 exports.findOneById=function(filters){
@@ -94,7 +94,7 @@ exports.findOneById=function(filters){
  * Update a role by its name
  * @parameters:
  * - filters: parameter provided as a JSON object that accepts the following parameters:
- *     - name (string, required) — The exact name of the role to retrieve.
+ *     - name (string, required) — The exact name of the role to update.
  *     - realm (string, optional if set globally) — The realm where the role is defined.
  * - role_dictionary: A JSON object representing a role dictionary as defined in Keycloak
  */
@@ -109,7 +109,7 @@ exports.updateByName=function(filters,role_dictionary){
  * Update a role by its Id
  * @parameters:
  * - filters: parameter provided as a JSON object that accepts the following parameters:
- *     - name (string, required) — The exact name of the role to retrieve.
+ *     - id (string, required) — The Id of the role to update.
  *     - realm (string, optional if set globally) — The realm where the role is defined.
  * - role_dictionary: A JSON object representing a role dictionary as defined in Keycloak
  */
@@ -134,8 +134,8 @@ exports.delByName=function(filters){
  * ***************************** - findUsersWithRole - *******************************
  * Find all users associated with a specific role
  * - filters: parameter provided as a JSON object that accepts the following parameters:
- *     - name: (string, optional) — The exact name of the role to retrieve.
- *     - id: (string, optional) — The Id of the role to retrieve.
+ *     - name: (string, required) — The exact name of the role.
+ *     - id: (string, optional) — Optional role id depending on endpoint support.
  *     - realm: (string, optional if set globally) — The realm where the role is defined.
  */
 exports.findUsersWithRole=function(filters){
@@ -148,8 +148,8 @@ exports.findUsersWithRole=function(filters){
  * ***************************** - getCompositeRoles - *******************************
  * Find all composite roles associated with a specific role.
  * - filters: parameter provided as a JSON object that accepts the following parameters:
- *     - name: (string, optional) — The exact name of the role to retrieve.
- *     - id: (string, optional) — The Id of the role to retrieve.
+ *     - id: (string, required) — The Id of the role to retrieve.
+ *     - realm: (string, optional) — Realm override.
  */
 exports.getCompositeRoles=function(filters){
  return (kcAdminClientHandler.roles.getCompositeRoles(filters));
@@ -161,13 +161,14 @@ exports.getCompositeRoles=function(filters){
  * associated with a given composite role.
  * When a role is defined as composite, it can include other roles either from the same
  * realm or from different clients. This specific method returns only the realm-level roles
- * that have been added to the composite role. It requires the roleId of the target role as a
+ * that have been added to the composite role. It requires the id of the target role as a
  * parameter and returns an array of RoleRepresentation objects. If the role is not composite
  * or has no associated realm roles, the result will be an empty array. This method is useful
  * for understanding and managing hierarchical role structures within a realm in Keycloak.
  * @parameters:
  * - filters: parameter provided as a JSON object that accepts the following parameters:
- *     - roleId: (string, required) — The Id of the role to retrieve
+ *     - id: (string, required) — The Id of the role to retrieve.
+ *     - realm: (string, optional) — Realm override.
  */
 exports.getCompositeRolesForRealm=function(filters){
  return (kcAdminClientHandler.roles.getCompositeRolesForRealm(filters));
@@ -180,14 +181,15 @@ exports.getCompositeRolesForRealm=function(filters){
  * associated with a given composite role.
  * Composite roles in Keycloak can include roles from different clients,
  * and this method specifically returns the roles belonging to a specified client that
- * are part of the composite role. It requires the roleId of the composite role
+ * are part of the composite role. It requires the id of the composite role
  * and the clientId of the client whose roles you want to retrieve. The function returns an array of
  * RoleRepresentation objects representing the client roles included in the composite.
  * This helps manage and inspect client-specific role hierarchies within the composite role structure in Keycloak.
  * @parameters:
  * - filters: parameter provided as a JSON object that accepts the following parameters:
- *     - roleId: (string, required) — The Id of the role to retrieve
+ *     - id: (string, required) — The Id of the role to retrieve.
  *     - clientId: (string, required) — The Id of the client to search for composite roles
+ *     - realm: (string, optional) — Realm override.
  *
  */
 exports.getCompositeRolesForClient=function(filters){

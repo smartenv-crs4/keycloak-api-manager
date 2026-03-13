@@ -389,7 +389,7 @@ exports.listScopeMappings=function(filter){
  * @parameters:
  * - filter: parameter provided as a JSON object that accepts the following filter:
  *     - id: [required] The ID of the client scope to list available scope mapping.
- *     - client: [required] The client ID (client UUID or client identifier) from which to list available roles
+ *     - clientUniqueId: [required] The client UUID from which to list available roles.
  *     - realm: [optional] The realm where the client scope is defined
  */
 exports.listAvailableClientScopeMappings=function(filter){
@@ -405,9 +405,9 @@ exports.listAvailableClientScopeMappings=function(filter){
  * @parameters:
  * - filter: parameter provided as a JSON object that accepts the following filter:
  *     - id: [required] ID of the client scope.
- *     - client: [required] The client ID (client UUID or client identifier) whose roles are being mapped.
+ *     - clientUniqueId: [required] The client UUID whose roles are being mapped.
  *     - realm : [optional] The realm where the client scope is defined.
- * - RoleRepresentation: An array of role definitions to add. Each RoleRepresentation typically includes(or at least their id and/or name):
+ * - roleRepresentation: An array of role definitions to add. Each RoleRepresentation typically includes(or at least their id and/or name):
  *     - id : [optional] The role ID.
  *     - name : [optional] The role name.
  *     - description: [optional] A description of the role.
@@ -428,7 +428,7 @@ exports.addClientScopeMappings=function(filter,roleRepresentation){
  * @parameters:
  * - filter: parameter provided as a JSON object that accepts the following filter:
  *     - id: [required] ID of the client scope.
- *     - client: [required] The client ID (client UUID or client identifier) from which the roles are being removed.
+ *     - clientUniqueId: [required] The client UUID from which the roles are being removed.
  *     - realm : [optional] The realm where the client scope is defined.
  * - roleRepresentation: An array of role objects (or at least their id and/or name) to be removed from the client scope.
  *     - id : [optional] The role ID
@@ -451,7 +451,7 @@ exports.delClientScopeMappings=function(filter,roleRepresentation){
  * @parameters:
  * - filter: parameter provided as a JSON object that accepts the following filter:
  *     - id: [required] The ID of the client scope
- *     - client: [required]: The client ID (client UUID or client identifier) whose mapped roles you want to list
+ *     - clientUniqueId: [required] The client UUID whose mapped roles you want to list.
  *     - realm: [optional] The realm where the client scope is defined
  */
 exports.listClientScopeMappings=function(filter){
@@ -467,7 +467,7 @@ exports.listClientScopeMappings=function(filter){
  * @parameters:
  * - filter: parameter provided as a JSON object that accepts the following filter:
  *     - id: [required] The ID of the client scope.
- *     - client: [required]: The client ID (client UUID or client identifier) whose mapped roles you want to list.
+ *     - clientUniqueId: [required] The client UUID whose mapped roles you want to list.
  *     - realm: [optional] The realm where the client scope is defined.
  */
 exports.listCompositeClientScopeMappings=function(filter){
@@ -522,15 +522,15 @@ exports.addRealmScopeMappings=function(filter,roleRepresentation){
  * - filter: parameter provided as a JSON object that accepts the following filter:
  *     - id: [required] The ID of the client scope.
  *     - realm: [optional] The realm where the client scope is defined.
- * - RoleRepresentation: Each role should include at least its id and/or name
+ * - roleRepresentation: Each role should include at least its id and/or name
  *     - id: [required] The role ID.
  *     - name: [required] The role name.
  *     - description: [optional] Description of the role.
  *     - clientRole: [optional] Should be false for realm roles.
  *     - containerId: [optional] The ID of the realm containing the role.
  */
-exports.delRealmScopeMappings=function(filter,RoleRepresentation){
- return (kcAdminClientHandler.clientScopes.delRealmScopeMappings(filter,RoleRepresentation));
+exports.delRealmScopeMappings=function(filter,roleRepresentation){
+ return (kcAdminClientHandler.clientScopes.delRealmScopeMappings(filter,roleRepresentation));
 }
 
 

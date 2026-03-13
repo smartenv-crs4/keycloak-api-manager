@@ -15,10 +15,11 @@ exports.setKcAdminClient = function(kcAdminClient) {
 
 /**
  * ***************************** - getBruteForceStatus - *******************************
- * Get brute force detection status for all users in a realm
+ * Get brute force detection status in the current realm context.
  * 
  * @parameters:
- * - realm: (string, required) - The realm name
+ * - filter: (object, optional) request filter object.
+ *    - realm: (string, optional) Realm override for this call.
  * @returns: Array of user brute force status objects
  */
 exports.getBruteForceStatus = function(filter) {
@@ -27,11 +28,12 @@ exports.getBruteForceStatus = function(filter) {
 
 /**
  * ***************************** - getUserBruteForceStatus - *******************************
- * Get brute force detection status for a specific user
+ * Get brute force detection status for one user.
  * 
  * @parameters:
- * - realm: (string, required) - The realm name  
- * - id: (string, required) - The user ID
+ * - filter: (object, required) request filter object.
+ *    - id: (string, required) User ID.
+ *    - realm: (string, optional) Realm override for this call.
  * @returns: User brute force status object
  */
 exports.getUserBruteForceStatus = function(filter) {
@@ -43,8 +45,9 @@ exports.getUserBruteForceStatus = function(filter) {
  * Clear all login failures for a specific user
  * 
  * @parameters:
- * - realm: (string, required) - The realm name
- * - id: (string, required) - The user ID
+ * - filter: (object, required) request filter object.
+ *    - id: (string, required) User ID.
+ *    - realm: (string, optional) Realm override for this call.
  * @returns: Promise
  */
 exports.clearUserLoginFailures = function(filter) {
@@ -56,7 +59,8 @@ exports.clearUserLoginFailures = function(filter) {
  * Clear all login failures for all users in a realm
  * 
  * @parameters:
- * - realm: (string, required) - The realm name
+ * - filter: (object, optional) request filter object.
+ *    - realm: (string, optional) Realm override for this call.
  * @returns: Promise
  */
 exports.clearAllLoginFailures = function(filter) {

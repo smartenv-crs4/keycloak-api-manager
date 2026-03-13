@@ -14,10 +14,11 @@ exports.setKcAdminClient=function(kcAdminClient){
 
 /**
  * ***************************** - CREATE - *******************************
- * Create a new group in the current realme
+ * Create a new group in the current realm.
   * @parameters:
  * - groupRepresentation:An object representing the new state of the group. You can update properties such as:
- *     - name: [optional] New name of the group
+ *     - name: [required] Group name.
+ *     - parentId: [optional] Parent group id. If provided, the group is created as a child group.
  *     - attributes: [optional] Custom attributes up field
  *     - path: [optional] full path of the group
  *     - subGroups: [optional] List of child groups (can also be updated separately)
