@@ -51,15 +51,17 @@ For local Docker on default HTTP port:
 }
 ```
 
-### 3) Start Keycloak for tests (only if needed)
+### 3) Prepare Keycloak for tests (choose one mode)
 
-Start Keycloak with Docker only if you do NOT already have a reachable Keycloak instance for tests.
+Choose one of the following modes.
 
-If you already have a running Keycloak instance:
+#### Mode A: Existing Keycloak instance (no Docker startup here)
+
+If you already have a reachable Keycloak instance:
 
 - set `test.keycloak.baseUrl` in `test/config/local.json` to that instance URL
 - ensure admin credentials in `test/config/secrets.json` are valid for that instance
-- skip Docker startup and run tests directly
+- skip any startup command and run tests directly
 
 Example using an existing instance:
 
@@ -79,7 +81,24 @@ Then run:
 npm test
 ```
 
-If you do not have a running instance, start the local Docker environment:
+#### Mode B: Automated setup with `npm run setup-keycloak`
+
+Use this when you do not already have a ready instance and want the helper to provision one.
+
+```bash
+npm run setup-keycloak
+```
+
+What this command does:
+
+- runs an interactive setup (local or remote, HTTP or HTTPS)
+- starts Keycloak via Docker Compose in the selected mode
+- waits for readiness
+- updates `test/config/default.json` with the generated `test.keycloak.baseUrl`
+
+#### Mode C: Manual Docker startup
+
+Use this if you prefer full manual control instead of the setup helper:
 
 ```bash
 docker compose -f test/docker-keycloak/docker-compose.yml up -d
@@ -207,6 +226,9 @@ test/
 ## Commands
 
 ```bash
+# interactive provisioning helper (starts docker and sets baseUrl)
+npm run setup-keycloak
+
 # full suite
 npm test
 

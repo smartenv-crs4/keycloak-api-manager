@@ -155,6 +155,7 @@ All documentation is centralized under `docs/`.
 ## Testing
 
 ```bash
+npm run setup-keycloak
 npm test
 ```
 
@@ -163,6 +164,8 @@ Or test workspace only:
 ```bash
 npm --prefix test test
 ```
+
+`npm run setup-keycloak` is an interactive helper that can start Keycloak via Docker Compose (local/remote, HTTP/HTTPS) and update the test `baseUrl` in config.
 
 The suite runs against a real Keycloak instance and provisions a shared test realm during setup.
 
