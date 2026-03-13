@@ -19,13 +19,31 @@ The active section is selected by `NODE_ENV` (defaults to `test` in suite bootst
 - `test.keycloak.password` (typically in `secrets.json`)
 - `test.keycloak.grantType`
 
+## Recommended Local Setup
+
+1. Keep non-sensitive defaults in `default.json`.
+2. Put secrets in `secrets.json`.
+3. Override per-machine host/ports in `local.json`.
+
+Example `local.json` for local Docker Keycloak:
+
+```json
+{
+  "test": {
+    "keycloak": {
+      "baseUrl": "http://127.0.0.1:8080"
+    }
+  }
+}
+```
+
 ## Example `secrets.json`
 
 ```json
 {
   "test": {
     "keycloak": {
-      "password": "admin"
+      "password": "your-admin-password-here"
     },
     "realm": {
       "user": {

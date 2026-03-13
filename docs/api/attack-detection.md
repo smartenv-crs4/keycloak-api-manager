@@ -2,41 +2,107 @@
 
 Brute-force and login-failure management endpoints.
 
-**Namespace:** `KeycloakManager.attackDetection`
+Namespace: KeycloakManager.attackDetection
+
+## Overview
+
+This handler wraps Keycloak Attack Detection endpoints used to:
+
+- Inspect lock/failure status.
+- Clear failures for one user.
+- Clear failures for the entire realm.
+
+These operations are usually used by support/admin tooling and automated account recovery flows.
 
 ## Methods
 
 ### getBruteForceStatus(filter)
-Get brute-force status for all users or query context depending on endpoint wrapper.
 
-- **Optional**: realm context fields
-- **Returns**: Promise<object>
+Read global brute-force status context from the configured realm.
 
-### getUserBruteForceStatus(filter)
-Get brute-force status for one user.
+Parameters:
 
-- **Required**: `filter.userId` (or `filter.id` based on wrapper usage)
-- **Returns**: Promise<object>
+- filter (object, optional):
+- realm (string, optional): override target realm for this call.
 
-### clearUserLoginFailures(filter)
-Clear failed login attempts for one user.
+Returns:
 
-- **Required**: `filter.userId` (or equivalent id field)
-- **Returns**: Promise<void>
+- Promise<object>: realm brute-force status payload returned by Keycloak.
 
-### clearAllLoginFailures(filter)
-Clear failed login attempts for all users in realm.
-
-- **Optional**: realm context fields
-- **Returns**: Promise<void>
-
-## Example
+Example:
 
 ```js
-const status = await KeycloakManager.attackDetection.getUserBruteForceStatus({ userId });
-await KeycloakManager.attackDetection.clearUserLoginFailures({ userId });
+const status = await KeycloakManager.attackDetection.getBruteForceStatus();
+console.log(status);
 ```
 
+### getUserBruteForceStatus(filter)
+
+Read brute-force status for one user.
+
+Parameters:
+
+- filter (object, required):
+- id (string, required): user id.
+- realm (string, optional): override target realm.
+
+Returns:
+
+- Promise<object>: user brute-force state (for example temporary lock status, failures metadata).
+
+Example:
+
+```js
+const userStatus = await KeycloakManager.attackDetection.getUserBruteForceStatus({
+	id: userId,
+});
+```
+
+### clearUserLoginFailures(filter)
+
+Clear failed-login counters for one user.
+
+Parameters:
+
+- filter (object, required):
+- id (string, required): user id.
+- realm (string, optional): override target realm.
+
+Returns:
+
+- Promise<void>
+
+Example:
+
+```js
+await KeycloakManager.attackDetection.clearUserLoginFailures({ id: userId });
+```
+
+### clearAllLoginFailures(filter)
+
+Clear failed-login counters for all users in the realm.
+
+Parameters:
+
+- filter (object, optional):
+- realm (string, optional): override target realm.
+
+Returns:
+
+- Promise<void>
+
+Example:
+
+```js
+await KeycloakManager.attackDetection.clearAllLoginFailures();
+```
+
+## Error Notes
+
+- Some Keycloak distributions/versions may not expose attack-detection endpoints in the same way.
+- If endpoint support is missing, Keycloak may return 404.
+
 ## See Also
+
 - [API Reference](../api-reference.md)
 - [Users](users.md)

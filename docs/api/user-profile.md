@@ -2,28 +2,72 @@
 
 Manage realm user-profile configuration and metadata.
 
-**Namespace:** `KeycloakManager.userProfile`
+Namespace: KeycloakManager.userProfile
+
+## Overview
+
+This handler manages declarative user-profile schema in a realm.
+It allows you to inspect current schema, update it, and read resolved metadata (validators, capabilities, attribute model).
+
+Note: endpoints are accessed through direct REST calls in the handler for compatibility across admin-client versions.
 
 ## Methods
 
 ### getConfiguration(filter)
-Get user-profile configuration for realm.
 
-- **Optional**: realm context fields
-- **Returns**: Promise<object>
+Get the current declarative user-profile configuration.
+
+Parameters:
+
+- filter (object, optional):
+- realm (string, optional): override target realm.
+
+Returns:
+
+- Promise<object>: current profile configuration.
 
 ### updateConfiguration(filter, userProfileConfig)
+
 Update user-profile configuration.
 
-- **Optional**: realm context fields
-- **Required**: `userProfileConfig` (full/partial config object)
-- **Returns**: Promise<void|object>
+Parameters:
+
+- filter (object, optional):
+- realm (string, optional): override target realm.
+- userProfileConfig (object, required): full or partial schema payload.
+
+Common top-level fields:
+
+- attributes (array): attribute definitions.
+- groups (array, optional): grouped attributes.
+- unmanagedAttributePolicy (string, optional)
+
+Common attribute fields:
+
+- name (string, required): attribute key.
+- displayName (string, optional)
+- required (object, optional): required rules.
+- permissions (object, optional): view/edit permissions.
+- validations (object, optional): validation rules.
+- annotations (object, optional): UI/metadata annotations.
+- multivalued (boolean, optional): enable list values.
+
+Returns:
+
+- Promise<void|object>: usually no content (204), or response payload if provided by server.
 
 ### getMetadata(filter)
-Get resolved user-profile metadata.
 
-- **Optional**: realm context fields
-- **Returns**: Promise<object>
+Get user-profile metadata resolved by the server.
+
+Parameters:
+
+- filter (object, optional):
+- realm (string, optional): override target realm.
+
+Returns:
+
+- Promise<object>: metadata payload (validators, resolved attributes, capabilities).
 
 ## Common User Profile Structure
 
@@ -56,6 +100,7 @@ await KeycloakManager.userProfile.updateConfiguration({}, {
 });
 
 const metadata = await KeycloakManager.userProfile.getMetadata();
+console.log('Available validators:', Object.keys(metadata.validators || {}));
 ```
 
 ## See Also
