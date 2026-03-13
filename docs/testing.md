@@ -51,7 +51,35 @@ For local Docker on default HTTP port:
 }
 ```
 
-### 3) Start Keycloak for tests
+### 3) Start Keycloak for tests (only if needed)
+
+Start Keycloak with Docker only if you do NOT already have a reachable Keycloak instance for tests.
+
+If you already have a running Keycloak instance:
+
+- set `test.keycloak.baseUrl` in `test/config/local.json` to that instance URL
+- ensure admin credentials in `test/config/secrets.json` are valid for that instance
+- skip Docker startup and run tests directly
+
+Example using an existing instance:
+
+```json
+{
+  "test": {
+    "keycloak": {
+      "baseUrl": "https://my-keycloak.company.net"
+    }
+  }
+}
+```
+
+Then run:
+
+```bash
+npm test
+```
+
+If you do not have a running instance, start the local Docker environment:
 
 ```bash
 docker compose -f test/docker-keycloak/docker-compose.yml up -d
@@ -189,6 +217,22 @@ npm --prefix test test
 npm --prefix test test -- --grep "Organizations Handler Tests"
 npm --prefix test test -- --grep "Matrix -"
 ```
+
+### Command Difference: `npm test` vs `npm --prefix test test`
+
+- `npm test` (from repository root): runs the root test script, which first installs test workspace dependencies and then executes the suite.
+- `npm --prefix test test`: runs the test workspace script directly, without performing the install step.
+
+Current root script behavior:
+
+```text
+npm test => npm --prefix test install && npm --prefix test test
+```
+
+Practical rule:
+
+- use `npm test` when setting up a fresh environment or after dependency changes
+- use `npm --prefix test test` for faster repeated runs when dependencies are already installed
 
 ---
 
