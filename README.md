@@ -31,7 +31,7 @@ DEPRECATION NOTICE (v6.0.0): The OIDC authentication methods (login(), loginPKCE
 
 This package is now exclusively for Keycloak admin resource management. For user authentication flows, use keycloak-express-middleware instead.
 
-See OIDC_MIGRATION_PLAN.md for migration details.
+See [OIDC_MIGRATION_PLAN.md](OIDC_MIGRATION_PLAN.md) for migration details.
 
 ## Quick Start
 
