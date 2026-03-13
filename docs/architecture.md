@@ -15,10 +15,9 @@ This package exposes a single runtime (`index.js`) that initializes one Keycloak
    - Keeps active session/token management in place.
 
 3. `login(credentials)`
-   - Direct token endpoint call for explicit OIDC login/token flows.
-   - Intended for application-level third-party authentication use-cases.
+   - Legacy OIDC helper kept for backward compatibility.
    - Does not mutate the internal admin client session established by `configure()`.
-   - `auth(credentials)` remains available as backward-compatible alias.
+   - For deprecation and migration guidance, see the README OIDC Deprecation Notice.
 
 4. `stop()`
    - Stops refresh timer for clean process termination.

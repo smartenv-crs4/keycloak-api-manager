@@ -5,7 +5,7 @@ Complete API documentation for keycloak-api-manager.
 ## Table of Contents
 
 ### Guides
-- [OIDC Migration Plan](../OIDC_MIGRATION_PLAN.md) - Deprecation status and migration notes to keycloak-express-middleware
+- [OIDC Migration Plan](../OIDC_MIGRATION_PLAN.md) - Migration notes for legacy OIDC helpers
 
 ### Core API
 - [Configuration & Authentication](api/configuration.md) - Setup, authentication, and lifecycle management
@@ -79,10 +79,7 @@ KeycloakManager.stop();
 | `configure()` | Authentication and setup | Core |
 | `setConfig()` | Runtime configuration | Core |
 | `getToken()` | Get current access/refresh token pair | Core |
-| `login()` | Deprecated OIDC token endpoint wrapper (moved to keycloak-express-middleware) | Core |
-| `generateAuthorizationUrl()` | Deprecated PKCE helper (moved to keycloak-express-middleware) | Core |
-| `loginPKCE()` | Deprecated PKCE token exchange helper (moved to keycloak-express-middleware) | Core |
-| `auth()` | Deprecated backward-compatible alias of `login()` | Core |
+| Legacy OIDC helpers | Backward-compatibility methods (`login`, `generateAuthorizationUrl`, `loginPKCE`, `auth`) | Core |
 | `stop()` | Stop token refresh timer | Core |
 | `realms` | Realm management | realmsHandler |
 | `users` | User management | usersHandler |
@@ -98,6 +95,8 @@ KeycloakManager.stop();
 | `userProfile` | User profile configuration | userProfileHandler |
 | `clientPolicies` | Client policy management | clientPoliciesHandler |
 | `serverInfo` | Server information | serverInfoHandler |
+
+For deprecation status and migration guidance, see [README - OIDC Deprecation Notice](../README.md#oidc-deprecation-notice).
 
 ## Parameter Conventions
 

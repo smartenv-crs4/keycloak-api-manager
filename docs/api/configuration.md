@@ -7,7 +7,7 @@ Core API methods for initializing and managing the Keycloak Admin Client connect
 - [configure()](#configure)
 - [setConfig()](#setconfig)
 - [getToken()](#gettoken)
-- [Deprecated OIDC Methods](#deprecated-oidc-methods)
+- [OIDC Deprecation Notice](#oidc-deprecation-notice)
 - [stop()](#stop)
 
 ---
@@ -243,23 +243,13 @@ const response = await axios.get('https://keycloak.example.com/admin/realms/mast
 
 ---
 
-## Deprecated OIDC Methods
+## OIDC Deprecation Notice
 
-The following methods are still available only for backward compatibility and are deprecated since v6.0.0:
+OIDC authentication helpers are deprecated and retained only for backward compatibility.
 
-- `auth(credentials)`
-- `login(credentials)`
-- `generateAuthorizationUrl(options)`
-- `loginPKCE(credentials)`
+For the canonical deprecation notice and migration path, see:
 
-These methods will be removed in v7.0.0.
-
-For all user authentication flows (including Authorization Code + PKCE), use keycloak-express-middleware:
-
-- https://github.com/smartenv-crs4/keycloak-express-middleware
-
-Migration notes:
-
+- [README - OIDC Deprecation Notice](../../README.md#oidc-deprecation-notice)
 - [OIDC Migration Plan](../../OIDC_MIGRATION_PLAN.md)
 
 ---
@@ -338,7 +328,7 @@ process.on('SIGTERM', () => {
 ### Notes
 
 - Always call `stop()` before application exit to prevent dangling timers.
-- After calling `stop()`, you can call `configure()` or `auth()` again to restart.
+- After calling `stop()`, you can call `configure()` again to restart.
 - Not calling `stop()` may prevent Node.js process from exiting cleanly.
 
 ---

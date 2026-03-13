@@ -1,21 +1,8 @@
-# PKCE Login Flow (Deprecated In This Package)
+# PKCE Login Flow
 
-This package is focused on Keycloak Admin API resource management.
+PKCE and user-authentication helpers in this package are deprecated and retained only for backward compatibility.
 
-PKCE and user-authentication helpers in this package are deprecated since v6.0.0 and kept only for backward compatibility:
+For the canonical deprecation notice and migration path, see:
 
-- `generateAuthorizationUrl(options)`
-- `loginPKCE(credentials)`
-- `login(credentials)`
-- `auth(credentials)`
-
-These methods are planned for removal in v7.0.0.
-
-For production user authentication flows (including Authorization Code + PKCE), use:
-
-- https://github.com/smartenv-crs4/keycloak-express-middleware
-
-Migration references:
-
+- [README - OIDC Deprecation Notice](../../README.md#oidc-deprecation-notice)
 - [OIDC Migration Plan](../../OIDC_MIGRATION_PLAN.md)
-- [Configuration & Authentication](../api/configuration.md)

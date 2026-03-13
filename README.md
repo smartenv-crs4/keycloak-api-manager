@@ -25,11 +25,13 @@ It provides a stable, function-oriented interface for managing Keycloak resource
 npm install keycloak-api-manager
 ```
 
-> **⚠️ DEPRECATION NOTICE (v6.0.0):** The OIDC authentication methods (`login()`, `loginPKCE()`, `generateAuthorizationUrl()`, `auth()`) have been **deprecated** and moved to [`keycloak-express-middleware`](https://github.com/smartenv-crs4/keycloak-express-middleware).
-> 
-> **This package is now exclusively for Keycloak admin resource management.** For user authentication flows, use `keycloak-express-middleware` instead.
-> 
-> See [OIDC_MIGRATION_PLAN.md](OIDC_MIGRATION_PLAN.md) for migration details.
+## OIDC Deprecation Notice
+
+DEPRECATION NOTICE (v6.0.0): The OIDC authentication methods (login(), loginPKCE(), generateAuthorizationUrl(), auth()) have been deprecated and moved to keycloak-express-middleware.
+
+This package is now exclusively for Keycloak admin resource management. For user authentication flows, use keycloak-express-middleware instead.
+
+See OIDC_MIGRATION_PLAN.md for migration details.
 
 ## Quick Start
 
@@ -54,8 +56,6 @@ console.log(users.length);
 KeycloakManager.stop();
 ```
 
-> **💡 Tip:** For user authentication (including Authorization Code + PKCE), use [`keycloak-express-middleware`](https://github.com/smartenv-crs4/keycloak-express-middleware). OIDC methods in this package are deprecated and kept only for backward compatibility.
-
 ## Keycloak Feature Flags
 
 For full API coverage in this package (especially Organizations, Client Policies, User Profile, Group permissions), run Keycloak with:
@@ -74,12 +74,6 @@ In Keycloak 26.x, management-permissions APIs used by group/user fine-grained te
 - `setConfig(overrides)`
 - `getToken()`
 - `stop()`
-- ~~`login(credentials)`~~ **DEPRECATED** - moved to keycloak-express-middleware
-- ~~`generateAuthorizationUrl(options)`~~ **DEPRECATED** - moved to keycloak-express-middleware
-- ~~`loginPKCE(credentials)`~~ **DEPRECATED** - moved to keycloak-express-middleware
-- ~~`auth(credentials)`~~ **DEPRECATED** - moved to keycloak-express-middleware
-
-**Note:** OIDC authentication methods have been deprecated in v6.0.0. Use [`keycloak-express-middleware`](https://github.com/smartenv-crs4/keycloak-express-middleware) for user authentication flows.
 
 Configured handler namespaces:
 
@@ -104,7 +98,7 @@ All documentation is centralized under `docs/`.
 
 ### Guides
 
-- [OIDC Migration Plan](OIDC_MIGRATION_PLAN.md) - Deprecation status and migration notes to keycloak-express-middleware
+- [OIDC Migration Plan](OIDC_MIGRATION_PLAN.md) - Migration notes for legacy OIDC helpers
 
 ### API Reference
 
@@ -163,14 +157,13 @@ docs/               # Centralized documentation
 
 ## Versioning and Compatibility
 
-- Package version: `6.0.2`
+- Package version: `6.0.3`
 - Keycloak Admin client dependency: `@keycloak/keycloak-admin-client`
 - Main compatibility target: Keycloak 25/26
 
 ### Breaking Changes in v6.0.0
 
-OIDC authentication methods (`login()`, `loginPKCE()`, `generateAuthorizationUrl()`, `auth()`) are now deprecated.
-These methods will be removed in v7.0.0. Migrate to `keycloak-express-middleware` for user authentication.
+See OIDC Deprecation Notice.
 
 ## License
 
